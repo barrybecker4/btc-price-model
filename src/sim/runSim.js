@@ -1,6 +1,11 @@
 import { YEAR_START } from "./constants.js";
 import { getHalvingCycleMonthlyAdj } from "./halving.js";
 import { getDailyMining } from "./mining.js";
+import {
+  monthlySigmaFromAnnual,
+  unitShockForMonth,
+  volatilityTimeDecayMultiplier,
+} from "./volatility.js";
 
 export function runSim(p) {
   const months = p.simYears * 12;
@@ -73,6 +78,13 @@ export function runSim(p) {
     // Fundamentals-only move (supply/demand), then halving-cycle overlay (asymmetric boom/bust).
     const fund = Math.max(-0.2, Math.min(rawPct, cap));
     let pctChange = fund + halvingCycleAdj;
+
+    const annualFrac = (p.initialAnnualVolatility ?? 0) / 100;
+    const sigmaMonth = monthlySigmaFromAnnual(annualFrac);
+    const reductionFrac = (p.volatilityReduction ?? 0) / 100;
+    const volDecay = volatilityTimeDecayMultiplier(reductionFrac, m, months);
+    const volShock = unitShockForMonth(m) * sigmaMonth * volDecay;
+    pctChange += volShock;
     // Upside: same hard cap as fundamentals (no runaway compounding). Downside: allow cyclical bear leg past −20%/mo so ~70% peak-to-trough is possible at max strength.
     pctChange = Math.max(-0.6, Math.min(pctChange, cap));
 

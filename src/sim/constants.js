@@ -26,6 +26,13 @@ export const DEFAULTS = {
   organicSellDecline: 5,
   baseElasticity: 1.5,
   maxMonthlyPctGain: 20,
+  /** Annualized BTC-style price volatility (%), wide range vs bonds / equities. */
+  initialAnnualVolatility: 73,
+  /**
+   * How much of that monthly noise fades from sim start to end (0–100%).
+   * 0 = full initial vol throughout; 100 = noise → 0 by the last month. Default 90%.
+   */
+  volatilityReduction: 90,
   /** 0–1: halving-cycle strength (1 = full ~70% drawdown potential in bear leg vs local peak, with muted structural flows). */
   halvingNarrativeAmp: 0.08,
   /** Each successive halving cycle retains this fraction of the prior cycle’s narrative strength (1 = no fade). */

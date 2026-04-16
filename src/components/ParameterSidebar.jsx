@@ -256,6 +256,26 @@ export function ParameterSidebar({ p, setP }) {
 
       <Section title="⚡ Market Dynamics" open={false}>
         <Slider
+          label="Initial annual volatility"
+          hint="Roughly how violent monthly moves are around the supply/demand path (spot BTC is often ~60–80% annualized vs ~10% bonds / ~20% equities). Applied as scaled monthly noise; fades over time per the next slider."
+          value={p.initialAnnualVolatility}
+          min={10}
+          max={80}
+          step={1}
+          onChange={set("initialAnnualVolatility")}
+          fmt={(v) => `${v}%/yr`}
+        />
+        <Slider
+          label="Volatility fade over time"
+          hint="0% = same noise amplitude every month. 100% = noise shrinks to ~0 by the last month of the simulation. Default 90% means most of the extra chop is early."
+          value={p.volatilityReduction}
+          min={0}
+          max={100}
+          step={1}
+          onChange={set("volatilityReduction")}
+          fmt={(v) => `${v}%`}
+        />
+        <Slider
           label="Base Price Elasticity"
           hint="Sensitivity of price to net buy/sell imbalance, relative to liquid supply. At 1.0×, a 1% net demand imbalance moves price 1% — before the scarcity amplifier. As liquid supply shrinks (thin order book), this multiplier amplifies: 1% imbalance on 5% remaining supply creates a ~20× larger move. Higher base = more violent shock. Lower = smoother repricing."
           value={p.baseElasticity}
