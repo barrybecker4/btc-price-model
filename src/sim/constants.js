@@ -26,4 +26,28 @@ export const DEFAULTS = {
   organicSellDecline: 5,
   baseElasticity: 1.5,
   maxMonthlyPctGain: 20,
+  /** 0–1: halving-cycle strength (1 = full ~70% drawdown potential in bear leg vs local peak, with muted structural flows). */
+  halvingNarrativeAmp: 0.08,
+  /** Each successive halving cycle retains this fraction of the prior cycle’s narrative strength (1 = no fade). */
+  halvingImpactDecay: 0.88,
 };
+
+/** Merge saved/partial state with DEFAULTS so new params never read as undefined (avoids NaN in UI and math). */
+export function withParamDefaults(p) {
+  const merged = { ...DEFAULTS, ...p };
+  for (const key of Object.keys(DEFAULTS)) {
+    const v = merged[key];
+    if (v === undefined || (typeof v === "number" && Number.isNaN(v))) {
+      merged[key] = DEFAULTS[key];
+    }
+  }
+  // Legacy: strength was a tiny 0–0.02 monthly factor; map to 0–1
+  if (
+    typeof merged.halvingNarrativeAmp === "number" &&
+    merged.halvingNarrativeAmp > 0 &&
+    merged.halvingNarrativeAmp <= 0.021
+  ) {
+    merged.halvingNarrativeAmp = Math.min(1, merged.halvingNarrativeAmp / 0.02);
+  }
+  return merged;
+}

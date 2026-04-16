@@ -5,7 +5,8 @@ import { PriceChart } from "./components/charts/PriceChart.jsx";
 import { SupplyChart } from "./components/charts/SupplyChart.jsx";
 import { KpiBar } from "./components/KpiBar.jsx";
 import { ParameterSidebar } from "./components/ParameterSidebar.jsx";
-import { DEFAULTS, YEAR_START } from "./sim/constants.js";
+import { DEFAULTS, withParamDefaults, YEAR_START } from "./sim/constants.js";
+import { getHalvingYearsInRange } from "./sim/halving.js";
 import { runSim } from "./sim/runSim.js";
 import { C, FONT_UI } from "./theme.js";
 
@@ -14,13 +15,15 @@ export default function App() {
   const [tab, setTab] = useState("price");
   const [logScale, setLog] = useState(true);
 
-  const { data, supplyShockYear } = useMemo(() => runSim(p), [p]);
+  const params = useMemo(() => withParamDefaults(p), [p]);
+
+  const { data, supplyShockYear } = useMemo(() => runSim(params), [params]);
   const cd = useMemo(() => data.filter((_, i) => i % 3 === 0), [data]);
   const first = data[0];
   const last = data[data.length - 1];
   const mult = last.price / first.price;
 
-  const halvings = [2028, 2032, 2036, 2040].filter((y) => y > YEAR_START && y <= YEAR_START + p.simYears);
+  const halvings = getHalvingYearsInRange(YEAR_START, params.simYears);
 
   const tabBtn = (key, lbl) => (
     <button
@@ -54,10 +57,10 @@ export default function App() {
         overflow: "hidden",
       }}
     >
-      <ParameterSidebar p={p} setP={setP} />
+      <ParameterSidebar p={params} setP={setP} />
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        <KpiBar p={p} last={last} supplyShockYear={supplyShockYear} mult={mult} />
+        <KpiBar p={params} last={last} supplyShockYear={supplyShockYear} mult={mult} />
 
         <div style={{ flex: 1, padding: "14px 20px", overflow: "auto" }}>
           <div style={{ display: "flex", gap: 6, marginBottom: 14, alignItems: "center" }}>
@@ -86,7 +89,7 @@ export default function App() {
             <PriceChart
               data={cd}
               first={first}
-              inflation={p.inflation}
+              inflation={params.inflation}
               logScale={logScale}
               halvings={halvings}
               supplyShockYear={supplyShockYear}

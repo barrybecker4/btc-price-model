@@ -1,4 +1,5 @@
 import { YEAR_START } from "./constants.js";
+import { getHalvingCycleMonthlyAdj } from "./halving.js";
 import { getDailyMining } from "./mining.js";
 
 export function runSim(p) {
@@ -67,8 +68,13 @@ export function runSim(p) {
     const liquidRatio = Math.max(liquid / initLiq, 0.03);
     const elasticity = p.baseElasticity / liquidRatio;
     const rawPct = (netDemand / Math.max(liquid, 50000)) * elasticity;
+    const halvingCycleAdj = getHalvingCycleMonthlyAdj(year, p.halvingNarrativeAmp, p.halvingImpactDecay);
     const cap = p.maxMonthlyPctGain / 100;
-    const pctChange = Math.max(-0.2, Math.min(rawPct, cap));
+    // Fundamentals-only move (supply/demand), then halving-cycle overlay (asymmetric boom/bust).
+    const fund = Math.max(-0.2, Math.min(rawPct, cap));
+    let pctChange = fund + halvingCycleAdj;
+    // Upside: same hard cap as fundamentals (no runaway compounding). Downside: allow cyclical bear leg past −20%/mo so ~70% peak-to-trough is possible at max strength.
+    pctChange = Math.max(-0.6, Math.min(pctChange, cap));
 
     price = Math.max(price * (1 + pctChange), p.miningCostFloor);
     if (!isFinite(price)) price = data[data.length - 1]?.price ?? p.startPrice;
