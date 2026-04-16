@@ -7,7 +7,7 @@ import { KpiBar } from "./components/KpiBar.jsx";
 import { ParameterSidebar } from "./components/ParameterSidebar.jsx";
 import { DEFAULTS, YEAR_START } from "./sim/constants.js";
 import { runSim } from "./sim/runSim.js";
-import { C, FONT_MONO } from "./theme.js";
+import { C, FONT_UI } from "./theme.js";
 
 export default function App() {
   const [p, setP] = useState(DEFAULTS);
@@ -33,8 +33,8 @@ export default function App() {
         borderRadius: 2,
         cursor: "pointer",
         color: tab === key ? "#000" : C.dim,
-        fontSize: 10,
-        fontFamily: FONT_MONO,
+        fontSize: 11,
+        fontFamily: FONT_UI,
         fontWeight: tab === key ? 700 : 400,
         letterSpacing: "0.06em",
       }}
@@ -50,7 +50,7 @@ export default function App() {
         height: "100vh",
         background: C.bg,
         color: C.text,
-        fontFamily: FONT_MONO,
+        fontFamily: FONT_UI,
         overflow: "hidden",
       }}
     >
@@ -68,7 +68,7 @@ export default function App() {
               <label
                 style={{
                   marginLeft: "auto",
-                  fontSize: 10,
+                  fontSize: 11,
                   color: C.dim,
                   display: "flex",
                   alignItems: "center",

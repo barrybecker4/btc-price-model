@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { C, FONT_MONO } from "../theme.js";
+import { C, FONT_UI } from "../theme.js";
 
 export function Section({ title, children, open: def = true }) {
   const [open, setOpen] = useState(def);
@@ -19,15 +19,15 @@ export function Section({ title, children, open: def = true }) {
           justifyContent: "space-between",
           alignItems: "center",
           color: C.amber,
-          fontFamily: FONT_MONO,
-          fontSize: 10,
+          fontFamily: FONT_UI,
+          fontSize: 11,
           fontWeight: 700,
-          letterSpacing: "0.07em",
+          letterSpacing: "0.06em",
           textTransform: "uppercase",
         }}
       >
         {title}
-        <span style={{ color: C.hint, fontSize: 9 }}>{open ? "▲" : "▼"}</span>
+        <span style={{ color: C.dim, fontSize: 10 }}>{open ? "▲" : "▼"}</span>
       </button>
       {open && (
         <div style={{ padding: "10px 6px 4px 8px", borderLeft: "1px solid #1c1c1c", marginLeft: 2 }}>

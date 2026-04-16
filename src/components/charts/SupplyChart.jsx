@@ -1,11 +1,11 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { C, FONT_MONO } from "../../theme.js";
+import { C, FONT_NUM, FONT_UI } from "../../theme.js";
 import { TIP, XAXIS_PROPS } from "../../charts/rechartsConfig.js";
 
 export function SupplyChart({ data }) {
   return (
     <>
-      <div style={{ fontSize: 9, color: C.hint, marginBottom: 8, letterSpacing: "0.06em" }}>
+      <div style={{ fontSize: 11, color: C.hint, marginBottom: 8, letterSpacing: "0.04em", fontFamily: FONT_UI }}>
         BTC SUPPLY BREAKDOWN (MILLIONS) — Liquid pool shrinks as treasuries &amp; ETFs absorb supply
       </div>
       <ResponsiveContainer width="100%" height={310}>
@@ -14,7 +14,7 @@ export function SupplyChart({ data }) {
           <XAxis {...XAXIS_PROPS} />
           <YAxis
             stroke="#1e1e1e"
-            tick={{ fontSize: 10, fill: C.dim, fontFamily: FONT_MONO }}
+            tick={{ fontSize: 11, fill: C.dim, fontFamily: FONT_NUM }}
             tickLine={false}
             tickFormatter={(v) => `${v.toFixed(1)}M`}
             width={60}
@@ -24,7 +24,7 @@ export function SupplyChart({ data }) {
             formatter={(v, n) => [`${parseFloat(v).toFixed(3)}M BTC`, n]}
             labelFormatter={(v) => `YEAR ${parseFloat(v).toFixed(1)}`}
           />
-          <Legend wrapperStyle={{ fontSize: 10, fontFamily: FONT_MONO, paddingTop: 8 }} />
+          <Legend wrapperStyle={{ fontSize: 11, fontFamily: FONT_UI, paddingTop: 8 }} />
           <Area type="monotone" dataKey="lostM" name="Lost Forever" stackId="1" fill={C.lost} stroke={C.lost} fillOpacity={1} />
           <Area
             type="monotone"

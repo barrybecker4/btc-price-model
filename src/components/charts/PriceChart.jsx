@@ -9,7 +9,7 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
-import { C, FONT_MONO } from "../../theme.js";
+import { C, FONT_NUM, FONT_UI } from "../../theme.js";
 import { fmtUSD } from "../../utils/format.js";
 import { TIP, XAXIS_PROPS } from "../../charts/rechartsConfig.js";
 
@@ -22,7 +22,7 @@ function HalvingLines({ halvings, yAxisId }) {
       stroke="#222"
       strokeWidth={1.5}
       strokeDasharray="4 4"
-      label={{ value: `⛏ ${y}`, position: "insideTopLeft", fill: "#333", fontSize: 8, fontFamily: FONT_MONO }}
+      label={{ value: `⛏ ${y}`, position: "insideTopLeft", fill: "#9a9a9a", fontSize: 10, fontFamily: FONT_UI }}
     />
   ));
 }
@@ -36,7 +36,7 @@ function ShockLine({ supplyShockYear, yAxisId }) {
       stroke={C.red}
       strokeWidth={1.5}
       strokeDasharray="6 3"
-      label={{ value: "⚠ SHOCK", position: "insideTopRight", fill: C.red, fontSize: 9, fontFamily: FONT_MONO }}
+      label={{ value: "⚠ SHOCK", position: "insideTopRight", fill: C.red, fontSize: 10, fontFamily: FONT_UI, fontWeight: 600 }}
     />
   );
 }
@@ -47,7 +47,7 @@ export function PriceChart({ data, first, inflation, logScale, halvings, supplyS
     domain: logScale ? [first.price * 0.5, "auto"] : [0, "auto"],
     tickFormatter: fmtUSD,
     stroke: "#1e1e1e",
-    tick: { fontSize: 10, fill: C.dim, fontFamily: FONT_MONO },
+    tick: { fontSize: 11, fill: C.dim, fontFamily: FONT_NUM },
     tickLine: false,
     width: 82,
     allowDecimals: false,
@@ -55,7 +55,7 @@ export function PriceChart({ data, first, inflation, logScale, halvings, supplyS
 
   return (
     <>
-      <div style={{ fontSize: 9, color: C.hint, marginBottom: 8, letterSpacing: "0.06em" }}>
+      <div style={{ fontSize: 11, color: C.hint, marginBottom: 8, letterSpacing: "0.04em", fontFamily: FONT_UI }}>
         BTC PRICE (USD) — Nominal vs Inflation-Adjusted · Halvings &amp; Supply Shock Marked
       </div>
       <ResponsiveContainer width="100%" height={310}>
@@ -64,7 +64,7 @@ export function PriceChart({ data, first, inflation, logScale, halvings, supplyS
           <XAxis {...XAXIS_PROPS} />
           <YAxis yAxisId="p" {...yAxisPrice} />
           <Tooltip {...TIP} formatter={(v, n) => [fmtUSD(v), n]} labelFormatter={(v) => `YEAR ${parseFloat(v).toFixed(1)}`} />
-          <Legend wrapperStyle={{ fontSize: 10, fontFamily: FONT_MONO, paddingTop: 8 }} />
+          <Legend wrapperStyle={{ fontSize: 11, fontFamily: FONT_UI, paddingTop: 8 }} />
           <HalvingLines halvings={halvings} yAxisId="p" />
           <ShockLine supplyShockYear={supplyShockYear} yAxisId="p" />
           <Line

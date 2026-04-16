@@ -1,11 +1,11 @@
-import { C, FONT_MONO } from "../theme.js";
+import { C, FONT_NUM, FONT_UI } from "../theme.js";
 
 export const TIP = {
   contentStyle: {
     background: "#161616",
     border: "1px solid #2a2a2a",
-    fontSize: 11,
-    fontFamily: FONT_MONO,
+    fontSize: 12,
+    fontFamily: FONT_UI,
     padding: "8px 12px",
   },
   labelStyle: { color: C.amber, marginBottom: 4 },
@@ -19,6 +19,6 @@ export const XAXIS_PROPS = {
   domain: ["dataMin", "dataMax"],
   tickFormatter: (v) => Math.floor(v),
   stroke: "#1e1e1e",
-  tick: { fontSize: 10, fill: C.dim, fontFamily: FONT_MONO },
+  tick: { fontSize: 11, fill: C.dim, fontFamily: FONT_NUM },
   tickLine: false,
 };

@@ -1,5 +1,5 @@
 import { DEFAULTS } from "../sim/constants.js";
-import { C, FONT_HEAD, FONT_MONO } from "../theme.js";
+import { C, FONT_HEAD, FONT_NUM, FONT_UI } from "../theme.js";
 import { fmtUSD } from "../utils/format.js";
 import { Section } from "./Section.jsx";
 import { Slider } from "./Slider.jsx";
@@ -15,8 +15,8 @@ export function ParameterSidebar({ p, setP }) {
   return (
     <div
       style={{
-        width: 278,
-        minWidth: 278,
+        width: 300,
+        minWidth: 300,
         background: C.panel,
         borderRight: `1px solid ${C.border}`,
         overflowY: "auto",
@@ -34,7 +34,9 @@ export function ParameterSidebar({ p, setP }) {
         }}
       >
         <div style={{ fontSize: 19, fontWeight: 700, color: C.amber, fontFamily: FONT_HEAD }}>₿ Supply Shock Model</div>
-        <div style={{ fontSize: 9, color: C.hint, marginTop: 3, letterSpacing: "0.12em" }}>ADJUST PARAMETERS BELOW</div>
+        <div style={{ fontSize: 10, color: C.hint, marginTop: 4, letterSpacing: "0.1em", fontFamily: FONT_UI }}>
+          ADJUST PARAMETERS BELOW
+        </div>
       </div>
 
       <Section title="◈ Macroeconomic">
@@ -83,15 +85,19 @@ export function ParameterSidebar({ p, setP }) {
         />
         <div
           style={{
-            fontSize: 10,
+            fontSize: 12,
             color: C.green,
-            fontFamily: FONT_MONO,
+            fontFamily: FONT_UI,
+            fontWeight: 600,
             marginBottom: 10,
             marginTop: -4,
             padding: "3px 0",
           }}
         >
-          Effective supply: {(effectiveSupply / 1e6).toFixed(2)}M BTC
+          Effective supply:{" "}
+          <span style={{ fontFamily: FONT_NUM, fontVariantNumeric: "tabular-nums" }}>
+            {(effectiveSupply / 1e6).toFixed(2)}M BTC
+          </span>
         </div>
         <Slider
           label="Annual Coin Loss Rate"
@@ -251,11 +257,11 @@ export function ParameterSidebar({ p, setP }) {
       <div
         style={{
           marginTop: 10,
-          padding: "9px 10px",
+          padding: "10px 11px",
           background: "#0d0d0d",
           border: `1px solid ${C.border}`,
           borderRadius: 3,
-          fontFamily: FONT_MONO,
+          fontFamily: FONT_UI,
         }}
       >
         {[
@@ -265,9 +271,18 @@ export function ParameterSidebar({ p, setP }) {
           ["Demand ratio", `${(strcInitialDayBtc / 450).toFixed(1)}×`, C.red],
           ["Effective supply", `${(effectiveSupply / 1e6).toFixed(2)}M BTC`, C.text],
         ].map(([lbl, val, col]) => (
-          <div key={lbl} style={{ display: "flex", justifyContent: "space-between", fontSize: 10, lineHeight: 2.1 }}>
+          <div key={lbl} style={{ display: "flex", justifyContent: "space-between", fontSize: 11, lineHeight: 2.05 }}>
             <span style={{ color: C.hint }}>{lbl}:</span>
-            <span style={{ color: col, fontWeight: col !== C.text ? 700 : 400 }}>{val}</span>
+            <span
+              style={{
+                color: col,
+                fontWeight: col !== C.text ? 700 : 400,
+                fontFamily: FONT_NUM,
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {val}
+            </span>
           </div>
         ))}
       </div>
@@ -284,9 +299,9 @@ export function ParameterSidebar({ p, setP }) {
           borderRadius: 3,
           color: C.dim,
           cursor: "pointer",
-          fontSize: 9,
-          fontFamily: FONT_MONO,
-          letterSpacing: "0.1em",
+          fontSize: 10,
+          fontFamily: FONT_UI,
+          letterSpacing: "0.08em",
         }}
       >
         ↺ RESET TO DEFAULTS

@@ -9,13 +9,13 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
-import { C, FONT_MONO } from "../../theme.js";
+import { C, FONT_NUM, FONT_UI } from "../../theme.js";
 import { TIP, XAXIS_PROPS } from "../../charts/rechartsConfig.js";
 
 export function FlowChart({ data, halvings }) {
   return (
     <>
-      <div style={{ fontSize: 9, color: C.hint, marginBottom: 8, letterSpacing: "0.06em" }}>
+      <div style={{ fontSize: 11, color: C.hint, marginBottom: 8, letterSpacing: "0.04em", fontFamily: FONT_UI }}>
         DAILY FLOW (BTC/DAY) — MSTR buys fewer BTC as price rises. Halvings cut mining supply.
       </div>
       <ResponsiveContainer width="100%" height={310}>
@@ -24,7 +24,7 @@ export function FlowChart({ data, halvings }) {
           <XAxis {...XAXIS_PROPS} />
           <YAxis
             stroke="#1e1e1e"
-            tick={{ fontSize: 10, fill: C.dim, fontFamily: FONT_MONO }}
+            tick={{ fontSize: 11, fill: C.dim, fontFamily: FONT_NUM }}
             tickLine={false}
             tickFormatter={(v) => (v >= 1000 ? `${(v / 1000).toFixed(1)}K` : v)}
             width={55}
@@ -34,7 +34,7 @@ export function FlowChart({ data, halvings }) {
             formatter={(v, n) => [`${Math.round(v).toLocaleString()} BTC/day`, n]}
             labelFormatter={(v) => `YEAR ${parseFloat(v).toFixed(1)}`}
           />
-          <Legend wrapperStyle={{ fontSize: 10, fontFamily: FONT_MONO, paddingTop: 8 }} />
+          <Legend wrapperStyle={{ fontSize: 11, fontFamily: FONT_UI, paddingTop: 8 }} />
           {halvings.map((y) => (
             <ReferenceLine
               key={y}

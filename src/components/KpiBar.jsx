@@ -1,5 +1,5 @@
 import { YEAR_START } from "../sim/constants.js";
-import { C, FONT_HEAD } from "../theme.js";
+import { C, FONT_UI } from "../theme.js";
 import { fmtUSD } from "../utils/format.js";
 import { KPI } from "./KPI.jsx";
 
@@ -13,7 +13,15 @@ export function KpiBar({ p, last, supplyShockYear, mult }) {
         flexShrink: 0,
       }}
     >
-      <div style={{ fontSize: 11, color: C.amberDim, fontFamily: FONT_HEAD, fontStyle: "italic", marginBottom: 8 }}>
+      <div
+        style={{
+          fontSize: 12,
+          color: C.amberDim,
+          fontFamily: FONT_UI,
+          fontWeight: 500,
+          marginBottom: 8,
+        }}
+      >
         Bitcoin Supply Shock Simulator &nbsp;·&nbsp; {YEAR_START}–{YEAR_START + p.simYears}
       </div>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
