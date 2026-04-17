@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import { C, FONT_NUM, FONT_UI } from "../../theme.js";
 import { TIP, XAXIS_PROPS } from "../../charts/rechartsConfig.js";
+import { ShockLine } from "./ShockLine.jsx";
 
 function FlowTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
@@ -34,7 +35,7 @@ function FlowTooltip({ active, payload, label }) {
   );
 }
 
-export function FlowChart({ data, halvings }) {
+export function FlowChart({ data, halvings, supplyShockYear }) {
   return (
     <>
       <div style={{ fontSize: 11, color: C.hint, marginBottom: 8, letterSpacing: "0.04em", fontFamily: FONT_UI }}>
@@ -91,6 +92,7 @@ export function FlowChart({ data, halvings }) {
             strokeWidth={1.5}
             strokeDasharray="3 3"
           />
+          <ShockLine supplyShockYear={supplyShockYear} />
         </LineChart>
       </ResponsiveContainer>
     </>

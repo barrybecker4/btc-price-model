@@ -12,6 +12,7 @@ import {
 import { C, FONT_NUM, FONT_UI } from "../../theme.js";
 import { fmtUSD } from "../../utils/format.js";
 import { TIP, XAXIS_PROPS } from "../../charts/rechartsConfig.js";
+import { ShockLine } from "./ShockLine.jsx";
 
 function PriceTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
@@ -48,27 +49,6 @@ function HalvingLines({ halvings, yAxisId }) {
       label={{ value: `⛏ ${y}`, position: "insideTopLeft", fill: "#9a9a9a", fontSize: 10, fontFamily: FONT_UI }}
     />
   ));
-}
-
-function ShockLine({ supplyShockYear, yAxisId }) {
-  if (!supplyShockYear) return null;
-  return (
-    <ReferenceLine
-      x={parseFloat(supplyShockYear.toFixed(1))}
-      yAxisId={yAxisId}
-      stroke={C.red}
-      strokeWidth={1.5}
-      strokeDasharray="6 3"
-      label={{
-        value: "Supply Shock",
-        position: "insideTopRight",
-        fill: C.red,
-        fontSize: 10,
-        fontFamily: FONT_UI,
-        fontWeight: 600,
-      }}
-    />
-  );
 }
 
 export function PriceChart({ data, first, inflation, logScale, halvings, supplyShockYear }) {
