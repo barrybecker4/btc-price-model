@@ -14,6 +14,8 @@ export function ShockLine({ supplyShockYear, yAxisId }) {
       label={{
         value: "Supply Shock",
         position: "insideTopRight",
+        // Vertical-only nudge: `offset` shifts both x and y for insideTopRight; `dy` does not move the anchor x.
+        dy: 17,
         fill: C.red,
         fontSize: 10,
         fontFamily: FONT_UI,

@@ -7,11 +7,11 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  ReferenceLine,
 } from "recharts";
 import { C, FONT_NUM, FONT_UI } from "../../theme.js";
 import { fmtUSD } from "../../utils/format.js";
 import { TIP, XAXIS_PROPS } from "../../charts/rechartsConfig.js";
+import { HalvingVLines } from "./HalvingVLines.jsx";
 import { ShockLine } from "./ShockLine.jsx";
 
 function PriceTooltip({ active, payload, label }) {
@@ -35,20 +35,6 @@ function PriceTooltip({ active, payload, label }) {
       )}
     </div>
   );
-}
-
-function HalvingLines({ halvings, yAxisId }) {
-  return halvings.map((y) => (
-    <ReferenceLine
-      key={y}
-      x={y}
-      yAxisId={yAxisId}
-      stroke="#222"
-      strokeWidth={1.5}
-      strokeDasharray="4 4"
-      label={{ value: `⛏ ${y}`, position: "insideTopLeft", fill: "#9a9a9a", fontSize: 10, fontFamily: FONT_UI }}
-    />
-  ));
 }
 
 export function PriceChart({ data, first, inflation, logScale, halvings, supplyShockYear }) {
@@ -75,7 +61,7 @@ export function PriceChart({ data, first, inflation, logScale, halvings, supplyS
           <YAxis yAxisId="p" {...yAxisPrice} />
           <Tooltip content={<PriceTooltip />} />
           <Legend wrapperStyle={{ fontSize: 11, fontFamily: FONT_UI, paddingTop: 8 }} />
-          <HalvingLines halvings={halvings} yAxisId="p" />
+          <HalvingVLines halvings={halvings} yAxisId="p" />
           <ShockLine supplyShockYear={supplyShockYear} yAxisId="p" />
           <Line
             yAxisId="p"

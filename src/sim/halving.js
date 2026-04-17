@@ -17,14 +17,27 @@ export const HALVING_BOOM_AT_FULL = 0.062;
  */
 export const HALVING_BUST_AT_FULL = 0.262;
 
-/** Halving calendar years that fall inside (simStart, simStart + simYears]. */
+/**
+ * Approximate Bitcoin halving dates as fractional calendar years (block-time schedule).
+ * Used for chart reference lines; future epochs extend every ~4y from the last historical halving.
+ */
+export const HALVING_CHART_EPOCHS = [
+  2012.91, // 2012-11-28
+  2016.52, // 2016-07-09
+  2020.36, // 2020-05-11
+  2024.3, // 2024-04-20
+];
+
+/** Halving epochs that fall inside (simStart, simStart + simYears] — all that intersect the chart x-range. */
 export function getHalvingYearsInRange(simStartYear, simYears) {
   const end = simStartYear + simYears;
-  const out = [];
-  for (let y = FIRST_HALVING_YEAR; y <= end + 1e-9; y += HALVING_INTERVAL_YEARS) {
-    if (y > simStartYear && y <= end) out.push(y);
+  const epochs = [...HALVING_CHART_EPOCHS];
+  let next = HALVING_CHART_EPOCHS[HALVING_CHART_EPOCHS.length - 1] + HALVING_INTERVAL_YEARS;
+  while (next <= end + 1e-9) {
+    epochs.push(next);
+    next += HALVING_INTERVAL_YEARS;
   }
-  return out;
+  return epochs.filter((y) => y > simStartYear && y <= end);
 }
 
 /**

@@ -122,7 +122,7 @@ export default function App() {
               supplyShockYear={supplyShockYear}
             />
           )}
-          {tab === "supply" && <SupplyChart data={cd} supplyShockYear={supplyShockYear} />}
+          {tab === "supply" && <SupplyChart data={cd} halvings={halvings} supplyShockYear={supplyShockYear} />}
           {tab === "flow" && <FlowChart data={cd} halvings={halvings} supplyShockYear={supplyShockYear} />}
 
           <ChartNotes />

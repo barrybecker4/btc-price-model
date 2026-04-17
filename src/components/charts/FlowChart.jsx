@@ -7,10 +7,10 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  ReferenceLine,
 } from "recharts";
 import { C, FONT_NUM, FONT_UI } from "../../theme.js";
 import { TIP, XAXIS_PROPS } from "../../charts/rechartsConfig.js";
+import { HalvingVLines } from "./HalvingVLines.jsx";
 import { ShockLine } from "./ShockLine.jsx";
 
 function FlowTooltip({ active, payload, label }) {
@@ -54,15 +54,7 @@ export function FlowChart({ data, halvings, supplyShockYear }) {
           />
           <Tooltip content={<FlowTooltip />} />
           <Legend wrapperStyle={{ fontSize: 11, fontFamily: FONT_UI, paddingTop: 8 }} />
-          {halvings.map((y) => (
-            <ReferenceLine
-              key={y}
-              x={y}
-              stroke="#222"
-              strokeDasharray="4 4"
-              label={{ value: "⛏", position: "insideTopLeft", fill: "#303030", fontSize: 10 }}
-            />
-          ))}
+          <HalvingVLines halvings={halvings} />
           <Line type="monotone" dataKey="totalBuyDay" name="Total Daily Buying" stroke={C.green} dot={false} strokeWidth={2.5} />
           <Line type="monotone" dataKey="totalSellDay" name="Total Daily Selling" stroke={C.red} dot={false} strokeWidth={2} />
           <Line
