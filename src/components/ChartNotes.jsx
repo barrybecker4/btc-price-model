@@ -16,7 +16,10 @@ export function ChartNotes() {
       }}
     >
       <span style={{ color: C.dim, fontWeight: 700 }}>PRICE MECHANISM: </span>
-      Monthly Δprice = (net demand ÷ liquid BTC) × elasticity. Elasticity amplifies as liquid supply shrinks — a thin order book means each BTC of net demand moves price farther. GDP growth is applied as an extra monthly multiplier on all USD-denominated flows, representing money-supply expansion.
+      Monthly Δprice = (net demand ÷ liquid BTC) × elasticity. Elasticity amplifies as liquid supply shrinks — a thin order book means each BTC of net demand moves price farther. GDP growth is applied as an extra monthly multiplier on all USD-denominated flows, representing money-supply expansion.{" "}
+      <span style={{ color: C.dim }}>
+        &ldquo;Cap buying to liquid float&rdquo; only changes results when monthly gross hoarding would exceed tradable liquid (above the floor); check the KPI for whether it bound in this run.
+      </span>
       <span style={{ color: C.dim }}>
         {" "}
         MSTR&apos;s BTC/day falls as price rises (USD fixed; BTC purchased = USD ÷ price) — the natural brake on accumulation rate.{" "}

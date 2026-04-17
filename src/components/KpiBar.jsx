@@ -3,7 +3,26 @@ import { C, FONT_UI } from "../theme.js";
 import { fmtUSD, formatSimRangeLabel } from "../utils/format.js";
 import { KPI } from "./KPI.jsx";
 
-export function KpiBar({ p, last, supplyShockYear, mult }) {
+export function KpiBar({ p, last, supplyShockYear, mult, floatCapInfo }) {
+  const capKpi =
+    floatCapInfo?.mode === "off"
+      ? {
+          value: "Off",
+          sub: "Hoarding not limited by tradable liquid",
+          highlight: false,
+        }
+      : floatCapInfo?.boundMonths > 0
+        ? {
+            value: `${floatCapInfo.boundMonths} / ${floatCapInfo.totalMonths} mo`,
+            sub: `Peak ${floatCapInfo.maxRationPct.toFixed(0)}% of gross buy demand rationed`,
+            highlight: true,
+          }
+        : {
+            value: "Not binding",
+            sub: "No rationing this run — paths match cap off until demand exceeds liquid room",
+            highlight: false,
+          };
+
   return (
     <div
       style={{
@@ -44,6 +63,14 @@ export function KpiBar({ p, last, supplyShockYear, mult }) {
           sub="Liquid BTC drops below 30% of start"
           warn={!!supplyShockYear}
         />
+        {floatCapInfo && (
+          <KPI
+            label="Cap buying to float"
+            value={capKpi.value}
+            sub={capKpi.sub}
+            highlight={capKpi.highlight}
+          />
+        )}
         <KPI
           label={`MSTR BTC/day · ${Math.floor(YEAR_START + p.simYears)}`}
           value={last.strcDayBtc.toLocaleString()}

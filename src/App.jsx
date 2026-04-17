@@ -48,6 +48,15 @@ export default function App() {
 
   const { data, supplyShockYear } = useMemo(() => runSim(params), [params]);
   const cd = useMemo(() => data.filter((_, i) => i % 3 === 0), [data]);
+
+  /** When the cap never binds, on/off runs match — surface that so the toggle doesn’t look “broken”. */
+  const floatCapInfo = useMemo(() => {
+    const capOn = params.capBuyingToLiquidFloat !== false;
+    if (!capOn) return { mode: "off" };
+    const maxRationPct = Math.max(0, ...data.map((d) => d.buyRationPct));
+    const boundMonths = data.filter((d) => d.buyRationPct > 0.01).length;
+    return { mode: "on", boundMonths, totalMonths: data.length, maxRationPct };
+  }, [data, params.capBuyingToLiquidFloat]);
   const first = data[0];
   const last = data[data.length - 1];
   const mult = last.price / first.price;
@@ -102,7 +111,7 @@ export default function App() {
           minHeight: 0,
         }}
       >
-        <KpiBar p={params} last={last} supplyShockYear={supplyShockYear} mult={mult} />
+        <KpiBar p={params} last={last} supplyShockYear={supplyShockYear} mult={mult} floatCapInfo={floatCapInfo} />
 
         <div style={{ flex: 1, minHeight: 0, padding: "14px 20px", overflow: "auto" }}>
           <div style={{ display: "flex", gap: 6, marginBottom: 14, alignItems: "center" }}>
