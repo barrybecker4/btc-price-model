@@ -43,10 +43,9 @@ export const DEFAULTS = {
   etfGrowthRate: 20,
   /** Years over which ETF USD inflow growth tapers to nominal GDP. */
   etfGrowthTaperYears: DEFAULT_TAPER_YEARS,
-  organicDailyBuy: 200,
-  organicDailySell: 500,
+  /** Net retail USD demand, $M/day (signed: positive = net buying, negative = net selling pressure). */
+  initialRetailPurchaseRateM: 20,
   organicBuyGrowth: 8,
-  organicSellDecline: 5,
   baseElasticity: 1.5,
   maxMonthlyPctGain: 20,
   /** Annualized BTC-style price volatility (%), wide range vs typical equities. */
@@ -57,8 +56,8 @@ export const DEFAULTS = {
    */
   volatilityReduction: 90,
   /**
-   * When true, monthly gross hoarding (MSTR + other treasury + ETF + organic buy) cannot exceed
-   * liquid − LIQ_FLOOR + miner sales + organic sells − coin loss. Shortfall is spread proportionally.
+   * When true, monthly gross hoarding (MSTR + other treasury + ETF + net retail buy component) cannot exceed
+   * liquid − LIQ_FLOOR + miner sales + net retail sell component − coin loss. Shortfall is spread proportionally.
    */
   capBuyingToLiquidFloat: true,
 
@@ -108,5 +107,8 @@ export function withParamDefaults(p) {
   }
   // Removed UI-only bond yield (never fed the sim); strip from older merged state.
   delete merged.bondYield;
+  delete merged.organicDailyBuy;
+  delete merged.organicDailySell;
+  delete merged.organicSellDecline;
   return merged;
 }

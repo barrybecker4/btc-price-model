@@ -315,19 +315,20 @@ export function ParameterSidebar({
       </Section>
 
       <Section title="👥 Organic Market" open={false}>
-        <Slider label="Retail Daily Buying" value={p.organicDailyBuy} min={0} max={2000} step={50} onChange={set("organicDailyBuy")} fmt={(v) => `${v} BTC/day`} />
-        <Slider label="Retail Daily Selling" value={p.organicDailySell} min={0} max={3000} step={50} onChange={set("organicDailySell")} fmt={(v) => `${v} BTC/day`} />
-        <Slider label="Retail Buy Growth" value={p.organicBuyGrowth} min={0} max={30} step={1} onChange={set("organicBuyGrowth")} fmt={(v) => `${v}%/yr`} />
         <Slider
-          label="HODLer Sell Decline"
-          hint="Annual % reduction in retail selling as scarcity narrative hardens and price rises."
-          value={p.organicSellDecline}
-          min={0}
-          max={20}
+          label="Initial Retail Purchase Rate"
+          hint="Net USD demand from retail, per calendar day ($M). Positive = net buying; negative = net selling pressure. Typical band 10–50 $M/day. Dollar-denominated so the path does not fix an unsustainable BTC/day against finite float."
+          value={p.initialRetailPurchaseRateM}
+          min={-50}
+          max={50}
           step={1}
-          onChange={set("organicSellDecline")}
-          fmt={(v) => `${v}%/yr`}
+          onChange={set("initialRetailPurchaseRateM")}
+          fmt={(v) => {
+            const sign = v < 0 ? "−" : "";
+            return `${sign}$${Math.abs(v)}M/day`;
+          }}
         />
+        <Slider label="Retail Buy Growth" value={p.organicBuyGrowth} min={0} max={30} step={1} onChange={set("organicBuyGrowth")} fmt={(v) => `${v}%/yr`} />
       </Section>
 
       <Section title="🔐 Holders (LTH / Ancient)" open={false}>
@@ -403,7 +404,7 @@ export function ParameterSidebar({
         <ParamHintHotspot
           focusable={false}
           ariaLabel="More about Cap buying to liquid float"
-          hint="When on, monthly hoarding cannot exceed liquid (above floor) plus miner/organic inflows. Demand is rationed proportionally across MSTR, other treasuries, ETF, and retail."
+          hint="When on, monthly hoarding cannot exceed liquid (above floor) plus miner supply and net retail selling pressure. Demand is rationed proportionally across MSTR, other treasuries, ETF, and the retail buy leg (net USD → BTC)."
           style={{ marginBottom: 12, cursor: "help", borderRadius: 2 }}
         >
           {({ inputFocusProps }) => (

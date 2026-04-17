@@ -105,8 +105,8 @@ export function runSim(p) {
   let strcUSD = (p.strcInitialUsdB * 1e9) / MONTHS_PER_YEAR;
   let otherUSD = (p.otherTreasuryUsdB * 1e9) / MONTHS_PER_YEAR;
   let etfUSD = p.etfDailyInflowM * 1e6 * 30;
-  let buyBtcM = p.organicDailyBuy * 30;
-  let sellBtcM = p.organicDailySell * 30;
+  /** Nominal monthly USD for net retail (daily $M × 30); signed when rate is negative. */
+  let retailNetUsd = (p.initialRetailPurchaseRateM ?? 0) * 1e6 * 30;
 
   const gdpMonthlyBoost = p.gdpGrowth / 100 / MONTHS_PER_YEAR;
 
@@ -126,20 +126,31 @@ export function runSim(p) {
     const strcBtcRaw = strcUSD / price;
     const otherBtcRaw = otherUSD / price;
     const etfBtc2Raw = etfUSD / price;
-    const G_raw = strcBtcRaw + otherBtcRaw + etfBtc2Raw + buyBtcM;
+    /** Signed BTC/month from net retail USD. Negative = selling pressure (supply back to liquid). */
+    const organicRetailBtcRaw = retailNetUsd / price;
+    const retailBuyRaw = Math.max(0, organicRetailBtcRaw);
+    const retailSellRaw = Math.max(0, -organicRetailBtcRaw);
+    /**
+     * Float cap: only the positive hoarding leg (retail + treasuries + ETF) competes for buyScale.
+     * The negative retail leg does not enter G_raw; it widens G_max like other sell-side liquidity.
+     * buyScale applies only to strc/other/etf/retailBuyRaw — not to retail selling pressure.
+     */
+    const G_raw = strcBtcRaw + otherBtcRaw + etfBtc2Raw + retailBuyRaw;
 
     const capOn = p.capBuyingToLiquidFloat !== false;
     let buyScale = 1;
     if (capOn && G_raw > 0) {
-      const G_max = liquid - LIQ_FLOOR + minerSales + sellBtcM - coinsLost;
+      const G_max = liquid - LIQ_FLOOR + minerSales + retailSellRaw - coinsLost;
       buyScale = G_max <= 0 ? 0 : Math.min(1, G_max / G_raw);
     }
 
     const strcBtc = strcBtcRaw * buyScale;
     const otherBtc = otherBtcRaw * buyScale;
     const etfBtc2 = etfBtc2Raw * buyScale;
-    const buyBtcMExec = buyBtcM * buyScale;
-    const G_exec = strcBtc + otherBtc + etfBtc2 + buyBtcMExec;
+    const retailBuyExec = retailBuyRaw * buyScale;
+    /** Executed net retail BTC/mo: scaled buy leg + unscaled negative leg (min(0, raw)). */
+    const organicRetailNetBtcExec = retailBuyExec + Math.min(0, organicRetailBtcRaw);
+    const G_exec = strcBtc + otherBtc + etfBtc2 + retailBuyExec;
     const unmetBuyBtcM = G_raw - G_exec;
     const buyRationPct = G_raw > 0 ? (unmetBuyBtcM / G_raw) * 100 : 0;
 
@@ -157,8 +168,10 @@ export function runSim(p) {
     const otherDayBtc = otherBtc / 30;
     const etfDayBtc = etfBtc2 / 30;
     const minerSellDay = dailyMining * (p.minerSellPct / 100);
-    const totalBuyDay = strcDayBtc + otherDayBtc + etfDayBtc + buyBtcMExec / 30;
-    const totalSellDay = minerSellDay + sellBtcM / 30;
+    const retailBuyDay = Math.max(0, organicRetailNetBtcExec) / 30;
+    const retailSellDay = Math.max(0, -organicRetailNetBtcExec) / 30;
+    const totalBuyDay = strcDayBtc + otherDayBtc + etfDayBtc + retailBuyDay;
+    const totalSellDay = minerSellDay + retailSellDay;
 
     data.push({
       year: parseFloat(year.toFixed(3)),
@@ -187,13 +200,13 @@ export function runSim(p) {
 
     /**
      * Monthly transition (mass conservation among modeled buckets):
-     * 1. Compute net demand from treasuries, ETFs, organic buy/sell, miners (all vs tradeable `liquid`).
+     * 1. Compute net demand from treasuries, ETFs, net retail (USD→BTC), miners (all vs tradeable `liquid`).
      * 2. Price update from elasticity (on `liquid`), halving overlay, vol shock; floor at mining cost.
      * 3. Apply structural drain: `liquid -= netDemand + coinsLost`, treasuries/ETFs up, `lostBtc` up from `coinsLost` (only from liquid).
      * 4. `applyHolderFlows`: optional liquid→young LTH / liquid→Ancient (positive), or bucket→liquid (negative); does not change treasuries/ETFs/lost.
      * Young LTH and Ancient are not in the netDemand path — institutions buy only from `liquid`.
      */
-    const netDemand = strcBtc + otherBtc + etfBtc2 + buyBtcMExec - minerSales - sellBtcM;
+    const netDemand = strcBtc + otherBtc + etfBtc2 + organicRetailNetBtcExec - minerSales;
 
     const liquidRatio = Math.max(liquid / initLiq, 0.03);
     const elasticity = p.baseElasticity / liquidRatio;
@@ -250,8 +263,7 @@ export function runSim(p) {
     strcUSD *= gm(rStrc);
     otherUSD *= gm(rOther);
     etfUSD *= gm(rEtf);
-    buyBtcM *= gm(p.organicBuyGrowth) * (1 + gdpMonthlyBoost);
-    sellBtcM *= 1 - p.organicSellDecline / 100 / MONTHS_PER_YEAR;
+    retailNetUsd *= gm(p.organicBuyGrowth) * (1 + gdpMonthlyBoost);
   }
 
   return { data, supplyShockYear };
