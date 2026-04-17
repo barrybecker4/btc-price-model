@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   LineChart,
   Line,
@@ -11,6 +12,7 @@ import {
 import { C, FONT_NUM, FONT_UI } from "../../theme.js";
 import { fmtUSD } from "../../utils/format.js";
 import { TIP, XAXIS_PROPS } from "../../charts/rechartsConfig.js";
+import { daysSinceGenesis, powerLawBoundsUsd } from "../../utils/powerLaw.js";
 import { HalvingVLines } from "./HalvingVLines.jsx";
 import { ShockLine } from "./ShockLine.jsx";
 
@@ -37,7 +39,28 @@ function PriceTooltip({ active, payload, label }) {
   );
 }
 
-export function PriceChart({ data, first, inflation, logScale, halvings, supplyShockYear }) {
+const POWER_LAW_UPPER_STROKE = C.ancient;
+const POWER_LAW_LOWER_STROKE = "#14b8a6";
+
+export function PriceChart({
+  data,
+  first,
+  inflation,
+  logScale,
+  halvings,
+  supplyShockYear,
+  overlayPowerLaw,
+  onOverlayPowerLawChange,
+}) {
+  const chartData = useMemo(() => {
+    if (!overlayPowerLaw) return data;
+    return data.map((row) => {
+      const days = daysSinceGenesis(row.year);
+      const { upper, lower } = powerLawBoundsUsd(days);
+      return { ...row, powerLawUpper: upper, powerLawLower: lower };
+    });
+  }, [data, overlayPowerLaw]);
+
   const yAxisPrice = {
     scale: logScale ? "log" : "linear",
     domain: logScale ? [first.price * 0.5, "auto"] : [0, "auto"],
@@ -55,7 +78,7 @@ export function PriceChart({ data, first, inflation, logScale, halvings, supplyS
         BTC PRICE (USD) — Nominal vs Inflation-Adjusted · Halvings &amp; Supply Shock Marked
       </div>
       <ResponsiveContainer width="100%" height={310}>
-        <LineChart data={data} margin={{ top: 5, right: 30, left: 5, bottom: 5 }}>
+        <LineChart data={chartData} margin={{ top: 5, right: 30, left: 5, bottom: 5 }}>
           <CartesianGrid stroke="#141414" strokeDasharray="3 3" />
           <XAxis {...XAXIS_PROPS} />
           <YAxis yAxisId="p" {...yAxisPrice} />
@@ -82,8 +105,67 @@ export function PriceChart({ data, first, inflation, logScale, halvings, supplyS
             strokeWidth={1.5}
             strokeDasharray="5 3"
           />
+          {overlayPowerLaw && (
+            <>
+              <Line
+                yAxisId="p"
+                type="monotone"
+                dataKey="powerLawUpper"
+                name="Power law upper"
+                stroke={POWER_LAW_UPPER_STROKE}
+                dot={false}
+                strokeWidth={1.25}
+                strokeDasharray="4 4"
+              />
+              <Line
+                yAxisId="p"
+                type="monotone"
+                dataKey="powerLawLower"
+                name="Power law lower"
+                stroke={POWER_LAW_LOWER_STROKE}
+                dot={false}
+                strokeWidth={1.25}
+                strokeDasharray="4 4"
+              />
+            </>
+          )}
         </LineChart>
       </ResponsiveContainer>
+      <div style={{ marginTop: 10 }}>
+        <label
+          style={{
+            fontSize: 11,
+            color: C.dim,
+            display: "flex",
+            alignItems: "center",
+            gap: 7,
+            cursor: "pointer",
+            fontFamily: FONT_UI,
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={overlayPowerLaw}
+            onChange={(e) => onOverlayPowerLawChange(e.target.checked)}
+            style={{ accentColor: C.amber }}
+          />
+          Overlay power law bounds
+        </label>
+        {overlayPowerLaw && (
+          <div
+            style={{
+              marginTop: 6,
+              maxWidth: 720,
+              fontSize: 10,
+              lineHeight: 1.4,
+              color: C.hint,
+              fontFamily: FONT_UI,
+            }}
+          >
+            Santostasi-style power-law corridor (reference only — not produced by this simulation).
+          </div>
+        )}
+      </div>
       <div
         style={{
           marginTop: 10,

@@ -511,8 +511,8 @@ export function ParameterSidebar({
         />
         <Slider
           label="Base Price Elasticity"
-          hint="Sensitivity of price to net buy/sell imbalance, relative to liquid supply. At 1.0×, a 1% net demand imbalance moves price 1% — before the scarcity amplifier. As liquid supply shrinks (thin order book), this multiplier amplifies: 1% imbalance on 5% remaining supply creates a ~20× larger move. Higher base = more violent shock. Lower = smoother repricing."
-          hintDetail="When float cap binds, the unmet-demand premium can add another leg on top of this baseline."
+          hint="How much buyers ease up or pile in when the BTC price moves—think of it as “how price-sensitive are people?” Higher = they react more to the same price change. Default 1.1 is a middle-of-the-road guess."
+          hintDetail="This dial also sets how big monthly price moves are for a given amount of net buying or selling. When there are fewer coins freely available, the same activity swings price more. If the float cap is on, the unmet-demand control can add extra lift when buying is rationed."
           value={p.baseElasticity}
           min={0.2}
           max={5}

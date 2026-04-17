@@ -23,6 +23,7 @@ export default function App() {
   const [startPriceSliderMax, setStartPriceSliderMax] = useState(START_PRICE_SLIDER_BASE_MAX);
   const [tab, setTab] = useState("price");
   const [logScale, setLog] = useState(true);
+  const [overlayPowerLaw, setOverlayPowerLaw] = useState(false);
 
   useEffect(() => {
     const ac = new AbortController();
@@ -144,6 +145,8 @@ export default function App() {
               logScale={logScale}
               halvings={halvings}
               supplyShockYear={supplyShockYear}
+              overlayPowerLaw={overlayPowerLaw}
+              onOverlayPowerLawChange={setOverlayPowerLaw}
             />
           )}
           {tab === "supply" && <SupplyChart data={cd} halvings={halvings} supplyShockYear={supplyShockYear} />}

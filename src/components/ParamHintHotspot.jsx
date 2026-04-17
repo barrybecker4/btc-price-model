@@ -19,24 +19,40 @@ export function ParamHintHotspot({ hint, hintDetail, ariaLabel, focusable = true
   const rawId = useId();
   const tooltipId = `param-hint-${rawId.replace(/:/g, "")}`;
   const shellRef = useRef(null);
+  const tooltipRef = useRef(null);
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, left: 0 });
 
-  const updatePos = useCallback(() => {
-    const el = shellRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
+  const placeTooltip = useCallback(() => {
+    const shell = shellRef.current;
+    if (!shell) return;
+    const rect = shell.getBoundingClientRect();
     const maxW = 288;
     let left = Math.min(rect.left, window.innerWidth - maxW - 8);
     left = Math.max(8, left);
-    const top = rect.bottom + 6;
-    setPos({ top, left });
+    const gap = 6;
+    const margin = 8;
+    let top = rect.bottom + gap;
+
+    const tip = tooltipRef.current;
+    if (tip) {
+      const h = tip.getBoundingClientRect().height;
+      const wouldClipBelow = rect.bottom + gap + h > window.innerHeight - margin;
+      if (wouldClipBelow) {
+        top = rect.top - gap - h;
+        if (top < margin) top = margin;
+      }
+    }
+
+    setPos((prev) => (prev.top === top && prev.left === left ? prev : { top, left }));
   }, []);
 
   useLayoutEffect(() => {
     if (!open) return;
-    updatePos();
-  }, [open, updatePos, hint, hintDetail]);
+    placeTooltip();
+    const id = requestAnimationFrame(() => placeTooltip());
+    return () => cancelAnimationFrame(id);
+  }, [open, placeTooltip, hint, hintDetail]);
 
   useEffect(() => {
     const onOtherOpen = (e) => {
@@ -53,10 +69,14 @@ export function ParamHintHotspot({ hint, hintDetail, ariaLabel, focusable = true
 
   useEffect(() => {
     if (!open) return;
-    const onResize = () => updatePos();
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, [open, updatePos]);
+    placeTooltip();
+    window.addEventListener("resize", placeTooltip);
+    window.addEventListener("scroll", placeTooltip, true);
+    return () => {
+      window.removeEventListener("resize", placeTooltip);
+      window.removeEventListener("scroll", placeTooltip, true);
+    };
+  }, [open, placeTooltip]);
 
   useEffect(() => {
     if (!open) return;
@@ -107,6 +127,7 @@ export function ParamHintHotspot({ hint, hintDetail, ariaLabel, focusable = true
     hasHint &&
     createPortal(
       <div
+        ref={tooltipRef}
         id={tooltipId}
         role="tooltip"
         style={{

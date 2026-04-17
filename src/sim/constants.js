@@ -51,7 +51,7 @@ export const DEFAULTS = {
   organicBuyGrowth: 10,
   /** Years over which retail USD demand growth logistically tapers to Nominal GDP Growth. */
   organicBuyGrowthTaperYears: DEFAULT_ORGANIC_BUY_GROWTH_TAPER_YEARS,
-  baseElasticity: 1.5,
+  baseElasticity: 1.1,
   maxMonthlyPctGain: 20,
   /** Annualized BTC-style price volatility (%), wide range vs typical equities. */
   initialAnnualVolatility: 73,
