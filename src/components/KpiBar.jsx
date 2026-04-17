@@ -8,18 +8,24 @@ export function KpiBar({ p, last, supplyShockYear, mult, floatCapInfo }) {
     floatCapInfo?.mode === "off"
       ? {
           value: "Off",
-          sub: "Hoarding not limited by tradable liquid",
+          sub: "Hoarding not limited by tradable liquid.",
+          tooltip:
+            "When off, monthly hoarding is not scaled down when it would exceed the room left in the liquid float. Turn the cap on to see whether gross buying ever hits that ceiling in this scenario.",
           highlight: false,
         }
       : floatCapInfo?.boundMonths > 0
         ? {
             value: `${floatCapInfo.boundMonths} / ${floatCapInfo.totalMonths} mo`,
-            sub: `Peak ${floatCapInfo.maxRationPct.toFixed(0)}% of gross buy demand rationed`,
+            sub: `Peak ${floatCapInfo.maxRationPct.toFixed(0)}% of gross buy demand rationed.`,
+            tooltip:
+              "Months where the model scales down buys because modeled hoarding would exceed available liquid BTC. Peak ration is the largest fraction of gross buy demand that had to be deferred in a single month.",
             highlight: true,
           }
         : {
             value: "Not binding",
-            sub: "No rationing this run — paths match cap off until demand exceeds liquid room",
+            sub: "No rationing this run.",
+            tooltip:
+              "Gross hoarding never exceeded liquid-room in any month, so capped vs uncapped paths match. Stress flows or shrink the float to see the cap bind.",
             highlight: false,
           };
 
@@ -47,20 +53,32 @@ export function KpiBar({ p, last, supplyShockYear, mult, floatCapInfo }) {
         <KPI
           label={`BTC Price · ${Math.floor(YEAR_START + p.simYears)}`}
           value={fmtUSD(last.price)}
-          sub={`${mult.toFixed(1)}× from ${fmtUSD(p.startPrice)}`}
+          sub={`${mult.toFixed(1)}× from ${fmtUSD(p.startPrice)}.`}
+          tooltip="Terminal nominal BTC/USD at the end of the simulation horizon, given your demand, supply, and market-dynamics parameters."
           highlight
         />
-        <KPI label="Real Price · Infl-Adj" value={fmtUSD(last.priceReal)} sub={`at ${p.inflation}%/yr inflation`} />
+        <KPI
+          label="Real Price · Infl-Adj"
+          value={fmtUSD(last.priceReal)}
+          sub={`Rough purchasing power parity (PPP) vs start at ${p.inflation}%/yr inflation.`}
+          tooltip="A simple deflation of the nominal path by the inflation slider — a coarse stand-in for real purchasing power, not formal purchasing power parity between economies or a full macro model."
+        />
         <KPI
           label="Liquid BTC Remaining"
           value={`${last.liquidM.toFixed(2)}M`}
-          sub={`${last.liquidPct.toFixed(0)}% of initial pool`}
+          sub={`${last.liquidPct.toFixed(0)}% of the initial liquid pool.`}
+          tooltip="Modeled tradeable float after treasuries, ETFs, LTH/ancient buckets, and flows — not the same as on-chain ‘liquid supply’ metrics from analytics firms."
           warn={last.liquidPct < 15}
         />
         <KPI
           label="Supply Shock Year"
           value={supplyShockYear ? `~${Math.floor(supplyShockYear)}` : "None"}
-          sub="Liquid BTC drops below 30% of start"
+          sub={
+            supplyShockYear
+              ? "First calendar year when liquid BTC falls below 30% of its starting level."
+              : "Threshold not crossed — liquid stayed above 30% of the initial pool through the horizon."
+          }
+          tooltip="A visualization aid for a ‘tight float’ regime, not a prediction of a market crash. Exact timing depends on all flows and on price feedback through the demand model."
           warn={!!supplyShockYear}
         />
         {floatCapInfo && (
@@ -68,18 +86,21 @@ export function KpiBar({ p, last, supplyShockYear, mult, floatCapInfo }) {
             label="Cap buying to float"
             value={capKpi.value}
             sub={capKpi.sub}
+            tooltip={capKpi.tooltip}
             highlight={capKpi.highlight}
           />
         )}
         <KPI
           label={`MSTR BTC/day · ${Math.floor(YEAR_START + p.simYears)}`}
           value={last.strcDayBtc.toLocaleString()}
-          sub={`mining: ${last.dailyMining.toFixed(0)} BTC/day`}
+          sub={`Network issuance (mining) is ${last.dailyMining.toFixed(0)} BTC/day.`}
+          tooltip="Company BTC accumulation per day implied by your strategy parameters at the terminal date, shown next to modeled new supply from mining."
         />
         <KPI
           label="Corp Treasury Total"
           value={`${last.treasuryM.toFixed(2)}M BTC`}
-          sub={`${((last.treasuryM / (p.circulatingSupply / 1e6)) * 100).toFixed(0)}% of all mined`}
+          sub={`${((last.treasuryM / (p.circulatingSupply / 1e6)) * 100).toFixed(0)}% of modeled circulating supply.`}
+          tooltip="Sum of modeled corporate treasury holdings (e.g. MSTR-style path plus any other treasury sliders you enabled)."
         />
       </div>
     </div>
