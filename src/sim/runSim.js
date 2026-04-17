@@ -1,4 +1,9 @@
-import { DEFAULT_TAPER_YEARS, MONTHS_PER_YEAR, YEAR_START } from "./constants.js";
+import {
+  DEFAULT_ORGANIC_BUY_GROWTH_TAPER_YEARS,
+  DEFAULT_TAPER_YEARS,
+  MONTHS_PER_YEAR,
+  YEAR_START,
+} from "./constants.js";
 import { effectiveAnnualGrowthTapered } from "./growthTaper.js";
 import { getHalvingCycleMonthlyAdj } from "./halving.js";
 import { getDailyMining } from "./mining.js";
@@ -107,8 +112,6 @@ export function runSim(p) {
   let etfUSD = p.etfDailyInflowM * 1e6 * 30;
   /** Nominal monthly USD for net retail (daily $M × 30); signed when rate is negative. */
   let retailNetUsd = (p.initialRetailPurchaseRateM ?? 0) * 1e6 * 30;
-
-  const gdpMonthlyBoost = p.gdpGrowth / 100 / MONTHS_PER_YEAR;
 
   const data = [];
   let supplyShockYear = null;
@@ -260,10 +263,16 @@ export function runSim(p) {
       tYears,
       nYears: p.etfGrowthTaperYears ?? DEFAULT_TAPER_YEARS,
     });
+    const rOrganic = effectiveAnnualGrowthTapered({
+      r0: p.organicBuyGrowth,
+      rInf: p.gdpGrowth,
+      tYears,
+      nYears: p.organicBuyGrowthTaperYears ?? DEFAULT_ORGANIC_BUY_GROWTH_TAPER_YEARS,
+    });
     strcUSD *= gm(rStrc);
     otherUSD *= gm(rOther);
     etfUSD *= gm(rEtf);
-    retailNetUsd *= gm(p.organicBuyGrowth) * (1 + gdpMonthlyBoost);
+    retailNetUsd *= gm(rOrganic);
   }
 
   return { data, supplyShockYear };

@@ -1,7 +1,7 @@
 import { C, FONT_NUM, FONT_UI } from "../theme.js";
 import { ParamHintHotspot } from "./ParamHintHotspot.jsx";
 
-export function Slider({ label, hint, hintDetail, value, min, max, step, onChange, fmt }) {
+export function Slider({ label, hint, hintDetail, value, min, max, step, onChange, fmt, disabled = false }) {
   const hasHint = Boolean(hint || hintDetail);
   const rowStyle = {
     display: "flex",
@@ -9,7 +9,8 @@ export function Slider({ label, hint, hintDetail, value, min, max, step, onChang
     alignItems: "center",
     marginBottom: 6,
     gap: 8,
-    ...(hasHint ? { cursor: "help", borderRadius: 2 } : {}),
+    opacity: disabled ? 0.45 : 1,
+    ...(hasHint && !disabled ? { cursor: "help", borderRadius: 2 } : {}),
   };
 
   const rowContent = (
@@ -18,7 +19,7 @@ export function Slider({ label, hint, hintDetail, value, min, max, step, onChang
       <span
         style={{
           fontSize: 13,
-          color: C.amber,
+          color: disabled ? C.dim : C.amber,
           fontFamily: FONT_NUM,
           fontWeight: 700,
           fontVariantNumeric: "tabular-nums",
@@ -33,7 +34,13 @@ export function Slider({ label, hint, hintDetail, value, min, max, step, onChang
   return (
     <div style={{ marginBottom: 14 }}>
       {hasHint ? (
-        <ParamHintHotspot hint={hint} hintDetail={hintDetail} ariaLabel={`More about ${label}`} style={rowStyle}>
+        <ParamHintHotspot
+          hint={hint}
+          hintDetail={hintDetail}
+          ariaLabel={`More about ${label}`}
+          style={rowStyle}
+          focusable={!disabled}
+        >
           {rowContent}
         </ParamHintHotspot>
       ) : (
@@ -45,8 +52,16 @@ export function Slider({ label, hint, hintDetail, value, min, max, step, onChang
         max={max}
         step={step}
         value={value}
+        disabled={disabled}
         onChange={(e) => onChange(parseFloat(e.target.value))}
-        style={{ width: "100%", accentColor: C.amber, cursor: "pointer", height: 3 }}
+        aria-disabled={disabled}
+        style={{
+          width: "100%",
+          accentColor: C.amber,
+          cursor: disabled ? "not-allowed" : "pointer",
+          height: 3,
+          opacity: disabled ? 0.55 : 1,
+        }}
       />
     </div>
   );

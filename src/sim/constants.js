@@ -18,6 +18,9 @@ export const MONTHS_PER_YEAR = 12;
 /** Default logistic taper horizon (years) for MSTR, other treasury, and ETF growth; single source of truth. */
 export const DEFAULT_TAPER_YEARS = 12;
 
+/** Default taper horizon (years) for organic retail USD demand growth toward Nominal GDP. */
+export const DEFAULT_ORGANIC_BUY_GROWTH_TAPER_YEARS = 16;
+
 export const DEFAULTS = {
   simYears: 10,
   startPrice: 85000,
@@ -45,7 +48,9 @@ export const DEFAULTS = {
   etfGrowthTaperYears: DEFAULT_TAPER_YEARS,
   /** Net retail USD demand, $M/day (signed: positive = net buying, negative = net selling pressure). */
   initialRetailPurchaseRateM: 20,
-  organicBuyGrowth: 8,
+  organicBuyGrowth: 10,
+  /** Years over which retail USD demand growth logistically tapers to Nominal GDP Growth. */
+  organicBuyGrowthTaperYears: DEFAULT_ORGANIC_BUY_GROWTH_TAPER_YEARS,
   baseElasticity: 1.5,
   maxMonthlyPctGain: 20,
   /** Annualized BTC-style price volatility (%), wide range vs typical equities. */
@@ -81,11 +86,11 @@ export const DEFAULTS = {
   /**
    * Signed annual flow: % of current liquid / year → young LTH (155d+ non-ancient). Positive = lock from liquid; negative = distribute from young LTH to liquid.
    */
-  flowLiquidToLth155Annual: 0,
+  flowLiquidToLth155Annual: 0.8,
   /**
    * Signed annual flow: % of current liquid / year → Ancient. Positive = lock from liquid; negative = ancient coins selling to liquid.
    */
-  flowLiquidToAncientAnnual: 0,
+  flowLiquidToAncientAnnual: 0.5,
 };
 
 /** Merge saved/partial state with DEFAULTS so new params never read as undefined (avoids NaN in UI and math). */

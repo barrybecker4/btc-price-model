@@ -93,10 +93,18 @@ export default function App() {
         startPriceMax={startPriceSliderMax}
       />
 
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          minHeight: 0,
+        }}
+      >
         <KpiBar p={params} last={last} supplyShockYear={supplyShockYear} mult={mult} />
 
-        <div style={{ flex: 1, padding: "14px 20px", overflow: "auto" }}>
+        <div style={{ flex: 1, minHeight: 0, padding: "14px 20px", overflow: "auto" }}>
           <div style={{ display: "flex", gap: 6, marginBottom: 14, alignItems: "center" }}>
             {tabBtn("price", "PRICE CHART")}
             {tabBtn("supply", "SUPPLY BREAKDOWN")}

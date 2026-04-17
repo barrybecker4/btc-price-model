@@ -29,6 +29,9 @@ export function ParameterSidebar({
 
   const closeParamHints = () => window.dispatchEvent(new Event("close-param-hints"));
 
+  /** Unmet-demand premium sliders only run in `runSim` when the float cap is on (`capOn`). */
+  const floatCapOn = p.capBuyingToLiquidFloat !== false;
+
   return (
     <div
       onScroll={closeParamHints}
@@ -317,10 +320,10 @@ export function ParameterSidebar({
       <Section title="👥 Organic Market" open={false}>
         <Slider
           label="Initial Retail Purchase Rate"
-          hint="Net USD demand from retail, per calendar day ($M). Positive = net buying; negative = net selling pressure. Typical band 10–50 $M/day. Dollar-denominated so the path does not fix an unsustainable BTC/day against finite float."
+          hint="Net USD demand from retail, per calendar day ($M). Positive = net buying; negative = net selling pressure. Dollar-denominated so the path does not fix an unsustainable BTC/day against finite float."
           value={p.initialRetailPurchaseRateM}
-          min={-50}
-          max={50}
+          min={-30}
+          max={60}
           step={1}
           onChange={set("initialRetailPurchaseRateM")}
           fmt={(v) => {
@@ -328,7 +331,26 @@ export function ParameterSidebar({
             return `${sign}$${Math.abs(v)}M/day`;
           }}
         />
-        <Slider label="Retail Buy Growth" value={p.organicBuyGrowth} min={0} max={30} step={1} onChange={set("organicBuyGrowth")} fmt={(v) => `${v}%/yr`} />
+        <Slider
+          label="Retail Buy Growth"
+          hint={`Annual growth of net retail USD demand. Logistic taper (below) converges toward Nominal GDP (${p.gdpGrowth.toFixed(1)}%/yr).`}
+          value={p.organicBuyGrowth}
+          min={0}
+          max={30}
+          step={1}
+          onChange={set("organicBuyGrowth")}
+          fmt={(v) => `${v}%/yr`}
+        />
+        <Slider
+          label="Retail growth taper horizon"
+          hint="Years for retail USD demand growth to converge logistically to Nominal GDP Growth (macro block), avoiding unbounded compounding at the slider rate."
+          value={p.organicBuyGrowthTaperYears}
+          min={5}
+          max={50}
+          step={1}
+          onChange={set("organicBuyGrowthTaperYears")}
+          fmt={(v) => `${v} yrs`}
+        />
       </Section>
 
       <Section title="🔐 Holders (LTH / Ancient)" open={false}>
@@ -358,8 +380,8 @@ export function ParameterSidebar({
           label="Flow: liquid → LTH (155d+)"
           hint="Signed annual rate: positive = % of current liquid per year locking into young LTH; negative = young LTH distributing back to liquid (% of young LTH stock per year)."
           value={p.flowLiquidToLth155Annual}
-          min={-10}
-          max={10}
+          min={-5}
+          max={5}
           step={0.1}
           onChange={set("flowLiquidToLth155Annual")}
           fmt={(v) => `${v >= 0 ? "+" : ""}${v.toFixed(1)} %/yr`}
@@ -368,8 +390,8 @@ export function ParameterSidebar({
           label="Flow: liquid → Ancient"
           hint="Signed annual rate: positive = % of current liquid per year locking into Ancient; negative = Ancient selling to liquid (% of Ancient stock per year)."
           value={p.flowLiquidToAncientAnnual}
-          min={-10}
-          max={10}
+          min={-5}
+          max={5}
           step={0.1}
           onChange={set("flowLiquidToAncientAnnual")}
           fmt={(v) => `${v >= 0 ? "+" : ""}${v.toFixed(1)} %/yr`}
@@ -401,55 +423,71 @@ export function ParameterSidebar({
       </Section>
 
       <Section title="⚡ Market Dynamics" open={false}>
-        <ParamHintHotspot
-          focusable={false}
-          ariaLabel="More about Cap buying to liquid float"
-          hint="When on, monthly hoarding cannot exceed liquid (above floor) plus miner supply and net retail selling pressure. Demand is rationed proportionally across MSTR, other treasuries, ETF, and the retail buy leg (net USD → BTC)."
-          style={{ marginBottom: 12, cursor: "help", borderRadius: 2 }}
+        {/*
+          Keep the checkbox outside ParamHintHotspot so hover/focus on the control does not open a
+          full-width portal tooltip (z-index 10000) over the main chart area.
+        */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 8,
+            marginBottom: 12,
+            fontSize: 12,
+            color: C.text,
+            fontFamily: FONT_UI,
+          }}
         >
-          {({ inputFocusProps }) => (
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                fontSize: 12,
-                color: C.text,
-                fontFamily: FONT_UI,
-                cursor: "inherit",
-              }}
-            >
-              <input
-                type="checkbox"
-                {...inputFocusProps}
-                checked={p.capBuyingToLiquidFloat !== false}
-                onChange={(e) => setP((prev) => ({ ...prev, capBuyingToLiquidFloat: e.target.checked }))}
-                style={{ accentColor: C.amber, cursor: "pointer" }}
-              />
-              <span>Cap buying to liquid float</span>
-            </label>
-          )}
-        </ParamHintHotspot>
+          <input
+            type="checkbox"
+            checked={p.capBuyingToLiquidFloat !== false}
+            onPointerDown={() => closeParamHints()}
+            onChange={(e) => {
+              closeParamHints();
+              setP((prev) => ({ ...prev, capBuyingToLiquidFloat: e.target.checked }));
+            }}
+            style={{ accentColor: C.amber, cursor: "pointer", marginTop: 2, flexShrink: 0 }}
+          />
+          <ParamHintHotspot
+            focusable={false}
+            ariaLabel="More about Cap buying to liquid float"
+            hint="When on, monthly hoarding cannot exceed liquid (above floor) plus miner supply and net retail selling pressure. Demand is rationed proportionally across MSTR, other treasuries, ETF, and the retail buy leg (net USD → BTC)."
+            style={{ flex: 1, cursor: "help", borderRadius: 2, minWidth: 0, lineHeight: 1.45 }}
+          >
+            <span>Cap buying to liquid float</span>
+          </ParamHintHotspot>
+        </div>
         <Slider
           label="Unmet demand → price (scarcity premium)"
           hint="When buying is capped by liquid float, extra monthly return ∝ unmet BTC demand ÷ liquid, before the global monthly gain cap. Offsets mechanical bearish drift when executed net demand is negative but buyers are rationed."
-          hintDetail="Stacks with base elasticity but is still bounded by the max monthly gain slider."
+          hintDetail={
+            floatCapOn
+              ? "Stacks with base elasticity but is still bounded by the max monthly gain slider."
+              : "Inactive while “Cap buying to liquid float” is off — the model does not compute unmet hoarding in that mode."
+          }
           value={p.unmetDemandPriceStrength}
           min={0}
           max={3}
           step={0.05}
           onChange={set("unmetDemandPriceStrength")}
           fmt={(v) => `${v.toFixed(2)}×`}
+          disabled={!floatCapOn}
         />
         <Slider
           label="Max monthly % from unmet premium"
           hint="Ceiling on the scarcity-premium term alone (percent per month)."
+          hintDetail={
+            floatCapOn
+              ? undefined
+              : "Inactive while “Cap buying to liquid float” is off."
+          }
           value={p.unmetPremiumMaxMonthlyPct}
           min={0}
           max={20}
           step={0.5}
           onChange={set("unmetPremiumMaxMonthlyPct")}
           fmt={(v) => `${v.toFixed(1)}%/mo`}
+          disabled={!floatCapOn}
         />
         <Slider
           label="Initial annual volatility"
