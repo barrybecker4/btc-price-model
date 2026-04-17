@@ -1,3 +1,5 @@
+import { MONTHS_PER_YEAR } from "./constants.js";
+
 /**
  * Deterministic pseudo-random shock in roughly [-1, 1] for month index `m`.
  * Same inputs always yield the same value (reproducible charts; no Math.random).
@@ -10,11 +12,11 @@ export function unitShockForMonth(m) {
 
 /**
  * Monthly return noise scale from annualized volatility (fraction, e.g. 0.73 for 73%).
- * Uses σ_month ≈ σ_annual / √12 (log-return style scaling).
+ * Uses σ_month ≈ σ_annual / √MONTHS_PER_YEAR (log-return style scaling).
  */
 export function monthlySigmaFromAnnual(annualFraction) {
   if (!Number.isFinite(annualFraction) || annualFraction <= 0) return 0;
-  return annualFraction / Math.sqrt(12);
+  return annualFraction / Math.sqrt(MONTHS_PER_YEAR);
 }
 
 /**

@@ -1,5 +1,11 @@
 export const YEAR_START = 2026;
 
+/** Months per calendar year (annual ↔ monthly rates in the sim). Not the same as DEFAULT_TAPER_YEARS. */
+export const MONTHS_PER_YEAR = 12;
+
+/** Default logistic taper horizon (years) for MSTR, other treasury, and ETF growth; single source of truth. */
+export const DEFAULT_TAPER_YEARS = 12;
+
 export const DEFAULTS = {
   simYears: 15,
   startPrice: 85000,
@@ -14,12 +20,18 @@ export const DEFAULTS = {
   strcInitialBtc: 500000,
   strcInitialUsdB: 83,
   strcGrowthRate: 20,
+  /** Years over which MSTR USD raise growth logistically tapers to nominal GDP. */
+  strcGrowthTaperYears: DEFAULT_TAPER_YEARS,
   otherInitialBtc: 200000,
   otherTreasuryUsdB: 20,
   otherTreasuryGrowth: 40,
+  /** Years over which other corporate treasury growth tapers to nominal GDP. */
+  otherTreasuryGrowthTaperYears: DEFAULT_TAPER_YEARS,
   etfInitialBtc: 1000000,
   etfDailyInflowM: 100,
   etfGrowthRate: 15,
+  /** Years over which ETF USD inflow growth tapers to nominal GDP. */
+  etfGrowthTaperYears: DEFAULT_TAPER_YEARS,
   organicDailyBuy: 200,
   organicDailySell: 500,
   organicBuyGrowth: 8,

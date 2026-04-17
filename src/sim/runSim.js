@@ -1,4 +1,5 @@
-import { YEAR_START } from "./constants.js";
+import { DEFAULT_TAPER_YEARS, MONTHS_PER_YEAR, YEAR_START } from "./constants.js";
+import { effectiveAnnualGrowthTapered } from "./growthTaper.js";
 import { getHalvingCycleMonthlyAdj } from "./halving.js";
 import { getDailyMining } from "./mining.js";
 import {
@@ -46,8 +47,8 @@ function applyHolderFlows(liquid, youngLth, ancientBtc, p) {
   let Y = youngLth;
   let A = ancientBtc;
 
-  const mL = (rL / 100) * L / 12;
-  const mA = (rA / 100) * L / 12;
+  const mL = (rL / 100) * L / MONTHS_PER_YEAR;
+  const mA = (rA / 100) * L / MONTHS_PER_YEAR;
 
   let outY = mL > 0 ? mL : 0;
   let outA = mA > 0 ? mA : 0;
@@ -63,12 +64,12 @@ function applyHolderFlows(liquid, youngLth, ancientBtc, p) {
   A += outA;
 
   if (rL < 0) {
-    const tfr = Math.min(Y, (Math.abs(rL) / 100) * Y / 12);
+    const tfr = Math.min(Y, (Math.abs(rL) / 100) * Y / MONTHS_PER_YEAR);
     Y -= tfr;
     L += tfr;
   }
   if (rA < 0) {
-    const tfr = Math.min(A, (Math.abs(rA) / 100) * A / 12);
+    const tfr = Math.min(A, (Math.abs(rA) / 100) * A / MONTHS_PER_YEAR);
     A -= tfr;
     L += tfr;
   }
@@ -81,7 +82,7 @@ function applyHolderFlows(liquid, youngLth, ancientBtc, p) {
 }
 
 export function runSim(p) {
-  const months = p.simYears * 12;
+  const months = p.simYears * MONTHS_PER_YEAR;
   const safeLost = Math.min(p.alreadyLostCoins, p.circulatingSupply * 0.9);
 
   let price = p.startPrice;
@@ -101,26 +102,26 @@ export function runSim(p) {
 
   const initLiq = liquid;
 
-  let strcUSD = (p.strcInitialUsdB * 1e9) / 12;
-  let otherUSD = (p.otherTreasuryUsdB * 1e9) / 12;
+  let strcUSD = (p.strcInitialUsdB * 1e9) / MONTHS_PER_YEAR;
+  let otherUSD = (p.otherTreasuryUsdB * 1e9) / MONTHS_PER_YEAR;
   let etfUSD = p.etfDailyInflowM * 1e6 * 30;
   let buyBtcM = p.organicDailyBuy * 30;
   let sellBtcM = p.organicDailySell * 30;
 
-  const gdpMonthlyBoost = p.gdpGrowth / 100 / 12;
+  const gdpMonthlyBoost = p.gdpGrowth / 100 / MONTHS_PER_YEAR;
 
   const data = [];
   let supplyShockYear = null;
 
   for (let m = 0; m <= months; m++) {
-    const year = YEAR_START + m / 12;
+    const year = YEAR_START + m / MONTHS_PER_YEAR;
     const dailyMining = getDailyMining(year);
     const liquidPct = (liquid / initLiq) * 100;
     if (liquidPct < 30 && !supplyShockYear) supplyShockYear = year;
 
     const dailyMiningM = dailyMining * 30;
     const minerSales = dailyMiningM * (p.minerSellPct / 100);
-    const coinsLost = liquid * (p.annualLossRate / 100 / 12);
+    const coinsLost = liquid * (p.annualLossRate / 100 / MONTHS_PER_YEAR);
 
     const strcBtcRaw = strcUSD / price;
     const otherBtcRaw = otherUSD / price;
@@ -162,7 +163,7 @@ export function runSim(p) {
     data.push({
       year: parseFloat(year.toFixed(3)),
       price: Math.round(price),
-      priceReal: Math.round(price / Math.pow(1 + p.inflation / 100, m / 12)),
+      priceReal: Math.round(price / Math.pow(1 + p.inflation / 100, m / MONTHS_PER_YEAR)),
       liquidM: parseFloat((liquid / 1e6).toFixed(3)),
       treasuryM: parseFloat((treasury / 1e6).toFixed(3)),
       etfM: parseFloat((etfBtc / 1e6).toFixed(3)),
@@ -226,12 +227,31 @@ export function runSim(p) {
     youngLthBtc = hf.youngLth;
     ancientBtc = hf.ancientBtc;
 
-    const gm = (r) => 1 + r / 100 / 12;
-    strcUSD *= gm(p.strcGrowthRate) * (1 + gdpMonthlyBoost);
-    otherUSD *= gm(p.otherTreasuryGrowth) * (1 + gdpMonthlyBoost);
-    etfUSD *= gm(p.etfGrowthRate) * (1 + gdpMonthlyBoost);
+    const gm = (r) => 1 + r / 100 / MONTHS_PER_YEAR;
+    const tYears = m / MONTHS_PER_YEAR;
+    const rStrc = effectiveAnnualGrowthTapered({
+      r0: p.strcGrowthRate,
+      rInf: p.gdpGrowth,
+      tYears,
+      nYears: p.strcGrowthTaperYears ?? DEFAULT_TAPER_YEARS,
+    });
+    const rOther = effectiveAnnualGrowthTapered({
+      r0: p.otherTreasuryGrowth,
+      rInf: p.gdpGrowth,
+      tYears,
+      nYears: p.otherTreasuryGrowthTaperYears ?? DEFAULT_TAPER_YEARS,
+    });
+    const rEtf = effectiveAnnualGrowthTapered({
+      r0: p.etfGrowthRate,
+      rInf: p.gdpGrowth,
+      tYears,
+      nYears: p.etfGrowthTaperYears ?? DEFAULT_TAPER_YEARS,
+    });
+    strcUSD *= gm(rStrc);
+    otherUSD *= gm(rOther);
+    etfUSD *= gm(rEtf);
     buyBtcM *= gm(p.organicBuyGrowth) * (1 + gdpMonthlyBoost);
-    sellBtcM *= 1 - p.organicSellDecline / 100 / 12;
+    sellBtcM *= 1 - p.organicSellDecline / 100 / MONTHS_PER_YEAR;
   }
 
   return { data, supplyShockYear };

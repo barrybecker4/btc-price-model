@@ -153,13 +153,23 @@ export function ParameterSidebar({ p, setP }) {
         />
         <Slider
           label="Annual Capital Raise Growth"
-          hint={`Rate at which Strategy grows its USD capital raises annually. Minimum realistic floor = inflation rate (${p.inflation.toFixed(1)}%). Strategy has historically grown well above this via convertible notes and ATM offerings.`}
+          hint={`Rate at which Strategy grows its USD capital raises annually. Logistic taper (below) converges this toward Nominal GDP (${p.gdpGrowth.toFixed(1)}%/yr). Strategy has historically grown well above inflation via convertible notes and ATM offerings.`}
           value={p.strcGrowthRate}
           min={Math.ceil(p.inflation)}
           max={80}
           step={1}
           onChange={set("strcGrowthRate")}
           fmt={(v) => `${v}%/yr`}
+        />
+        <Slider
+          label="MSTR growth taper horizon"
+          hint="Years over which capital-raise growth logistically tapers to the Nominal GDP Growth rate (macro block). Shorter = faster convergence to GDP pace."
+          value={p.strcGrowthTaperYears}
+          min={5}
+          max={50}
+          step={1}
+          onChange={set("strcGrowthTaperYears")}
+          fmt={(v) => `${v} yrs`}
         />
       </Section>
 
@@ -185,13 +195,23 @@ export function ParameterSidebar({ p, setP }) {
         />
         <Slider
           label="Other Corp. Growth"
-          hint="Catching up as playbook spreads globally."
+          hint="Catching up as playbook spreads globally. Tapers toward Nominal GDP over the horizon below."
           value={p.otherTreasuryGrowth}
           min={0}
           max={100}
           step={5}
           onChange={set("otherTreasuryGrowth")}
           fmt={(v) => `${v}%/yr`}
+        />
+        <Slider
+          label="Other treasury growth taper horizon"
+          hint="Years for other corporate BTC treasury USD growth to converge logistically to Nominal GDP Growth."
+          value={p.otherTreasuryGrowthTaperYears}
+          min={5}
+          max={50}
+          step={1}
+          onChange={set("otherTreasuryGrowthTaperYears")}
+          fmt={(v) => `${v} yrs`}
         />
         <Slider
           label="ETF Initial Holdings"
@@ -212,7 +232,26 @@ export function ParameterSidebar({ p, setP }) {
           onChange={set("etfDailyInflowM")}
           fmt={(v) => `$${v}M/day`}
         />
-        <Slider label="ETF Inflow Growth" value={p.etfGrowthRate} min={0} max={50} step={2} onChange={set("etfGrowthRate")} fmt={(v) => `${v}%/yr`} />
+        <Slider
+          label="ETF Inflow Growth"
+          hint="Annual growth of aggregate ETF USD inflow. Tapers toward Nominal GDP over the horizon below."
+          value={p.etfGrowthRate}
+          min={0}
+          max={50}
+          step={2}
+          onChange={set("etfGrowthRate")}
+          fmt={(v) => `${v}%/yr`}
+        />
+        <Slider
+          label="ETF inflow growth taper horizon"
+          hint="Years for ETF net USD inflow growth to converge logistically to Nominal GDP Growth."
+          value={p.etfGrowthTaperYears}
+          min={5}
+          max={50}
+          step={1}
+          onChange={set("etfGrowthTaperYears")}
+          fmt={(v) => `${v} yrs`}
+        />
       </Section>
 
       <Section title="👥 Organic Market" open={false}>
