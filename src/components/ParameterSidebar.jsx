@@ -1,6 +1,7 @@
 import { DEFAULTS } from "../sim/constants.js";
 import { C, FONT_HEAD, FONT_NUM, FONT_UI } from "../theme.js";
 import { fmtUSD } from "../utils/format.js";
+import { ParamHintHotspot } from "./ParamHintHotspot.jsx";
 import { Section } from "./Section.jsx";
 import { Slider } from "./Slider.jsx";
 
@@ -12,8 +13,11 @@ export function ParameterSidebar({ p, setP }) {
   const strcYield = (p.bondYield + 7).toFixed(1);
   const strcInitialDayBtc = Math.round((p.strcInitialUsdB * 1e9) / 365 / p.startPrice);
 
+  const closeParamHints = () => window.dispatchEvent(new Event("close-param-hints"));
+
   return (
     <div
+      onScroll={closeParamHints}
       style={{
         width: 300,
         minWidth: 300,
@@ -47,6 +51,7 @@ export function ParameterSidebar({ p, setP }) {
         <Slider
           label="Nominal GDP Growth"
           hint="Global nominal GDP growth (real GDP + inflation). Applied as an extra monthly multiplier to ALL USD-denominated demand flows — simulating money-supply expansion. Higher GDP → more capital chasing BTC → the price curve continues rising rather than plateauing."
+          hintDetail="Does not scale BTC-denominated paths (e.g. block rewards); it biases USD flows that chase the float."
           value={p.gdpGrowth}
           min={1}
           max={12}
@@ -60,6 +65,7 @@ export function ParameterSidebar({ p, setP }) {
         <Slider
           label="Total BTC Ever Mined"
           hint="All mined BTC including lost coins (~19.85M today). Hard cap = 21M. This is NOT the effective liquid supply — lost coins must be subtracted below."
+          hintDetail="The sim treats this as gross mined supply before subtracting lost coins for float and demand math."
           value={p.circulatingSupply}
           min={19000000}
           max={21000000}
@@ -76,6 +82,7 @@ export function ParameterSidebar({ p, setP }) {
         <Slider
           label="Already-Lost Coins"
           hint="Permanently inaccessible subset of above: Satoshi wallet (~1.1M), lost keys, burned coins. Effective liquid supply = Total Mined − Lost."
+          hintDetail="Lost is removed before treasuries, ETFs, and LTH/Ancient splits, so those coins never enter the modeled tradable float."
           value={safeLostCoins}
           min={500000}
           max={Math.floor(p.circulatingSupply * 0.9)}
@@ -102,6 +109,7 @@ export function ParameterSidebar({ p, setP }) {
         <Slider
           label="Annual Coin Loss Rate"
           hint="% of liquid BTC lost per year going forward."
+          hintDetail="Drain applies to the liquid bucket each year (stylized ongoing loss)."
           value={p.annualLossRate}
           min={0.05}
           max={0.5}
@@ -144,6 +152,7 @@ export function ParameterSidebar({ p, setP }) {
         <Slider
           label="Initial Annual USD Purchase Rate"
           hint="Strategy's BTC acquisition spend at t=0 (annualized). This is the starting rate — grows each year at the rate below."
+          hintDetail="Converted to BTC/month against the starting price; subject to float cap when that mode is on."
           value={p.strcInitialUsdB}
           min={5}
           max={300}
@@ -274,6 +283,7 @@ export function ParameterSidebar({ p, setP }) {
         <Slider
           label="LTH 155d+ share of float"
           hint="Share of BTC outside Lost, treasuries & ETFs modeled as long-term holders (155d+ total, including Ancient). Range 60–80%; default ~73%. Ancient is nested inside this total."
+          hintDetail="Young LTH plus Ancient equals this share of the modeled float; liquid is what remains after the split."
           value={p.lth155SharePct}
           min={60}
           max={80}
@@ -284,6 +294,7 @@ export function ParameterSidebar({ p, setP }) {
         <Slider
           label="Ancient (7y+) share of float"
           hint="Share of that same non-treasury / non-ETF / non-lost pool that is Ancient (7y+). Must be ≤ LTH 155d+ total; Satoshi-like coins in Already-Lost are not double-counted here."
+          hintDetail="If Ancient% × float would exceed the LTH cap, the model clamps so Ancient stays inside the LTH total."
           value={p.ancientSharePct}
           min={15}
           max={20}
@@ -317,6 +328,7 @@ export function ParameterSidebar({ p, setP }) {
         <Slider
           label="4y cycle strength"
           hint="0–100% of a full halving-era boom/bust (bear leg calibrated to ~70% peak-to-trough vs a local top when structural demand is muted). Applied on top of fundamentals; at 100% the bear leg can dominate. Scales down each cycle by “impact decay”. 0% = off."
+          hintDetail="A behavioral overlay on supply/demand fundamentals, not a replacement for them."
           value={p.halvingNarrativeAmp}
           min={0}
           max={1}
@@ -337,34 +349,39 @@ export function ParameterSidebar({ p, setP }) {
       </Section>
 
       <Section title="⚡ Market Dynamics" open={false}>
-        <label
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            fontSize: 12,
-            color: C.text,
-            fontFamily: FONT_UI,
-            marginBottom: 12,
-            cursor: "pointer",
-          }}
+        <ParamHintHotspot
+          focusable={false}
+          ariaLabel="More about Cap buying to liquid float"
+          hint="When on, monthly hoarding cannot exceed liquid (above floor) plus miner/organic inflows. Demand is rationed proportionally across MSTR, other treasuries, ETF, and retail."
+          style={{ marginBottom: 12, cursor: "help", borderRadius: 2 }}
         >
-          <input
-            type="checkbox"
-            checked={p.capBuyingToLiquidFloat !== false}
-            onChange={(e) => setP((prev) => ({ ...prev, capBuyingToLiquidFloat: e.target.checked }))}
-            style={{ accentColor: C.amber }}
-          />
-          <span>
-            Cap buying to liquid float
-            <span style={{ display: "block", fontSize: 10, color: C.hint, marginTop: 3, fontWeight: 400 }}>
-              When on, monthly hoarding cannot exceed liquid (above floor) plus miner/organic inflows. Demand is rationed proportionally across MSTR, other treasuries, ETF, and retail.
-            </span>
-          </span>
-        </label>
+          {({ inputFocusProps }) => (
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                fontSize: 12,
+                color: C.text,
+                fontFamily: FONT_UI,
+                cursor: "inherit",
+              }}
+            >
+              <input
+                type="checkbox"
+                {...inputFocusProps}
+                checked={p.capBuyingToLiquidFloat !== false}
+                onChange={(e) => setP((prev) => ({ ...prev, capBuyingToLiquidFloat: e.target.checked }))}
+                style={{ accentColor: C.amber, cursor: "pointer" }}
+              />
+              <span>Cap buying to liquid float</span>
+            </label>
+          )}
+        </ParamHintHotspot>
         <Slider
           label="Unmet demand → price (scarcity premium)"
           hint="When buying is capped by liquid float, extra monthly return ∝ unmet BTC demand ÷ liquid, before the global monthly gain cap. Offsets mechanical bearish drift when executed net demand is negative but buyers are rationed."
+          hintDetail="Stacks with base elasticity but is still bounded by the max monthly gain slider."
           value={p.unmetDemandPriceStrength}
           min={0}
           max={3}
@@ -405,6 +422,7 @@ export function ParameterSidebar({ p, setP }) {
         <Slider
           label="Base Price Elasticity"
           hint="Sensitivity of price to net buy/sell imbalance, relative to liquid supply. At 1.0×, a 1% net demand imbalance moves price 1% — before the scarcity amplifier. As liquid supply shrinks (thin order book), this multiplier amplifies: 1% imbalance on 5% remaining supply creates a ~20× larger move. Higher base = more violent shock. Lower = smoother repricing."
+          hintDetail="When float cap binds, the unmet-demand premium can add another leg on top of this baseline."
           value={p.baseElasticity}
           min={0.2}
           max={5}
