@@ -9,7 +9,6 @@ export const DEFAULT_TAPER_YEARS = 12;
 export const DEFAULTS = {
   simYears: 15,
   startPrice: 85000,
-  bondYield: 4.5,
   inflation: 3.0,
   gdpGrowth: 3.5,
   circulatingSupply: 19850000,
@@ -38,7 +37,7 @@ export const DEFAULTS = {
   organicSellDecline: 5,
   baseElasticity: 1.5,
   maxMonthlyPctGain: 20,
-  /** Annualized BTC-style price volatility (%), wide range vs bonds / equities. */
+  /** Annualized BTC-style price volatility (%), wide range vs typical equities. */
   initialAnnualVolatility: 73,
   /**
    * How much of that monthly noise fades from sim start to end (0–100%).
@@ -95,5 +94,7 @@ export function withParamDefaults(p) {
   ) {
     merged.halvingNarrativeAmp = Math.min(1, merged.halvingNarrativeAmp / 0.02);
   }
+  // Removed UI-only bond yield (never fed the sim); strip from older merged state.
+  delete merged.bondYield;
   return merged;
 }

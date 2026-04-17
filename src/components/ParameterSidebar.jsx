@@ -10,7 +10,6 @@ export function ParameterSidebar({ p, setP }) {
 
   const safeLostCoins = Math.min(p.alreadyLostCoins, p.circulatingSupply * 0.9);
   const effectiveSupply = p.circulatingSupply - safeLostCoins;
-  const strcYield = (p.bondYield + 7).toFixed(1);
   const strcInitialDayBtc = Math.round((p.strcInitialUsdB * 1e9) / 365 / p.startPrice);
 
   const closeParamHints = () => window.dispatchEvent(new Event("close-param-hints"));
@@ -46,7 +45,6 @@ export function ParameterSidebar({ p, setP }) {
       <Section title="◈ Macroeconomic">
         <Slider label="Simulation Period" value={p.simYears} min={5} max={25} step={1} onChange={set("simYears")} fmt={(v) => `${v} yrs`} />
         <Slider label="Starting BTC Price" value={p.startPrice} min={50000} max={250000} step={5000} onChange={set("startPrice")} fmt={fmtUSD} />
-        <Slider label="10yr Bond Yield" value={p.bondYield} min={2} max={10} step={0.1} onChange={set("bondYield")} fmt={(v) => `${v.toFixed(1)}%`} />
         <Slider label="USD Inflation Rate" value={p.inflation} min={1} max={15} step={0.1} onChange={set("inflation")} fmt={(v) => `${v.toFixed(1)}%/yr`} />
         <Slider
           label="Nominal GDP Growth"
@@ -401,7 +399,7 @@ export function ParameterSidebar({ p, setP }) {
         />
         <Slider
           label="Initial annual volatility"
-          hint="Roughly how violent monthly moves are around the supply/demand path (spot BTC is often ~60–80% annualized vs ~10% bonds / ~20% equities). Applied as scaled monthly noise; fades over time per the next slider."
+          hint="Roughly how violent monthly moves are around the supply/demand path (spot BTC is often ~60–80% annualized vs ~15–25% equities). Applied as scaled monthly noise; fades over time per the next slider."
           value={p.initialAnnualVolatility}
           min={10}
           max={80}
@@ -453,7 +451,6 @@ export function ParameterSidebar({ p, setP }) {
         }}
       >
         {[
-          ["STRC Yield (bond + 7%)", `${strcYield}%`, C.amber],
           ["Initial MSTR BTC/day", strcInitialDayBtc.toLocaleString(), C.text],
           ["vs mining output", "450 BTC/day", C.green],
           ["Demand ratio", `${(strcInitialDayBtc / 450).toFixed(1)}×`, C.red],
