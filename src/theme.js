@@ -23,4 +23,8 @@ export const C = {
   etf: "#3388ee",
   lost: "#252525",
   liquid: "#00cc66",
+  /** LTH 155d+ (non-ancient) stack color */
+  lth: "#c4a012",
+  /** Ancient (7y+) — distinct from lost/treasury */
+  ancient: "#8b5cf6",
 };

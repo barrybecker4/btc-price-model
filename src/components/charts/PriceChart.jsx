@@ -13,6 +13,29 @@ import { C, FONT_NUM, FONT_UI } from "../../theme.js";
 import { fmtUSD } from "../../utils/format.js";
 import { TIP, XAXIS_PROPS } from "../../charts/rechartsConfig.js";
 
+function PriceTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) return null;
+  const row = payload[0]?.payload;
+  const yr = typeof label === "number" ? label.toFixed(1) : String(label);
+  const prem = row?.unmetPremiumPct ?? 0;
+  const showPrem = prem > 0.005;
+  return (
+    <div style={TIP.contentStyle}>
+      <div style={{ ...TIP.labelStyle, fontFamily: FONT_UI }}>YEAR {yr}</div>
+      {payload.map((item) => (
+        <div key={String(item.dataKey)} style={{ ...TIP.itemStyle, fontFamily: FONT_NUM, marginTop: 2 }}>
+          {item.name}: {fmtUSD(item.value ?? 0)}
+        </div>
+      ))}
+      {showPrem && (
+        <div style={{ color: C.hint, fontSize: 10, marginTop: 8, fontFamily: FONT_UI, lineHeight: 1.35 }}>
+          Unmet-demand price premium (month): +{prem.toFixed(2)}% (float cap)
+        </div>
+      )}
+    </div>
+  );
+}
+
 function HalvingLines({ halvings, yAxisId }) {
   return halvings.map((y) => (
     <ReferenceLine
@@ -70,7 +93,7 @@ export function PriceChart({ data, first, inflation, logScale, halvings, supplyS
           <CartesianGrid stroke="#141414" strokeDasharray="3 3" />
           <XAxis {...XAXIS_PROPS} />
           <YAxis yAxisId="p" {...yAxisPrice} />
-          <Tooltip {...TIP} formatter={(v, n) => [fmtUSD(v), n]} labelFormatter={(v) => `YEAR ${parseFloat(v).toFixed(1)}`} />
+          <Tooltip content={<PriceTooltip />} />
           <Legend wrapperStyle={{ fontSize: 11, fontFamily: FONT_UI, paddingTop: 8 }} />
           <HalvingLines halvings={halvings} yAxisId="p" />
           <ShockLine supplyShockYear={supplyShockYear} yAxisId="p" />

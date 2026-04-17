@@ -6,7 +6,7 @@ export function SupplyChart({ data }) {
   return (
     <>
       <div style={{ fontSize: 11, color: C.hint, marginBottom: 8, letterSpacing: "0.04em", fontFamily: FONT_UI }}>
-        BTC SUPPLY BREAKDOWN (MILLIONS) — Liquid pool shrinks as treasuries &amp; ETFs absorb supply
+        BTC SUPPLY BREAKDOWN (MILLIONS) — Treasuries, ETFs &amp; LTH vs tradeable liquid
       </div>
       <ResponsiveContainer width="100%" height={310}>
         <AreaChart data={data} margin={{ top: 5, right: 30, left: 5, bottom: 5 }}>
@@ -38,8 +38,26 @@ export function SupplyChart({ data }) {
           <Area type="monotone" dataKey="etfM" name="ETF Holdings" stackId="1" fill={C.etf} stroke={C.etf} fillOpacity={0.8} />
           <Area
             type="monotone"
+            dataKey="lthYoungM"
+            name="LTH 155d+ (excl. Ancient)"
+            stackId="1"
+            fill={C.lth}
+            stroke={C.lth}
+            fillOpacity={0.85}
+          />
+          <Area
+            type="monotone"
+            dataKey="ancientM"
+            name="Ancient 7y+ (excl. Lost)"
+            stackId="1"
+            fill={C.ancient}
+            stroke={C.ancient}
+            fillOpacity={0.85}
+          />
+          <Area
+            type="monotone"
             dataKey="liquidM"
-            name="Liquid Market Supply"
+            name="Liquid (tradeable float)"
             stackId="1"
             fill={C.liquid}
             stroke={C.liquid}
@@ -47,6 +65,19 @@ export function SupplyChart({ data }) {
           />
         </AreaChart>
       </ResponsiveContainer>
+      <div
+        style={{
+          marginTop: 10,
+          maxWidth: 720,
+          fontSize: 11,
+          lineHeight: 1.45,
+          color: C.hint,
+          fontFamily: FONT_UI,
+        }}
+      >
+        <strong style={{ color: C.text }}>Ancient</strong> here is 7y+ among coins <strong>not</strong> counted as Lost — headline on-chain &ldquo;ancient&rdquo; often includes unmoved Satoshi coins; if Satoshi is in{' '}
+        <strong style={{ color: C.text }}>Already-Lost</strong>, those BTC appear under Lost Forever, not Ancient. Model Ancient % can run below glassnode-style headlines when Satoshi is modeled as Lost.
+      </div>
     </>
   );
 }

@@ -33,10 +33,37 @@ export const DEFAULTS = {
    * 0 = full initial vol throughout; 100 = noise → 0 by the last month. Default 90%.
    */
   volatilityReduction: 90,
+  /**
+   * When true, monthly gross hoarding (MSTR + other treasury + ETF + organic buy) cannot exceed
+   * liquid − LIQ_FLOOR + miner sales + organic sells − coin loss. Shortfall is spread proportionally.
+   */
+  capBuyingToLiquidFloat: true,
+
+  /**
+   * When float cap binds, extra monthly price return ∝ unmetBuyBtcM / liquid (before global monthly cap).
+   * 0 = off. Typical 0.3–1.5.
+   */
+  unmetDemandPriceStrength: 0.6,
+  /** Ceiling on the unmet-demand premium alone, as % per month (e.g. 8 = at most +8%/mo from this term). */
+  unmetPremiumMaxMonthlyPct: 8,
+
   /** 0–1: halving-cycle strength (1 = full ~70% drawdown potential in bear leg vs local peak, with muted structural flows). */
   halvingNarrativeAmp: 0.08,
   /** Each successive halving cycle retains this fraction of the prior cycle’s narrative strength (1 = no fade). */
   halvingImpactDecay: 0.88,
+
+  /** Share of (circ − lost − treasury − ETF) modeled as 155d+ LTH total (young + ancient). */
+  lth155SharePct: 73,
+  /** Share of that same pool that is Ancient (7y+); must be ≤ LTH155 total share (nested). */
+  ancientSharePct: 17,
+  /**
+   * Signed annual flow: % of current liquid / year → young LTH (155d+ non-ancient). Positive = lock from liquid; negative = distribute from young LTH to liquid.
+   */
+  flowLiquidToLth155Annual: 0,
+  /**
+   * Signed annual flow: % of current liquid / year → Ancient. Positive = lock from liquid; negative = ancient coins selling to liquid.
+   */
+  flowLiquidToAncientAnnual: 0,
 };
 
 /** Merge saved/partial state with DEFAULTS so new params never read as undefined (avoids NaN in UI and math). */

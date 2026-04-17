@@ -231,6 +231,49 @@ export function ParameterSidebar({ p, setP }) {
         />
       </Section>
 
+      <Section title="🔐 Holders (LTH / Ancient)" open={false}>
+        <Slider
+          label="LTH 155d+ share of float"
+          hint="Share of BTC outside Lost, treasuries & ETFs modeled as long-term holders (155d+ total, including Ancient). Range 60–80%; default ~73%. Ancient is nested inside this total."
+          value={p.lth155SharePct}
+          min={60}
+          max={80}
+          step={1}
+          onChange={set("lth155SharePct")}
+          fmt={(v) => `${v}%`}
+        />
+        <Slider
+          label="Ancient (7y+) share of float"
+          hint="Share of that same non-treasury / non-ETF / non-lost pool that is Ancient (7y+). Must be ≤ LTH 155d+ total; Satoshi-like coins in Already-Lost are not double-counted here."
+          value={p.ancientSharePct}
+          min={15}
+          max={20}
+          step={1}
+          onChange={set("ancientSharePct")}
+          fmt={(v) => `${v}%`}
+        />
+        <Slider
+          label="Flow: liquid → LTH (155d+)"
+          hint="Signed annual rate: positive = % of current liquid per year locking into young LTH; negative = young LTH distributing back to liquid (% of young LTH stock per year)."
+          value={p.flowLiquidToLth155Annual}
+          min={-10}
+          max={10}
+          step={0.1}
+          onChange={set("flowLiquidToLth155Annual")}
+          fmt={(v) => `${v >= 0 ? "+" : ""}${v.toFixed(1)} %/yr`}
+        />
+        <Slider
+          label="Flow: liquid → Ancient"
+          hint="Signed annual rate: positive = % of current liquid per year locking into Ancient; negative = Ancient selling to liquid (% of Ancient stock per year)."
+          value={p.flowLiquidToAncientAnnual}
+          min={-10}
+          max={10}
+          step={0.1}
+          onChange={set("flowLiquidToAncientAnnual")}
+          fmt={(v) => `${v >= 0 ? "+" : ""}${v.toFixed(1)} %/yr`}
+        />
+      </Section>
+
       <Section title="⛏ Halving cycle" open={false}>
         <Slider
           label="4y cycle strength"
@@ -255,6 +298,51 @@ export function ParameterSidebar({ p, setP }) {
       </Section>
 
       <Section title="⚡ Market Dynamics" open={false}>
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            fontSize: 12,
+            color: C.text,
+            fontFamily: FONT_UI,
+            marginBottom: 12,
+            cursor: "pointer",
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={p.capBuyingToLiquidFloat !== false}
+            onChange={(e) => setP((prev) => ({ ...prev, capBuyingToLiquidFloat: e.target.checked }))}
+            style={{ accentColor: C.amber }}
+          />
+          <span>
+            Cap buying to liquid float
+            <span style={{ display: "block", fontSize: 10, color: C.hint, marginTop: 3, fontWeight: 400 }}>
+              When on, monthly hoarding cannot exceed liquid (above floor) plus miner/organic inflows. Demand is rationed proportionally across MSTR, other treasuries, ETF, and retail.
+            </span>
+          </span>
+        </label>
+        <Slider
+          label="Unmet demand → price (scarcity premium)"
+          hint="When buying is capped by liquid float, extra monthly return ∝ unmet BTC demand ÷ liquid, before the global monthly gain cap. Offsets mechanical bearish drift when executed net demand is negative but buyers are rationed."
+          value={p.unmetDemandPriceStrength}
+          min={0}
+          max={3}
+          step={0.05}
+          onChange={set("unmetDemandPriceStrength")}
+          fmt={(v) => `${v.toFixed(2)}×`}
+        />
+        <Slider
+          label="Max monthly % from unmet premium"
+          hint="Ceiling on the scarcity-premium term alone (percent per month)."
+          value={p.unmetPremiumMaxMonthlyPct}
+          min={0}
+          max={20}
+          step={0.5}
+          onChange={set("unmetPremiumMaxMonthlyPct")}
+          fmt={(v) => `${v.toFixed(1)}%/mo`}
+        />
         <Slider
           label="Initial annual volatility"
           hint="Roughly how violent monthly moves are around the supply/demand path (spot BTC is often ~60–80% annualized vs ~10% bonds / ~20% equities). Applied as scaled monthly noise; fades over time per the next slider."
