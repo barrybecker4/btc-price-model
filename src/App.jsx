@@ -14,6 +14,7 @@ import {
   START_PRICE_SLIDER_BASE_MAX,
   START_PRICE_SLIDER_BASE_MIN,
   boundsForSpotPrice,
+  miningCostFloorBounds,
 } from "./utils/startPriceSlider.js";
 
 export default function App() {
@@ -32,7 +33,13 @@ export default function App() {
       if (ac.signal.aborted) return;
       setStartPriceSliderMin(min);
       setStartPriceSliderMax(max);
-      setP((prev) => ({ ...prev, startPrice: value }));
+      setP((prev) => {
+        const { min: floorMin, max: floorMax } = miningCostFloorBounds(value);
+        let mcf = prev.miningCostFloor;
+        if (mcf < floorMin) mcf = floorMin;
+        if (mcf > floorMax) mcf = floorMax;
+        return { ...prev, startPrice: value, miningCostFloor: mcf };
+      });
     })();
     return () => ac.abort();
   }, []);

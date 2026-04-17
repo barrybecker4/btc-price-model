@@ -1,5 +1,7 @@
 import { DEFAULTS } from "../sim/constants.js";
 import {
+  MINING_COST_FLOOR_STEP,
+  miningCostFloorBounds,
   START_PRICE_SLIDER_BASE_MAX,
   START_PRICE_SLIDER_BASE_MIN,
   START_PRICE_SLIDER_STEP,
@@ -18,7 +20,10 @@ export function ParameterSidebar({
 }) {
   const set = (k) => (v) => setP((prev) => ({ ...prev, [k]: v }));
 
+  const { min: miningCostMin, max: miningCostMax } = miningCostFloorBounds(p.startPrice);
+
   const safeLostCoins = Math.min(p.alreadyLostCoins, p.circulatingSupply * 0.9);
+  const lostCoinsMax = Math.min(7000000, Math.floor(p.circulatingSupply * 0.9));
   const effectiveSupply = p.circulatingSupply - safeLostCoins;
   const strcInitialDayBtc = Math.round((p.strcInitialUsdB * 1e9) / 365 / p.startPrice);
 
@@ -53,17 +58,46 @@ export function ParameterSidebar({
       </div>
 
       <Section title="◈ Macroeconomic">
-        <Slider label="Simulation Period" value={p.simYears} min={5} max={25} step={1} onChange={set("simYears")} fmt={(v) => `${v} yrs`} />
+        <Slider
+          label="Simulation Period"
+          hint="Number of years for the prediction model to run, starting from the current date."
+          value={p.simYears}
+          min={5}
+          max={25}
+          step={1}
+          onChange={set("simYears")}
+          fmt={(v) => `${v} yrs`}
+        />
         <Slider
           label="Starting BTC Price"
+          hint="Initial price is set from the actual current price, but you can adjust it."
+          hintDetail="On load, the app pulls a live BTC/USD quote for the default; the slider overrides that value."
           value={p.startPrice}
           min={startPriceMin}
           max={startPriceMax}
           step={START_PRICE_SLIDER_STEP}
-          onChange={set("startPrice")}
+          onChange={(v) => {
+            setP((prev) => {
+              const { min: mn, max: mx } = miningCostFloorBounds(v);
+              let mcf = prev.miningCostFloor;
+              if (mcf < mn) mcf = mn;
+              if (mcf > mx) mcf = mx;
+              return { ...prev, startPrice: v, miningCostFloor: mcf };
+            });
+          }}
           fmt={fmtUSD}
         />
-        <Slider label="USD Inflation Rate" value={p.inflation} min={1} max={15} step={0.1} onChange={set("inflation")} fmt={(v) => `${v.toFixed(1)}%/yr`} />
+        <Slider
+          label="USD Inflation Rate"
+          hint="Expected annual rise in the general price level in the United States — the percentage by which a broad basket of goods and services becomes more expensive over a year (the same idea headline CPI inflation measures)."
+          hintDetail="Used to compute inflation-adjusted (real) BTC price alongside the nominal path."
+          value={p.inflation}
+          min={1}
+          max={15}
+          step={0.1}
+          onChange={set("inflation")}
+          fmt={(v) => `${v.toFixed(1)}%/yr`}
+        />
         <Slider
           label="Nominal GDP Growth"
           hint="Global nominal GDP growth (real GDP + inflation). Applied as an extra monthly multiplier to ALL USD-denominated demand flows — simulating money-supply expansion. Higher GDP → more capital chasing BTC → the price curve continues rising rather than plateauing."
@@ -79,7 +113,7 @@ export function ParameterSidebar({
 
       <Section title="⛏ Supply &amp; Mining">
         <Slider
-          label="Total BTC Ever Mined"
+          label="Total BTC Mined"
           hint="All mined BTC including lost coins (~19.85M today). Hard cap = 21M. This is NOT the effective liquid supply — lost coins must be subtracted below."
           hintDetail="The sim treats this as gross mined supply before subtracting lost coins for float and demand math."
           value={p.circulatingSupply}
@@ -93,15 +127,15 @@ export function ParameterSidebar({
               alreadyLostCoins: Math.min(prev.alreadyLostCoins, v * 0.9),
             }));
           }}
-          fmt={(v) => `${(v / 1e6).toFixed(3)}M`}
+          fmt={(v) => `${(v / 1e6).toFixed(2)}M`}
         />
         <Slider
           label="Already-Lost Coins"
           hint="Permanently inaccessible subset of above: Satoshi wallet (~1.1M), lost keys, burned coins. Effective liquid supply = Total Mined − Lost."
           hintDetail="Lost is removed before treasuries, ETFs, and LTH/Ancient splits, so those coins never enter the modeled tradable float."
           value={safeLostCoins}
-          min={500000}
-          max={Math.floor(p.circulatingSupply * 0.9)}
+          min={1000000}
+          max={lostCoinsMax}
           step={100000}
           onChange={set("alreadyLostCoins")}
           fmt={(v) => `${(v / 1e6).toFixed(2)}M`}
@@ -129,7 +163,7 @@ export function ParameterSidebar({
           value={p.annualLossRate}
           min={0.05}
           max={3}
-          step={0.05}
+          step={0.01}
           onChange={set("annualLossRate")}
           fmt={(v) => `${v.toFixed(2)}%/yr`}
         />
@@ -137,19 +171,20 @@ export function ParameterSidebar({
           label="Miner Sell Pressure"
           hint="% of newly mined BTC immediately sold by miners to cover costs."
           value={p.minerSellPct}
-          min={50}
-          max={100}
+          min={30}
+          max={80}
           step={1}
           onChange={set("minerSellPct")}
           fmt={(v) => `${v}%`}
         />
         <Slider
           label="Mining Cost Floor"
-          hint="All-in production cost floor. Price cannot fall below this level."
+          hint="This floor represents the average production cost (energy and overhead) for publicly traded miners. The cost floor differs significantly based on hardware efficiency and energy prices. When Bitcoin’s market price falls below this average mining cost, it often signals a bottom as inefficient miners are forced to pause operations."
+          hintDetail="In the model, nominal price cannot fall below this level (a simplified floor vs. spot)."
           value={p.miningCostFloor}
-          min={20000}
-          max={150000}
-          step={1000}
+          min={miningCostMin}
+          max={miningCostMax}
+          step={MINING_COST_FLOOR_STEP}
           onChange={set("miningCostFloor")}
           fmt={fmtUSD}
         />
@@ -159,8 +194,8 @@ export function ParameterSidebar({
         <Slider
           label="Initial BTC Holdings"
           value={p.strcInitialBtc}
-          min={100000}
-          max={1000000}
+          min={800000}
+          max={1500000}
           step={10000}
           onChange={set("strcInitialBtc")}
           fmt={(v) => `${(v / 1000).toFixed(0)}K BTC`}
@@ -170,9 +205,9 @@ export function ParameterSidebar({
           hint="Strategy's BTC acquisition spend at t=0 (annualized). This is the starting rate — grows each year at the rate below."
           hintDetail="Converted to BTC/month against the starting price; subject to float cap when that mode is on."
           value={p.strcInitialUsdB}
-          min={5}
-          max={300}
-          step={5}
+          min={20}
+          max={50}
+          step={1}
           onChange={set("strcInitialUsdB")}
           fmt={(v) => `$${v}B/yr`}
         />
@@ -180,8 +215,8 @@ export function ParameterSidebar({
           label="Annual Capital Raise Growth"
           hint={`Rate at which Strategy grows its USD capital raises annually. Logistic taper (below) converges this toward Nominal GDP (${p.gdpGrowth.toFixed(1)}%/yr). Strategy has historically grown well above inflation via convertible notes and ATM offerings.`}
           value={p.strcGrowthRate}
-          min={Math.ceil(p.inflation)}
-          max={80}
+          min={5}
+          max={50}
           step={1}
           onChange={set("strcGrowthRate")}
           fmt={(v) => `${v}%/yr`}
@@ -202,9 +237,9 @@ export function ParameterSidebar({
         <Slider
           label="Other Corp. Initial Holdings"
           value={p.otherInitialBtc}
-          min={0}
-          max={500000}
-          step={10000}
+          min={360000}
+          max={400000}
+          step={1000}
           onChange={set("otherInitialBtc")}
           fmt={(v) => `${(v / 1000).toFixed(0)}K BTC`}
         />
@@ -222,9 +257,9 @@ export function ParameterSidebar({
           label="Other Corp. Growth"
           hint="Catching up as playbook spreads globally. Tapers toward Nominal GDP over the horizon below."
           value={p.otherTreasuryGrowth}
-          min={0}
-          max={100}
-          step={5}
+          min={1}
+          max={50}
+          step={1}
           onChange={set("otherTreasuryGrowth")}
           fmt={(v) => `${v}%/yr`}
         />
@@ -241,9 +276,9 @@ export function ParameterSidebar({
         <Slider
           label="ETF Initial Holdings"
           value={p.etfInitialBtc}
-          min={500000}
-          max={3000000}
-          step={50000}
+          min={1400000}
+          max={1900000}
+          step={10000}
           onChange={set("etfInitialBtc")}
           fmt={(v) => `${(v / 1e6).toFixed(2)}M BTC`}
         />
@@ -252,8 +287,8 @@ export function ParameterSidebar({
           hint="Net USD inflow per day across all spot BTC ETFs."
           value={p.etfDailyInflowM}
           min={0}
-          max={2000}
-          step={10}
+          max={500}
+          step={5}
           onChange={set("etfDailyInflowM")}
           fmt={(v) => `$${v}M/day`}
         />
@@ -262,8 +297,8 @@ export function ParameterSidebar({
           hint="Annual growth of aggregate ETF USD inflow. Tapers toward Nominal GDP over the horizon below."
           value={p.etfGrowthRate}
           min={0}
-          max={50}
-          step={2}
+          max={60}
+          step={1}
           onChange={set("etfGrowthRate")}
           fmt={(v) => `${v}%/yr`}
         />
