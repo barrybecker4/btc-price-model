@@ -1,11 +1,21 @@
 import { DEFAULTS } from "../sim/constants.js";
+import {
+  START_PRICE_SLIDER_BASE_MAX,
+  START_PRICE_SLIDER_BASE_MIN,
+  START_PRICE_SLIDER_STEP,
+} from "../utils/startPriceSlider.js";
 import { C, FONT_HEAD, FONT_NUM, FONT_UI } from "../theme.js";
 import { fmtUSD } from "../utils/format.js";
 import { ParamHintHotspot } from "./ParamHintHotspot.jsx";
 import { Section } from "./Section.jsx";
 import { Slider } from "./Slider.jsx";
 
-export function ParameterSidebar({ p, setP }) {
+export function ParameterSidebar({
+  p,
+  setP,
+  startPriceMin = START_PRICE_SLIDER_BASE_MIN,
+  startPriceMax = START_PRICE_SLIDER_BASE_MAX,
+}) {
   const set = (k) => (v) => setP((prev) => ({ ...prev, [k]: v }));
 
   const safeLostCoins = Math.min(p.alreadyLostCoins, p.circulatingSupply * 0.9);
@@ -44,7 +54,15 @@ export function ParameterSidebar({ p, setP }) {
 
       <Section title="◈ Macroeconomic">
         <Slider label="Simulation Period" value={p.simYears} min={5} max={25} step={1} onChange={set("simYears")} fmt={(v) => `${v} yrs`} />
-        <Slider label="Starting BTC Price" value={p.startPrice} min={50000} max={250000} step={5000} onChange={set("startPrice")} fmt={fmtUSD} />
+        <Slider
+          label="Starting BTC Price"
+          value={p.startPrice}
+          min={startPriceMin}
+          max={startPriceMax}
+          step={START_PRICE_SLIDER_STEP}
+          onChange={set("startPrice")}
+          fmt={fmtUSD}
+        />
         <Slider label="USD Inflation Rate" value={p.inflation} min={1} max={15} step={0.1} onChange={set("inflation")} fmt={(v) => `${v.toFixed(1)}%/yr`} />
         <Slider
           label="Nominal GDP Growth"
