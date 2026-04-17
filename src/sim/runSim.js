@@ -21,7 +21,7 @@ const LIQ_MIN_INIT = 200000;
  * Split available float (non-lost, non-treasury, non-ETF) into liquid vs nested LTH (young + ancient).
  * Clamps so ancient ≤ total LTH155 and liquid ≥ LIQ_MIN_INIT when possible.
  */
-function initialHolderSplit(available0, lth155SharePct, ancientSharePct) {
+export function initialHolderSplit(available0, lth155SharePct, ancientSharePct) {
   const lPct = Math.max(60, Math.min(80, lth155SharePct)) / 100;
   const aPct = Math.max(15, Math.min(20, ancientSharePct)) / 100;
   let lth155Total = available0 * lPct;
@@ -41,10 +41,34 @@ function initialHolderSplit(available0, lth155SharePct, ancientSharePct) {
 }
 
 /**
- * After demand step, apply signed annual flows (%/yr of liquid stock toward buckets; negative pulls from bucket).
+ * Enforce a minimum liquid balance by moving BTC from young LTH, then ancient.
+ * Preserves liquid + youngLth + ancientBtc (total modeled tradeable + illiquid float).
+ */
+export function rebalanceLiquidToFloor(liquid, youngLth, ancientBtc, floor) {
+  let L = liquid;
+  let Y = youngLth;
+  let A = ancientBtc;
+  if (L >= floor) return { liquid: L, youngLth: Y, ancientBtc: A };
+  let need = floor - L;
+  const fromY = Math.min(need, Y);
+  Y -= fromY;
+  L += fromY;
+  need = floor - L;
+  if (need > 0) {
+    const fromA = Math.min(need, A);
+    A -= fromA;
+    L += fromA;
+  }
+  return { liquid: L, youngLth: Y, ancientBtc: A };
+}
+
+/**
+ * After demand step, apply signed annual flows toward buckets.
+ * Positive rates: %/yr of **current liquid** L → young LTH or Ancient (scaled together so L ≥ LIQ_FLOOR).
+ * Negative rates: %/yr of **source bucket** (young or ancient) → liquid (capped by bucket size).
  * Order: scale positive outflows so liquid stays ≥ LIQ_FLOOR; then negative inflows from young/ancient.
  */
-function applyHolderFlows(liquid, youngLth, ancientBtc, p) {
+export function applyHolderFlows(liquid, youngLth, ancientBtc, p) {
   const rL = typeof p.flowLiquidToLth155Annual === "number" ? p.flowLiquidToLth155Annual : 0;
   const rA = typeof p.flowLiquidToAncientAnnual === "number" ? p.flowLiquidToAncientAnnual : 0;
 
@@ -96,14 +120,15 @@ export function runSim(p) {
   let etfBtc = p.etfInitialBtc;
 
   const available0 = Math.max(p.circulatingSupply - lostBtc - treasury - etfBtc, 0);
-  const { liquid: liq0, youngLth, ancientBtc: anc0 } = initialHolderSplit(
+  const split = initialHolderSplit(
     available0,
     p.lth155SharePct ?? 73,
     p.ancientSharePct ?? 17
   );
-  let liquid = Math.max(liq0, LIQ_FLOOR);
-  let youngLthBtc = youngLth;
-  let ancientBtc = anc0;
+  const rebal = rebalanceLiquidToFloor(split.liquid, split.youngLth, split.ancientBtc, LIQ_FLOOR);
+  let liquid = rebal.liquid;
+  let youngLthBtc = rebal.youngLth;
+  let ancientBtc = rebal.ancientBtc;
 
   const initLiq = liquid;
 
