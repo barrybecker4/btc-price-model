@@ -1,4 +1,16 @@
-export const YEAR_START = 2026;
+/**
+ * Fractional calendar year at module load (local "today"), so the sim and charts
+ * anchor to the current date instead of a fixed Jan 1.
+ */
+export function getSimulationAnchorYear() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const start = new Date(y, 0, 1);
+  const next = new Date(y + 1, 0, 1);
+  return y + (d - start) / (next - start);
+}
+
+export const YEAR_START = getSimulationAnchorYear();
 
 /** Months per calendar year (annual ↔ monthly rates in the sim). Not the same as DEFAULT_TAPER_YEARS. */
 export const MONTHS_PER_YEAR = 12;

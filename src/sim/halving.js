@@ -1,4 +1,4 @@
-/** Next protocol halving after the simulation anchor year (see constants YEAR_START). */
+/** Next protocol halving after a fixed calendar anchor (sim uses fractional years from “today”; lines still use integer halving years). */
 export const FIRST_HALVING_YEAR = 2028;
 
 export const HALVING_INTERVAL_YEARS = 4;

@@ -1,6 +1,6 @@
 import { YEAR_START } from "../sim/constants.js";
 import { C, FONT_UI } from "../theme.js";
-import { fmtUSD } from "../utils/format.js";
+import { fmtUSD, formatSimRangeLabel } from "../utils/format.js";
 import { KPI } from "./KPI.jsx";
 
 export function KpiBar({ p, last, supplyShockYear, mult }) {
@@ -22,11 +22,11 @@ export function KpiBar({ p, last, supplyShockYear, mult }) {
           marginBottom: 8,
         }}
       >
-        Bitcoin Supply Shock Simulator &nbsp;·&nbsp; {YEAR_START}–{YEAR_START + p.simYears}
+        Bitcoin Supply Shock Simulator &nbsp;·&nbsp; {formatSimRangeLabel(YEAR_START, p.simYears)}
       </div>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <KPI
-          label={`BTC Price · ${YEAR_START + p.simYears}`}
+          label={`BTC Price · ${Math.floor(YEAR_START + p.simYears)}`}
           value={fmtUSD(last.price)}
           sub={`${mult.toFixed(1)}× from ${fmtUSD(p.startPrice)}`}
           highlight
@@ -45,7 +45,7 @@ export function KpiBar({ p, last, supplyShockYear, mult }) {
           warn={!!supplyShockYear}
         />
         <KPI
-          label={`MSTR BTC/day · ${YEAR_START + p.simYears}`}
+          label={`MSTR BTC/day · ${Math.floor(YEAR_START + p.simYears)}`}
           value={last.strcDayBtc.toLocaleString()}
           sub={`mining: ${last.dailyMining.toFixed(0)} BTC/day`}
         />
