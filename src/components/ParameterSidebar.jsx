@@ -110,7 +110,7 @@ export function ParameterSidebar({ p, setP }) {
           hintDetail="Drain applies to the liquid bucket each year (stylized ongoing loss)."
           value={p.annualLossRate}
           min={0.05}
-          max={0.5}
+          max={3}
           step={0.05}
           onChange={set("annualLossRate")}
           fmt={(v) => `${v.toFixed(2)}%/yr`}
