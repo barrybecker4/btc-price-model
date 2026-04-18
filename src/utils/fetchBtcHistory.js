@@ -21,6 +21,11 @@ const CC_PAGE_LIMIT = 2000;
 const MAX_PAGES = 24;
 const BETWEEN_PAGES_MS = 120;
 
+/** In `vite dev`, requests use the same-origin proxy in vite.config.js (avoids CORS on non‑Vite localhost ports, e.g. IntelliJ :63342). */
+const CC_API_ORIGIN = import.meta.env.DEV
+  ? "/api/cryptocompare"
+  : "https://min-api.cryptocompare.com";
+
 /**
  * Daily BTC/USD from CryptoCompare (no API key; CORS-friendly). Paginates backward from `toSec`.
  * Earliest usable daily closes depend on the feed; earlier days may be zero and are skipped.
@@ -31,7 +36,7 @@ async function fetchCryptoCompareHistodayRange({ fromSec, toSec, signal }) {
   let toTs = toSec;
 
   for (let page = 0; page < MAX_PAGES; page++) {
-    const url = `https://min-api.cryptocompare.com/data/v2/histoday?fsym=BTC&tsym=USD&limit=${CC_PAGE_LIMIT}&toTs=${toTs}`;
+    const url = `${CC_API_ORIGIN}/data/v2/histoday?fsym=BTC&tsym=USD&limit=${CC_PAGE_LIMIT}&toTs=${toTs}`;
     const res = await fetch(url, { signal });
     if (!res.ok) {
       throw new Error(`CryptoCompare histoday failed (${res.status})`);
