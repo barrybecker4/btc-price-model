@@ -8,8 +8,10 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  ReferenceLine,
 } from "recharts";
 import { C, FONT_NUM, FONT_UI } from "../../theme.js";
+import { YEAR_START } from "../../sim/constants.js";
 import { fmtUSD } from "../../utils/format.js";
 import { TIP, XAXIS_PROPS } from "../../charts/rechartsConfig.js";
 import { daysSinceGenesis, powerLawBoundsUsd } from "../../utils/powerLaw.js";
@@ -70,6 +72,8 @@ export function PriceChart({
   onOverlayPowerLawChange,
   showHistorical,
   onShowHistoricalChange,
+  /** When historical series is merged, draw a vertical guide at the sim anchor (today). */
+  showProjectionStartLine = false,
   historicalLoading = false,
   historicalError = null,
 }) {
@@ -116,6 +120,26 @@ export function PriceChart({
           <Legend wrapperStyle={{ fontSize: 11, fontFamily: FONT_UI, paddingTop: 8 }} />
           <HalvingVLines halvings={halvings} yAxisId="p" />
           <ShockLine supplyShockYear={supplyShockYear} yAxisId="p" />
+          {showProjectionStartLine && (
+            <ReferenceLine
+              x={parseFloat(YEAR_START.toFixed(4))}
+              yAxisId="p"
+              stroke={C.blue}
+              strokeWidth={1.5}
+              strokeDasharray="5 4"
+              label={{
+                value: "Now",
+                position: "insideTop",
+                // Same vertical nudge as ShockLine — keeps halving labels (insideTopLeft) readable.
+                dy: 17,
+                // Anchor is on the line; nudge left so the dash does not run through the text.
+                dx: -22,
+                fill: C.blue,
+                fontSize: 10,
+                fontFamily: FONT_UI,
+              }}
+            />
+          )}
           <Line
             yAxisId="p"
             type="monotone"

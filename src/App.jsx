@@ -219,6 +219,7 @@ export default function App() {
                 setShowHistorical(v);
                 if (!v) setHistoricalError(null);
               }}
+              showProjectionStartLine={showHistorical && !!historicalEnriched?.length}
               historicalLoading={historicalLoading}
               historicalError={historicalError}
             />
