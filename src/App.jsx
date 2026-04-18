@@ -12,7 +12,7 @@ import { C, FONT_UI } from "./theme.js";
 import { fetchBtcUsdHistoryRange } from "./utils/fetchBtcHistory.js";
 import { fetchBtcUsd } from "./utils/fetchBtcUsd.js";
 import { enrichHistoricalPriceRows, mergePriceChartHistoricalSim } from "./utils/priceChartMerge.js";
-import { fractionalYearToMs } from "./utils/powerLaw.js";
+import { fractionalYearToLocalMs } from "./utils/powerLaw.js";
 import {
   START_PRICE_SLIDER_BASE_MAX,
   START_PRICE_SLIDER_BASE_MIN,
@@ -72,7 +72,7 @@ export default function App() {
       try {
         const rows = await fetchBtcUsdHistoryRange({
           fromMs: FROM_HISTORICAL_START_MS,
-          toMs: fractionalYearToMs(YEAR_START),
+          toMs: fractionalYearToLocalMs(YEAR_START),
           signal: ac.signal,
         });
         if (ac.signal.aborted) return;

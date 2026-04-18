@@ -1,3 +1,5 @@
+import { parsePositiveUsdNumber } from "./parseUsd.js";
+
 /**
  * Fetches spot BTC/USD from a public API (no key). CoinGecko first, Coinbase fallback.
  * @param {AbortSignal} [signal]
@@ -17,8 +19,9 @@ async function tryCoinGecko(signal) {
     );
     if (!res.ok) return null;
     const data = await res.json();
-    const n = data?.bitcoin?.usd;
-    return parsePositiveUsd(n);
+    const bitcoin = data.bitcoin;
+    if (!bitcoin) return null;
+    return parsePositiveUsdNumber(bitcoin.usd);
   } catch {
     return null;
   }
@@ -29,15 +32,10 @@ async function tryCoinbase(signal) {
     const res = await fetch("https://api.coinbase.com/v2/prices/BTC-USD/spot", { signal });
     if (!res.ok) return null;
     const data = await res.json();
-    const n = data?.data?.amount;
-    return parsePositiveUsd(n);
+    const payload = data.data;
+    if (!payload) return null;
+    return parsePositiveUsdNumber(payload.amount);
   } catch {
     return null;
   }
-}
-
-function parsePositiveUsd(v) {
-    const n = typeof v === "string" ? parseFloat(v) : Number(v);
-  if (!Number.isFinite(n) || n <= 0) return null;
-  return n;
 }

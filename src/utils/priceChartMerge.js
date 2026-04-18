@@ -6,10 +6,12 @@
  * @param {number} yearStart simulation anchor (fractional year)
  */
 export function priceRealForYear(priceNominal, year, inflationPct, yearStart) {
-  const r = inflationPct / 100;
-  const v = Math.round(priceNominal / Math.pow(1 + r, year - yearStart));
+  const inflationRate = inflationPct / 100;
+  const deflated = Math.round(
+    priceNominal / Math.pow(1 + inflationRate, year - yearStart),
+  );
   /** Match nominal: avoid 0 so log-scale Y axis can render (Recharts rejects non-positive values). */
-  return Math.max(0.01, v);
+  return Math.max(0.01, deflated);
 }
 
 /**
@@ -30,18 +32,28 @@ export function enrichHistoricalPriceRows(rawHistorical, inflationPct, yearStart
 const YEAR_EPS = 1e-4;
 
 /**
+ * @param {object[]} rowsBeforeSim historical enriched rows strictly before yearStart
+ * @param {object[]} simRows
+ * @returns {object[]}
+ */
+function trimDuplicateBoundaryPoint(rowsBeforeSim, simRows) {
+  const lastHistorical = rowsBeforeSim[rowsBeforeSim.length - 1];
+  const firstSim = simRows[0];
+  if (!lastHistorical) return rowsBeforeSim;
+  if (!firstSim) return rowsBeforeSim;
+  const yearGap = Math.abs(lastHistorical.year - firstSim.year);
+  if (yearGap >= YEAR_EPS) return rowsBeforeSim;
+  return rowsBeforeSim.slice(0, -1);
+}
+
+/**
  * @param {object[]} historical enriched rows strictly before yearStart
  * @param {object[]} simRows simulation chart rows (downsampled)
  * @param {number} yearStart
  * @returns {object[]}
  */
 export function mergePriceChartHistoricalSim(historical, simRows, yearStart) {
-  const hist = historical.filter((r) => r.year < yearStart - YEAR_EPS);
-  const lastH = hist[hist.length - 1];
-  const firstS = simRows[0];
-  let head = hist;
-  if (lastH && firstS && Math.abs(lastH.year - firstS.year) < YEAR_EPS) {
-    head = hist.slice(0, -1);
-  }
+  const beforeStart = historical.filter((row) => row.year < yearStart - YEAR_EPS);
+  const head = trimDuplicateBoundaryPoint(beforeStart, simRows);
   return [...head, ...simRows];
 }

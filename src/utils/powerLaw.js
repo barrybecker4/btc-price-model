@@ -3,6 +3,11 @@
  * @see https://bitcoinpower.law/
  *
  * Genesis is Jan 3, 2009 UTC (common convention; exact block time shifts days only slightly).
+ *
+ * Calendar systems:
+ * - {@link fractionalYearToMs} / {@link fractionalYearFromUtcMs}: **UTC** calendar year boundaries (matches API timestamps).
+ * - {@link fractionalYearToLocalMs}: **local** calendar year boundaries — pair with `getSimulationAnchorYear` in `src/sim/constants.js`
+ *   and `decimalYearToDate` in `./format.js` so “today” and history `toMs` agree.
  */
 
 export const GENESIS_MS = Date.UTC(2009, 0, 3);
@@ -26,6 +31,20 @@ export function fractionalYearToMs(fractionalYear) {
 }
 
 /**
+ * Same interpolation as {@link fractionalYearToMs} but using the **local** calendar (host timezone).
+ * Use when converting {@link ../sim/constants.js#getSimulationAnchorYear} to epoch ms.
+ * @param {number} fractionalYear
+ * @returns {number} epoch milliseconds
+ */
+export function fractionalYearToLocalMs(fractionalYear) {
+  const y = Math.floor(fractionalYear);
+  const frac = fractionalYear - y;
+  const yearStart = new Date(y, 0, 1).getTime();
+  const nextStart = new Date(y + 1, 0, 1).getTime();
+  return yearStart + frac * (nextStart - yearStart);
+}
+
+/**
  * Inverse of {@link fractionalYearToMs} for UTC instants (used for API timestamps).
  * @param {number} ms Unix epoch milliseconds (UTC)
  * @returns {number} fractional calendar year
@@ -38,11 +57,13 @@ export function fractionalYearFromUtcMs(ms) {
 }
 
 /**
+ * Uses **UTC** {@link fractionalYearToMs} vs UTC {@link GENESIS_MS} so band positions match chart X (fractional year in UTC).
  * @param {number} fractionalYear
  * @returns {number} days since genesis (clamped)
  */
 export function daysSinceGenesis(fractionalYear) {
-  const d = (fractionalYearToMs(fractionalYear) - GENESIS_MS) / MS_PER_DAY;
+  const msSinceGenesis = fractionalYearToMs(fractionalYear) - GENESIS_MS;
+  const d = msSinceGenesis / MS_PER_DAY;
   return Math.max(MIN_DAYS, d);
 }
 
