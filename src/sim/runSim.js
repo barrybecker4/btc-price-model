@@ -1,303 +1,133 @@
+import { MONTHS_PER_YEAR, YEAR_START } from "./constants.js";
 import {
-  DEFAULT_ORGANIC_BUY_GROWTH_TAPER_YEARS,
-  DEFAULT_TAPER_YEARS,
-  MONTHS_PER_YEAR,
-  YEAR_START,
-} from "./constants.js";
-import { effectiveAnnualGrowthTapered } from "./growthTaper.js";
-import { getHalvingCycleMonthlyAdj } from "./halving.js";
+  applyHolderFlows,
+  initialHolderSplit,
+  LIQ_FLOOR,
+  rebalanceLiquidToFloor,
+} from "./holderBuckets.js";
 import { getDailyMining } from "./mining.js";
-import {
-  monthlySigmaFromAnnual,
-  unitShockForMonth,
-  volatilityTimeDecayMultiplier,
-} from "./volatility.js";
+import { computeMonthlyDemandFromUsd } from "./monthlyDemandFromUsd.js";
+import { computePriceAfterMonthTransition } from "./monthlyPriceStep.js";
+import { buildSimulationRow } from "./simulationRow.js";
+import { advanceUsdFlowsForMonth } from "./usdFlowGrowth.js";
 
-const LIQ_FLOOR = 50000;
-/** Initial liquid must be at least this after LTH/Ancient split (matches legacy single-pool floor scale). */
-const LIQ_MIN_INIT = 200000;
+export { applyHolderFlows, initialHolderSplit, LIQ_FLOOR, rebalanceLiquidToFloor } from "./holderBuckets.js";
 
 /**
- * Split available float (non-lost, non-treasury, non-ETF) into liquid vs nested LTH (young + ancient).
- * Clamps so ancient ≤ total LTH155 and liquid ≥ LIQ_MIN_INIT when possible.
+ * @param {import("./simTypes.js").SimParams} parameters
  */
-export function initialHolderSplit(available0, lth155SharePct, ancientSharePct) {
-  const lPct = Math.max(60, Math.min(80, lth155SharePct)) / 100;
-  const aPct = Math.max(15, Math.min(20, ancientSharePct)) / 100;
-  let lth155Total = available0 * lPct;
-  let ancientBtc = Math.min(available0 * aPct, lth155Total);
-  let youngLth = lth155Total - ancientBtc;
-  let liquid = available0 - lth155Total;
+export function runSim(parameters) {
+  const months = parameters.simYears * MONTHS_PER_YEAR;
+  const safeLost = Math.min(parameters.alreadyLostCoins, parameters.circulatingSupply * 0.9);
 
-  if (liquid < LIQ_MIN_INIT && available0 > LIQ_MIN_INIT) {
-    const shortfall = LIQ_MIN_INIT - liquid;
-    lth155Total = Math.max(0, lth155Total - shortfall);
-    ancientBtc = Math.min(ancientBtc, lth155Total);
-    youngLth = lth155Total - ancientBtc;
-    liquid = available0 - lth155Total;
-  }
-
-  return { liquid, youngLth, ancientBtc, lth155Total };
-}
-
-/**
- * Enforce a minimum liquid balance by moving BTC from young LTH, then ancient.
- * Preserves liquid + youngLth + ancientBtc (total modeled tradeable + illiquid float).
- */
-export function rebalanceLiquidToFloor(liquid, youngLth, ancientBtc, floor) {
-  let L = liquid;
-  let Y = youngLth;
-  let A = ancientBtc;
-  if (L >= floor) return { liquid: L, youngLth: Y, ancientBtc: A };
-  let need = floor - L;
-  const fromY = Math.min(need, Y);
-  Y -= fromY;
-  L += fromY;
-  need = floor - L;
-  if (need > 0) {
-    const fromA = Math.min(need, A);
-    A -= fromA;
-    L += fromA;
-  }
-  return { liquid: L, youngLth: Y, ancientBtc: A };
-}
-
-/**
- * After demand step, apply signed annual flows toward buckets.
- * Positive rates: %/yr of **current liquid** L → young LTH or Ancient (scaled together so L ≥ LIQ_FLOOR).
- * Negative rates: %/yr of **source bucket** (young or ancient) → liquid (capped by bucket size).
- * Order: scale positive outflows so liquid stays ≥ LIQ_FLOOR; then negative inflows from young/ancient.
- */
-export function applyHolderFlows(liquid, youngLth, ancientBtc, p) {
-  const rL = typeof p.flowLiquidToLth155Annual === "number" ? p.flowLiquidToLth155Annual : 0;
-  const rA = typeof p.flowLiquidToAncientAnnual === "number" ? p.flowLiquidToAncientAnnual : 0;
-
-  let L = liquid;
-  let Y = youngLth;
-  let A = ancientBtc;
-
-  const mL = (rL / 100) * L / MONTHS_PER_YEAR;
-  const mA = (rA / 100) * L / MONTHS_PER_YEAR;
-
-  let outY = mL > 0 ? mL : 0;
-  let outA = mA > 0 ? mA : 0;
-  let room = Math.max(0, L - LIQ_FLOOR);
-  const totalOut = outY + outA;
-  if (totalOut > room && totalOut > 0) {
-    const s = room / totalOut;
-    outY *= s;
-    outA *= s;
-  }
-  L -= outY + outA;
-  Y += outY;
-  A += outA;
-
-  if (rL < 0) {
-    const tfr = Math.min(Y, (Math.abs(rL) / 100) * Y / MONTHS_PER_YEAR);
-    Y -= tfr;
-    L += tfr;
-  }
-  if (rA < 0) {
-    const tfr = Math.min(A, (Math.abs(rA) / 100) * A / MONTHS_PER_YEAR);
-    A -= tfr;
-    L += tfr;
-  }
-
-  L = Math.max(L, LIQ_FLOOR);
-  Y = Math.max(Y, 0);
-  A = Math.max(A, 0);
-
-  return { liquid: L, youngLth: Y, ancientBtc: A };
-}
-
-export function runSim(p) {
-  const months = p.simYears * MONTHS_PER_YEAR;
-  const safeLost = Math.min(p.alreadyLostCoins, p.circulatingSupply * 0.9);
-
-  let price = p.startPrice;
+  let price = parameters.startPrice;
   let lostBtc = safeLost;
-  let treasury = p.strcInitialBtc + p.otherInitialBtc;
-  let etfBtc = p.etfInitialBtc;
+  let treasury = parameters.strcInitialBtc + parameters.otherInitialBtc;
+  let etfBtc = parameters.etfInitialBtc;
 
-  const available0 = Math.max(p.circulatingSupply - lostBtc - treasury - etfBtc, 0);
+  const available0 = Math.max(parameters.circulatingSupply - lostBtc - treasury - etfBtc, 0);
   const split = initialHolderSplit(
     available0,
-    p.lth155SharePct ?? 73,
-    p.ancientSharePct ?? 17
+    parameters.lth155SharePct ?? 73,
+    parameters.ancientSharePct ?? 17
   );
-  const rebal = rebalanceLiquidToFloor(split.liquid, split.youngLth, split.ancientBtc, LIQ_FLOOR);
-  let liquid = rebal.liquid;
-  let youngLthBtc = rebal.youngLth;
-  let ancientBtc = rebal.ancientBtc;
+  const rebalanced = rebalanceLiquidToFloor(split.liquid, split.youngLth, split.ancientBtc, LIQ_FLOOR);
+  let liquid = rebalanced.liquid;
+  let youngLthBtc = rebalanced.youngLth;
+  let ancientBtc = rebalanced.ancientBtc;
 
-  const initLiq = liquid;
+  const initialLiquid = liquid;
+  if (initialLiquid <= 0) {
+    throw new Error(
+      "runSim: initial liquid after rebalance must be positive; increase circulating supply or reduce lost/treasury/ETF allocation."
+    );
+  }
 
-  let strcUSD = (p.strcInitialUsdB * 1e9) / MONTHS_PER_YEAR;
-  let otherUSD = (p.otherTreasuryUsdB * 1e9) / MONTHS_PER_YEAR;
-  let etfUSD = p.etfDailyInflowM * 1e6 * 30;
-  /** Nominal monthly USD for net retail (daily $M × 30); signed when rate is negative. */
-  let retailNetUsd = (p.initialRetailPurchaseRateM ?? 0) * 1e6 * 30;
+  let strcUSD = (parameters.strcInitialUsdB * 1e9) / MONTHS_PER_YEAR;
+  let otherUSD = (parameters.otherTreasuryUsdB * 1e9) / MONTHS_PER_YEAR;
+  let etfUSD = parameters.etfDailyInflowM * 1e6 * 30;
+  let retailNetUsd = (parameters.initialRetailPurchaseRateM ?? 0) * 1e6 * 30;
 
   const data = [];
   let supplyShockYear = null;
 
-  for (let m = 0; m <= months; m++) {
-    const year = YEAR_START + m / MONTHS_PER_YEAR;
+  for (let monthIndex = 0; monthIndex <= months; monthIndex++) {
+    const year = YEAR_START + monthIndex / MONTHS_PER_YEAR;
     const dailyMining = getDailyMining(year);
-    const liquidPct = (liquid / initLiq) * 100;
-    if (liquidPct < 30 && !supplyShockYear) supplyShockYear = year;
+    const liquidPercentOfInitial = (liquid / initialLiquid) * 100;
+    if (liquidPercentOfInitial < 30 && supplyShockYear === null) supplyShockYear = year;
 
-    const dailyMiningM = dailyMining * 30;
-    const minerSales = dailyMiningM * (p.minerSellPct / 100);
-    const coinsLost = liquid * (p.annualLossRate / 100 / MONTHS_PER_YEAR);
-
-    const strcBtcRaw = strcUSD / price;
-    const otherBtcRaw = otherUSD / price;
-    const etfBtc2Raw = etfUSD / price;
-    /** Signed BTC/month from net retail USD. Negative = selling pressure (supply back to liquid). */
-    const organicRetailBtcRaw = retailNetUsd / price;
-    const retailBuyRaw = Math.max(0, organicRetailBtcRaw);
-    const retailSellRaw = Math.max(0, -organicRetailBtcRaw);
-    /**
-     * Float cap: only the positive hoarding leg (retail + treasuries + ETF) competes for buyScale.
-     * The negative retail leg does not enter G_raw; it widens G_max like other sell-side liquidity.
-     * buyScale applies only to strc/other/etf/retailBuyRaw — not to retail selling pressure.
-     */
-    const G_raw = strcBtcRaw + otherBtcRaw + etfBtc2Raw + retailBuyRaw;
-
-    const capOn = p.capBuyingToLiquidFloat !== false;
-    let buyScale = 1;
-    if (capOn && G_raw > 0) {
-      const G_max = liquid - LIQ_FLOOR + minerSales + retailSellRaw - coinsLost;
-      buyScale = G_max <= 0 ? 0 : Math.min(1, G_max / G_raw);
-    }
-
-    const strcBtc = strcBtcRaw * buyScale;
-    const otherBtc = otherBtcRaw * buyScale;
-    const etfBtc2 = etfBtc2Raw * buyScale;
-    const retailBuyExec = retailBuyRaw * buyScale;
-    /** Executed net retail BTC/mo: scaled buy leg + unscaled negative leg (min(0, raw)). */
-    const organicRetailNetBtcExec = retailBuyExec + Math.min(0, organicRetailBtcRaw);
-    const G_exec = strcBtc + otherBtc + etfBtc2 + retailBuyExec;
-    const unmetBuyBtcM = G_raw - G_exec;
-    const buyRationPct = G_raw > 0 ? (unmetBuyBtcM / G_raw) * 100 : 0;
-
-    const Lref = Math.max(liquid, 50000);
-    let unmetPremiumMonthly = 0;
-    if (capOn && unmetBuyBtcM > 0) {
-      const K = typeof p.unmetDemandPriceStrength === "number" ? p.unmetDemandPriceStrength : 0.6;
-      const maxPrem =
-        (typeof p.unmetPremiumMaxMonthlyPct === "number" ? p.unmetPremiumMaxMonthlyPct : 8) / 100;
-      const tightness = unmetBuyBtcM / Lref;
-      unmetPremiumMonthly = Math.min(tightness * K, maxPrem);
-    }
-
-    const strcDayBtc = strcBtc / 30;
-    const otherDayBtc = otherBtc / 30;
-    const etfDayBtc = etfBtc2 / 30;
-    const minerSellDay = dailyMining * (p.minerSellPct / 100);
-    const retailBuyDay = Math.max(0, organicRetailNetBtcExec) / 30;
-    const retailSellDay = Math.max(0, -organicRetailNetBtcExec) / 30;
-    const totalBuyDay = strcDayBtc + otherDayBtc + etfDayBtc + retailBuyDay;
-    const totalSellDay = minerSellDay + retailSellDay;
-
-    data.push({
-      year: parseFloat(year.toFixed(3)),
-      price: Math.round(price),
-      priceReal: Math.round(price / Math.pow(1 + p.inflation / 100, m / MONTHS_PER_YEAR)),
-      liquidM: parseFloat((liquid / 1e6).toFixed(3)),
-      treasuryM: parseFloat((treasury / 1e6).toFixed(3)),
-      etfM: parseFloat((etfBtc / 1e6).toFixed(3)),
-      lostM: parseFloat((lostBtc / 1e6).toFixed(3)),
-      lthYoungM: parseFloat((youngLthBtc / 1e6).toFixed(3)),
-      ancientM: parseFloat((ancientBtc / 1e6).toFixed(3)),
-      liquidPct: parseFloat(liquidPct.toFixed(1)),
-      strcDayBtc: parseFloat(strcDayBtc.toFixed(0)),
-      etfDayBtc: parseFloat(etfDayBtc.toFixed(0)),
-      otherDayBtc: parseFloat(otherDayBtc.toFixed(0)),
-      dailyMining: parseFloat(dailyMining.toFixed(1)),
-      totalBuyDay: parseFloat(totalBuyDay.toFixed(0)),
-      totalSellDay: parseFloat(totalSellDay.toFixed(0)),
-      netDayDemand: parseFloat((totalBuyDay - totalSellDay).toFixed(0)),
-      buyRationPct: parseFloat(buyRationPct.toFixed(1)),
-      unmetBuyBtcM: parseFloat(unmetBuyBtcM.toFixed(0)),
-      unmetPremiumPct: parseFloat((unmetPremiumMonthly * 100).toFixed(2)),
+    const demand = computeMonthlyDemandFromUsd({
+      price,
+      liquid,
+      strcUSD,
+      otherUSD,
+      etfUSD,
+      retailNetUsd,
+      dailyMining,
+      parameters,
     });
 
-    if (m === months) break;
-
-    /**
-     * Monthly transition (mass conservation among modeled buckets):
-     * 1. Compute net demand from treasuries, ETFs, net retail (USD→BTC), miners (all vs tradeable `liquid`).
-     * 2. Price update from elasticity (on `liquid`), halving overlay, vol shock; floor at mining cost.
-     * 3. Apply structural drain: `liquid -= netDemand + coinsLost`, treasuries/ETFs up, `lostBtc` up from `coinsLost` (only from liquid).
-     * 4. `applyHolderFlows`: optional liquid→young LTH / liquid→Ancient (positive), or bucket→liquid (negative); does not change treasuries/ETFs/lost.
-     * Young LTH and Ancient are not in the netDemand path — institutions buy only from `liquid`.
-     */
-    const netDemand = strcBtc + otherBtc + etfBtc2 + organicRetailNetBtcExec - minerSales;
-
-    const liquidRatio = Math.max(liquid / initLiq, 0.03);
-    const elasticity = p.baseElasticity / liquidRatio;
-    const structuralRaw = (netDemand / Math.max(liquid, 50000)) * elasticity;
-    const rawPct = structuralRaw + unmetPremiumMonthly;
-    const halvingCycleAdj = getHalvingCycleMonthlyAdj(year, p.halvingNarrativeAmp, p.halvingImpactDecay);
-    const cap = p.maxMonthlyPctGain / 100;
-    const fund = Math.max(-0.2, Math.min(rawPct, cap));
-    let pctChange = fund + halvingCycleAdj;
-
-    const annualFrac = (p.initialAnnualVolatility ?? 0) / 100;
-    const sigmaMonth = monthlySigmaFromAnnual(annualFrac);
-    const reductionFrac = (p.volatilityReduction ?? 0) / 100;
-    const volDecay = volatilityTimeDecayMultiplier(reductionFrac, m, months);
-    const volShock = unitShockForMonth(m) * sigmaMonth * volDecay;
-    pctChange += volShock;
-    pctChange = Math.max(-0.6, Math.min(pctChange, cap));
-
-    price = Math.max(price * (1 + pctChange), p.miningCostFloor);
-    if (!isFinite(price)) price = data[data.length - 1]?.price ?? p.startPrice;
-
-    // Structural demand drains liquid; losses move coins to lost forever.
-    liquid = Math.max(liquid - netDemand - coinsLost, LIQ_FLOOR);
-    treasury += strcBtc + otherBtc;
-    etfBtc += etfBtc2;
-    lostBtc += coinsLost;
-
-    // Illiquid holder flows (after net demand for the month).
-    const hf = applyHolderFlows(liquid, youngLthBtc, ancientBtc, p);
-    liquid = hf.liquid;
-    youngLthBtc = hf.youngLth;
-    ancientBtc = hf.ancientBtc;
-
-    const gm = (r) => 1 + r / 100 / MONTHS_PER_YEAR;
-    const tYears = m / MONTHS_PER_YEAR;
-    const rStrc = effectiveAnnualGrowthTapered({
-      r0: p.strcGrowthRate,
-      rInf: p.gdpGrowth,
-      tYears,
-      nYears: p.strcGrowthTaperYears ?? DEFAULT_TAPER_YEARS,
+    const row = buildSimulationRow({
+      year,
+      price,
+      inflationPercent: parameters.inflation,
+      monthIndex,
+      liquid,
+      treasury,
+      etfBtc,
+      lostBtc,
+      youngLthBtc,
+      ancientBtc,
+      liquidPercentOfInitial,
+      demand,
+      dailyMining,
     });
-    const rOther = effectiveAnnualGrowthTapered({
-      r0: p.otherTreasuryGrowth,
-      rInf: p.gdpGrowth,
-      tYears,
-      nYears: p.otherTreasuryGrowthTaperYears ?? DEFAULT_TAPER_YEARS,
+    data.push(row);
+
+    if (monthIndex === months) break;
+
+    const netDemand =
+      demand.strcBtc +
+      demand.otherBtc +
+      demand.etfBtc2 +
+      demand.organicRetailNetBtcExecuted -
+      demand.minerSales;
+
+    price = computePriceAfterMonthTransition({
+      price,
+      liquid,
+      initLiq: initialLiquid,
+      netDemand,
+      unmetDemandPremiumMonthly: demand.unmetDemandPremiumMonthly,
+      year,
+      monthIndex,
+      totalMonths: months,
+      parameters,
     });
-    const rEtf = effectiveAnnualGrowthTapered({
-      r0: p.etfGrowthRate,
-      rInf: p.gdpGrowth,
-      tYears,
-      nYears: p.etfGrowthTaperYears ?? DEFAULT_TAPER_YEARS,
+
+    liquid = Math.max(liquid - netDemand - demand.coinsLost, LIQ_FLOOR);
+    treasury += demand.strcBtc + demand.otherBtc;
+    etfBtc += demand.etfBtc2;
+    lostBtc += demand.coinsLost;
+
+    const holderFlows = applyHolderFlows(liquid, youngLthBtc, ancientBtc, parameters);
+    liquid = holderFlows.liquid;
+    youngLthBtc = holderFlows.youngLth;
+    ancientBtc = holderFlows.ancientBtc;
+
+    const usdFlows = advanceUsdFlowsForMonth({
+      strcUSD,
+      otherUSD,
+      etfUSD,
+      retailNetUsd,
+      monthIndex,
+      parameters,
     });
-    const rOrganic = effectiveAnnualGrowthTapered({
-      r0: p.organicBuyGrowth,
-      rInf: p.gdpGrowth,
-      tYears,
-      nYears: p.organicBuyGrowthTaperYears ?? DEFAULT_ORGANIC_BUY_GROWTH_TAPER_YEARS,
-    });
-    strcUSD *= gm(rStrc);
-    otherUSD *= gm(rOther);
-    etfUSD *= gm(rEtf);
-    retailNetUsd *= gm(rOrganic);
+    strcUSD = usdFlows.strcUSD;
+    otherUSD = usdFlows.otherUSD;
+    etfUSD = usdFlows.etfUSD;
+    retailNetUsd = usdFlows.retailNetUsd;
   }
 
   return { data, supplyShockYear };

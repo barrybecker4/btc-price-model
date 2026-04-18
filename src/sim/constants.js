@@ -7,7 +7,9 @@ export function getSimulationAnchorYear() {
   const y = d.getFullYear();
   const start = new Date(y, 0, 1);
   const next = new Date(y + 1, 0, 1);
-  return y + (d - start) / (next - start);
+  const elapsed = Number(d) - Number(start);
+  const yearLength = Number(next) - Number(start);
+  return y + elapsed / yearLength;
 }
 
 export const YEAR_START = getSimulationAnchorYear();

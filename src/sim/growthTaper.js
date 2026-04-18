@@ -48,7 +48,7 @@ export function logisticWeight01(u, steepness) {
  * @param {number} opts.r0 slider annual % (e.g. strcGrowthRate)
  * @param {number} opts.rInf long-run anchor (nominal GDP %)
  * @param {number} opts.tYears years since sim start
- * @param {number} opts.nYears taper horizon (years); if &lt; 1, no taper (returns r0)
+ * @param {number} opts.nYears taper horizon (years); if < 1, no taper (returns r0)
  * @param {number} [opts.steepness] optional override for k (testing); default scales with nYears
  */
 export function effectiveAnnualGrowthTapered({ r0, rInf, tYears, nYears, steepness }) {

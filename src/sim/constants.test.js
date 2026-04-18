@@ -23,4 +23,9 @@ describe("withParamDefaults", () => {
     expect(merged.bondYield).toBeUndefined();
     expect(merged.organicDailyBuy).toBeUndefined();
   });
+
+  it("keeps explicit numeric zero and does not replace it with defaults", () => {
+    const merged = withParamDefaults({ initialRetailPurchaseRateM: 0 });
+    expect(merged.initialRetailPurchaseRateM).toBe(0);
+  });
 });
