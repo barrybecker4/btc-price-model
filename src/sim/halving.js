@@ -28,16 +28,25 @@ export const HALVING_CHART_EPOCHS = [
   2024.3, // 2024-04-20
 ];
 
-/** Halving epochs that fall inside (simStart, simStart + simYears] — all that intersect the chart x-range. */
-export function getHalvingYearsInRange(simStartYear, simYears) {
-  const end = simStartYear + simYears;
+function extendHalvingEpochsUntil(endYear) {
   const epochs = [...HALVING_CHART_EPOCHS];
   let next = HALVING_CHART_EPOCHS[HALVING_CHART_EPOCHS.length - 1] + HALVING_INTERVAL_YEARS;
-  while (next <= end + 1e-9) {
+  while (next <= endYear + 1e-9) {
     epochs.push(next);
     next += HALVING_INTERVAL_YEARS;
   }
-  return epochs.filter((y) => y > simStartYear && y <= end);
+  return epochs;
+}
+
+/** Halving epochs in (startYear, endYear] — chart reference lines. */
+export function getHalvingYearsBetween(startYear, endYear) {
+  const epochs = extendHalvingEpochsUntil(endYear);
+  return epochs.filter((y) => y > startYear && y <= endYear);
+}
+
+/** Halving epochs that fall inside (simStart, simStart + simYears] — all that intersect the chart x-range. */
+export function getHalvingYearsInRange(simStartYear, simYears) {
+  return getHalvingYearsBetween(simStartYear, simStartYear + simYears);
 }
 
 /**

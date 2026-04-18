@@ -42,6 +42,23 @@ function PriceTooltip({ active, payload, label }) {
 const POWER_LAW_UPPER_STROKE = C.ancient;
 const POWER_LAW_LOWER_STROKE = "#14b8a6";
 
+/** Recharts log scale requires every plotted value to be strictly positive. */
+const MIN_LOG_USD = 1e-9;
+
+function clampRowForLogScale(row) {
+  return {
+    ...row,
+    price: Math.max(MIN_LOG_USD, Number(row.price) || MIN_LOG_USD),
+    priceReal: Math.max(MIN_LOG_USD, Number(row.priceReal) || MIN_LOG_USD),
+    ...(row.powerLawUpper != null && row.powerLawLower != null
+      ? {
+          powerLawUpper: Math.max(MIN_LOG_USD, row.powerLawUpper),
+          powerLawLower: Math.max(MIN_LOG_USD, row.powerLawLower),
+        }
+      : {}),
+  };
+}
+
 export function PriceChart({
   data,
   first,
@@ -51,19 +68,32 @@ export function PriceChart({
   supplyShockYear,
   overlayPowerLaw,
   onOverlayPowerLawChange,
+  showHistorical,
+  onShowHistoricalChange,
+  historicalLoading = false,
+  historicalError = null,
 }) {
   const chartData = useMemo(() => {
-    if (!overlayPowerLaw) return data;
-    return data.map((row) => {
-      const days = daysSinceGenesis(row.year);
-      const { upper, lower } = powerLawBoundsUsd(days);
-      return { ...row, powerLawUpper: upper, powerLawLower: lower };
-    });
-  }, [data, overlayPowerLaw]);
+    let rows = data;
+    if (overlayPowerLaw) {
+      rows = data.map((row) => {
+        const days = daysSinceGenesis(row.year);
+        const { upper, lower } = powerLawBoundsUsd(days);
+        return { ...row, powerLawUpper: upper, powerLawLower: lower };
+      });
+    }
+    if (logScale) {
+      rows = rows.map(clampRowForLogScale);
+    }
+    return rows;
+  }, [data, overlayPowerLaw, logScale]);
+
+  const floorForLog =
+    chartData.length > 0 && chartData[0].price > 0 ? chartData[0].price : first?.price > 0 ? first.price : 1;
 
   const yAxisPrice = {
     scale: logScale ? "log" : "linear",
-    domain: logScale ? [first.price * 0.5, "auto"] : [0, "auto"],
+    domain: logScale ? [Math.max(MIN_LOG_USD, floorForLog * 0.5), "auto"] : [0, "auto"],
     tickFormatter: fmtUSD,
     stroke: "#1e1e1e",
     tick: { fontSize: 11, fill: C.dim, fontFamily: FONT_NUM },
@@ -163,6 +193,37 @@ export function PriceChart({
             }}
           >
             Santostasi-style power-law corridor (reference only — not produced by this simulation).
+          </div>
+        )}
+      </div>
+      <div style={{ marginTop: 10 }}>
+        <label
+          style={{
+            fontSize: 11,
+            color: C.dim,
+            display: "flex",
+            alignItems: "center",
+            gap: 7,
+            cursor: "pointer",
+            fontFamily: FONT_UI,
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={showHistorical}
+            onChange={(e) => onShowHistoricalChange(e.target.checked)}
+            style={{ accentColor: C.amber }}
+          />
+          Show historical BTC/USD (2011–present)
+        </label>
+        {historicalLoading && (
+          <div style={{ marginTop: 6, fontSize: 10, color: C.hint, fontFamily: FONT_UI }}>Loading historical prices…</div>
+        )}
+        {historicalError && !historicalLoading && (
+          <div style={{ marginTop: 6, fontSize: 10, color: C.red, fontFamily: FONT_UI, maxWidth: 720 }}>
+            {historicalError}
+            {" — "}
+            Uncheck and check again to retry.
           </div>
         )}
       </div>

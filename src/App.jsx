@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ChartNotes } from "./components/ChartNotes.jsx";
 import { FlowChart } from "./components/charts/FlowChart.jsx";
 import { PriceChart } from "./components/charts/PriceChart.jsx";
@@ -6,16 +6,22 @@ import { SupplyChart } from "./components/charts/SupplyChart.jsx";
 import { KpiBar } from "./components/KpiBar.jsx";
 import { ParameterSidebar } from "./components/ParameterSidebar.jsx";
 import { DEFAULTS, withParamDefaults, YEAR_START } from "./sim/constants.js";
-import { getHalvingYearsInRange } from "./sim/halving.js";
+import { getHalvingYearsBetween, getHalvingYearsInRange } from "./sim/halving.js";
 import { runSim } from "./sim/runSim.js";
 import { C, FONT_UI } from "./theme.js";
+import { fetchBtcUsdHistoryRange } from "./utils/fetchBtcHistory.js";
 import { fetchBtcUsd } from "./utils/fetchBtcUsd.js";
+import { enrichHistoricalPriceRows, mergePriceChartHistoricalSim } from "./utils/priceChartMerge.js";
+import { fractionalYearToMs } from "./utils/powerLaw.js";
 import {
   START_PRICE_SLIDER_BASE_MAX,
   START_PRICE_SLIDER_BASE_MIN,
   boundsForSpotPrice,
   miningCostFloorBounds,
 } from "./utils/startPriceSlider.js";
+
+const HISTORICAL_CHART_START_YEAR = 2011;
+const FROM_HISTORICAL_START_MS = Date.UTC(HISTORICAL_CHART_START_YEAR, 0, 1);
 
 export default function App() {
   const [p, setP] = useState(DEFAULTS);
@@ -24,6 +30,11 @@ export default function App() {
   const [tab, setTab] = useState("price");
   const [logScale, setLog] = useState(true);
   const [overlayPowerLaw, setOverlayPowerLaw] = useState(false);
+  const [showHistorical, setShowHistorical] = useState(false);
+  const [historicalRaw, setHistoricalRaw] = useState(null);
+  const [historicalLoading, setHistoricalLoading] = useState(false);
+  const [historicalError, setHistoricalError] = useState(null);
+  const historicalFetchAttemptedRef = useRef(false);
 
   useEffect(() => {
     const ac = new AbortController();
@@ -45,6 +56,42 @@ export default function App() {
     return () => ac.abort();
   }, []);
 
+  useEffect(() => {
+    if (!showHistorical) {
+      historicalFetchAttemptedRef.current = false;
+      return;
+    }
+    if (historicalRaw != null) return;
+    if (historicalFetchAttemptedRef.current) return;
+    historicalFetchAttemptedRef.current = true;
+
+    const ac = new AbortController();
+    setHistoricalLoading(true);
+    setHistoricalError(null);
+    (async () => {
+      try {
+        const rows = await fetchBtcUsdHistoryRange({
+          fromMs: FROM_HISTORICAL_START_MS,
+          toMs: fractionalYearToMs(YEAR_START),
+          signal: ac.signal,
+        });
+        if (ac.signal.aborted) return;
+        if (!rows.length) {
+          setHistoricalError("No historical data returned.");
+          return;
+        }
+        setHistoricalRaw(rows);
+      } catch (e) {
+        if (!ac.signal.aborted) {
+          setHistoricalError(e instanceof Error ? e.message : "Failed to load historical prices.");
+        }
+      } finally {
+        if (!ac.signal.aborted) setHistoricalLoading(false);
+      }
+    })();
+    return () => ac.abort();
+  }, [showHistorical, historicalRaw]);
+
   const params = useMemo(() => withParamDefaults(p), [p]);
 
   const { data, supplyShockYear } = useMemo(() => runSim(params), [params]);
@@ -62,7 +109,27 @@ export default function App() {
   const last = data[data.length - 1];
   const mult = last.price / first.price;
 
-  const halvings = getHalvingYearsInRange(YEAR_START, params.simYears);
+  const historicalEnriched = useMemo(() => {
+    if (!historicalRaw?.length) return null;
+    return enrichHistoricalPriceRows(historicalRaw, params.inflation, YEAR_START);
+  }, [historicalRaw, params.inflation]);
+
+  const priceChartData = useMemo(() => {
+    if (!showHistorical || !historicalEnriched?.length) return cd;
+    return mergePriceChartHistoricalSim(historicalEnriched, cd, YEAR_START);
+  }, [showHistorical, historicalEnriched, cd]);
+
+  const chartFirstRow = priceChartData[0] ?? first;
+
+  const simEndYear = YEAR_START + params.simYears;
+  const halvingsPrice = useMemo(() => {
+    if (showHistorical && historicalEnriched?.length) {
+      return getHalvingYearsBetween(HISTORICAL_CHART_START_YEAR, simEndYear);
+    }
+    return getHalvingYearsInRange(YEAR_START, params.simYears);
+  }, [showHistorical, historicalEnriched, simEndYear, params.simYears]);
+
+  const halvingsSim = useMemo(() => getHalvingYearsInRange(YEAR_START, params.simYears), [params.simYears]);
 
   const tabBtn = (key, lbl) => (
     <button
@@ -139,18 +206,25 @@ export default function App() {
 
           {tab === "price" && (
             <PriceChart
-              data={cd}
-              first={first}
+              data={priceChartData}
+              first={chartFirstRow}
               inflation={params.inflation}
               logScale={logScale}
-              halvings={halvings}
+              halvings={halvingsPrice}
               supplyShockYear={supplyShockYear}
               overlayPowerLaw={overlayPowerLaw}
               onOverlayPowerLawChange={setOverlayPowerLaw}
+              showHistorical={showHistorical}
+              onShowHistoricalChange={(v) => {
+                setShowHistorical(v);
+                if (!v) setHistoricalError(null);
+              }}
+              historicalLoading={historicalLoading}
+              historicalError={historicalError}
             />
           )}
-          {tab === "supply" && <SupplyChart data={cd} halvings={halvings} supplyShockYear={supplyShockYear} />}
-          {tab === "flow" && <FlowChart data={cd} halvings={halvings} supplyShockYear={supplyShockYear} />}
+          {tab === "supply" && <SupplyChart data={cd} halvings={halvingsSim} supplyShockYear={supplyShockYear} />}
+          {tab === "flow" && <FlowChart data={cd} halvings={halvingsSim} supplyShockYear={supplyShockYear} />}
 
           <ChartNotes />
         </div>

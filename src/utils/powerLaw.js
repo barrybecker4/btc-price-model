@@ -26,6 +26,18 @@ export function fractionalYearToMs(fractionalYear) {
 }
 
 /**
+ * Inverse of {@link fractionalYearToMs} for UTC instants (used for API timestamps).
+ * @param {number} ms Unix epoch milliseconds (UTC)
+ * @returns {number} fractional calendar year
+ */
+export function fractionalYearFromUtcMs(ms) {
+  const y = new Date(ms).getUTCFullYear();
+  const yearStart = Date.UTC(y, 0, 1);
+  const nextStart = Date.UTC(y + 1, 0, 1);
+  return y + (ms - yearStart) / (nextStart - yearStart);
+}
+
+/**
  * @param {number} fractionalYear
  * @returns {number} days since genesis (clamped)
  */

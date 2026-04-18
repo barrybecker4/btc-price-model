@@ -3,6 +3,7 @@ import {
   FIRST_HALVING_YEAR,
   HALVING_INTERVAL_YEARS,
   getHalvingCycleMonthlyAdj,
+  getHalvingYearsBetween,
   getHalvingYearsInRange,
   HALVING_CHART_EPOCHS,
 } from "./halving.js";
@@ -50,5 +51,19 @@ describe("getHalvingYearsInRange", () => {
     const inRange = getHalvingYearsInRange(start, years);
     expect(inRange.length).toBeGreaterThan(0);
     expect(inRange.every((y) => y > start && y <= start + years)).toBe(true);
+  });
+});
+
+describe("getHalvingYearsBetween", () => {
+  it("includes known epochs after 2011 through end year", () => {
+    const between = getHalvingYearsBetween(2011, 2030);
+    expect(between.some((y) => Math.abs(y - 2012.91) < 0.01)).toBe(true);
+    expect(between.every((y) => y > 2011 && y <= 2030)).toBe(true);
+  });
+
+  it("matches getHalvingYearsInRange for the same window", () => {
+    const start = 2025.0;
+    const years = 8;
+    expect(getHalvingYearsBetween(start, start + years)).toEqual(getHalvingYearsInRange(start, years));
   });
 });
