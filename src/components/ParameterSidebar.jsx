@@ -103,11 +103,11 @@ export function ParameterSidebar({
         />
         <Slider
           label="Nominal GDP Growth"
-          hint="Global nominal GDP growth (real GDP + inflation). Applied as an extra monthly multiplier to ALL USD-denominated demand flows — simulating money-supply expansion. Higher GDP → more capital chasing BTC → the price curve continues rising rather than plateauing."
+          hint="Global nominal GDP growth (real GDP + inflation). Applied as an extra monthly multiplier to ALL USD-denominated demand flows — simulating money-supply expansion. Higher GDP → more capital chasing BTC."
           hintDetail="Does not scale BTC-denominated paths (e.g. block rewards); it biases USD flows that chase the float."
           value={p.gdpGrowth}
           min={1}
-          max={12}
+          max={20}
           step={0.1}
           onChange={set("gdpGrowth")}
           fmt={(v) => `${v.toFixed(1)}%/yr`}
@@ -175,7 +175,7 @@ export function ParameterSidebar({
           hint="% of newly mined BTC immediately sold by miners to cover costs."
           value={p.minerSellPct}
           min={30}
-          max={80}
+          max={90}
           step={1}
           onChange={set("minerSellPct")}
           fmt={(v) => `${v}%`}
@@ -229,7 +229,7 @@ export function ParameterSidebar({
           hint="Years over which capital-raise growth logistically tapers to the Nominal GDP Growth rate (macro block). Shorter = faster convergence to GDP pace."
           value={p.strcGrowthTaperYears}
           min={5}
-          max={50}
+          max={70}
           step={1}
           onChange={set("strcGrowthTaperYears")}
           fmt={(v) => `${v} yrs`}
@@ -258,10 +258,10 @@ export function ParameterSidebar({
         />
         <Slider
           label="Other Corp. Growth"
-          hint="Catching up as playbook spreads globally. Tapers toward Nominal GDP over the horizon below."
+          hint="Catching up as playbook spreads globally. The number of Treasury companies may grow as well as each having larger buys. Tapers toward Nominal GDP over the horizon below."
           value={p.otherTreasuryGrowth}
           min={1}
-          max={50}
+          max={80}
           step={1}
           onChange={set("otherTreasuryGrowth")}
           fmt={(v) => `${v}%/yr`}
@@ -483,7 +483,7 @@ export function ParameterSidebar({
           }
           value={p.unmetPremiumMaxMonthlyPct}
           min={0}
-          max={20}
+          max={30}
           step={0.5}
           onChange={set("unmetPremiumMaxMonthlyPct")}
           fmt={(v) => `${v.toFixed(1)}%/mo`}
@@ -501,7 +501,7 @@ export function ParameterSidebar({
         />
         <Slider
           label="Volatility fade over time"
-          hint="0% = same noise amplitude every month. 100% = noise shrinks to ~0 by the last month of the simulation. Default 90% means most of the extra chop is early."
+          hint="0% = same noise amplitude every month. 100% = noise shrinks to ~0 by the last month of the simulation."
           value={p.volatilityReduction}
           min={0}
           max={100}
