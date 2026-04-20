@@ -15,6 +15,14 @@ export const GENESIS_MS = Date.UTC(2009, 0, 3);
 /** Log10 distance from trend for upper/lower bands: ~10^0.477 ≈ 3× and ~10^-0.477 ≈ 1/3. */
 export const SIGMA_LOG10 = 0.477;
 
+/**
+ * Santostasi / Perrenod power-law trend in USD: price ≈ 10^intercept × days^exponent
+ * (equivalently log₁₀(price) = intercept + exponent·log₁₀(days)).
+ * @see https://bitcoinpower.law/
+ */
+export const POWER_LAW_LOG10_INTERCEPT = -16.493;
+export const POWER_LAW_DAYS_EXPONENT = 5.688;
+
 const MS_PER_DAY = 86400000;
 const MIN_DAYS = 1;
 
@@ -72,7 +80,10 @@ export function daysSinceGenesis(fractionalYear) {
  * @returns {number} USD trend price
  */
 export function powerLawTrendUsd(days) {
-  return Math.pow(10, -16.493) * Math.pow(days, 5.688);
+  return (
+    Math.pow(10, POWER_LAW_LOG10_INTERCEPT) *
+    Math.pow(days, POWER_LAW_DAYS_EXPONENT)
+  );
 }
 
 /**

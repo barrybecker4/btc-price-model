@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { decimalYearToDate } from "./format.js";
 import {
   GENESIS_MS,
+  POWER_LAW_DAYS_EXPONENT,
+  POWER_LAW_LOG10_INTERCEPT,
   SIGMA_LOG10,
   daysSinceGenesis,
   fractionalYearFromUtcMs,
@@ -44,7 +46,9 @@ describe("daysSinceGenesis", () => {
 describe("powerLawTrendUsd", () => {
   it("matches reference formula at a fixed day count", () => {
     const days = 4000;
-    const expected = Math.pow(10, -16.493) * Math.pow(days, 5.688);
+    const expected =
+      Math.pow(10, POWER_LAW_LOG10_INTERCEPT) *
+      Math.pow(days, POWER_LAW_DAYS_EXPONENT);
     expect(powerLawTrendUsd(days)).toBeCloseTo(expected, 8);
   });
 });
