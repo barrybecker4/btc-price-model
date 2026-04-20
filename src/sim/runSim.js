@@ -1,4 +1,4 @@
-import { MONTHS_PER_YEAR, YEAR_START } from "./constants.js";
+import { DEFAULTS, MONTHS_PER_YEAR, YEAR_START } from "./constants.js";
 import {
   applyHolderFlows,
   initialHolderSplit,
@@ -28,8 +28,8 @@ export function runSim(parameters) {
   const available0 = Math.max(parameters.circulatingSupply - lostBtc - treasury - etfBtc, 0);
   const split = initialHolderSplit(
     available0,
-    parameters.lth155SharePct ?? 73,
-    parameters.ancientSharePct ?? 17
+    parameters.lth155SharePct ?? DEFAULTS.lth155SharePct,
+    parameters.ancientSharePct ?? DEFAULTS.ancientSharePct
   );
   const rebalanced = rebalanceLiquidToFloor(split.liquid, split.youngLth, split.ancientBtc, LIQ_FLOOR);
   let liquid = rebalanced.liquid;
