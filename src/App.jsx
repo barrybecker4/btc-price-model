@@ -30,6 +30,7 @@ export default function App() {
   const [tab, setTab] = useState("price");
   const [logScale, setLog] = useState(true);
   const [overlayPowerLaw, setOverlayPowerLaw] = useState(false);
+  const [overlaySpy, setOverlaySpy] = useState(false);
   const [showHistorical, setShowHistorical] = useState(false);
   const [historicalRaw, setHistoricalRaw] = useState(null);
   const [historicalLoading, setHistoricalLoading] = useState(false);
@@ -199,7 +200,7 @@ export default function App() {
                 }}
               >
                 <input type="checkbox" checked={logScale} onChange={(e) => setLog(e.target.checked)} style={{ accentColor: C.amber }} />
-                LOG SCALE
+                LOG SCALE (BTC & SPY)
               </label>
             )}
           </div>
@@ -209,11 +210,14 @@ export default function App() {
               data={priceChartData}
               first={chartFirstRow}
               inflation={params.inflation}
+              gdpGrowth={params.gdpGrowth}
               logScale={logScale}
               halvings={halvingsPrice}
               supplyShockYear={supplyShockYear}
               overlayPowerLaw={overlayPowerLaw}
               onOverlayPowerLawChange={setOverlayPowerLaw}
+              overlaySpy={overlaySpy}
+              onOverlaySpyChange={setOverlaySpy}
               showHistorical={showHistorical}
               onShowHistoricalChange={(v) => {
                 setShowHistorical(v);

@@ -15,6 +15,7 @@ import { YEAR_START } from "../../sim/constants.js";
 import { fmtUSD } from "../../utils/format.js";
 import { TIP, XAXIS_PROPS } from "../../charts/rechartsConfig.js";
 import { daysSinceGenesis, powerLawBoundsUsd } from "../../utils/powerLaw.js";
+import { attachSpyOverlay } from "../../utils/spyProjection.js";
 import { HalvingVLines } from "./HalvingVLines.jsx";
 import { ShockLine } from "./ShockLine.jsx";
 
@@ -58,6 +59,13 @@ function clampRowForLogScale(row) {
           powerLawLower: Math.max(MIN_LOG_USD, row.powerLawLower),
         }
       : {}),
+    ...(row.spyHistorical != null
+      ? { spyHistorical: Math.max(MIN_LOG_USD, Number(row.spyHistorical) || MIN_LOG_USD) }
+      : {}),
+    ...(row.spyBase != null ? { spyBase: Math.max(MIN_LOG_USD, Number(row.spyBase) || MIN_LOG_USD) } : {}),
+    ...(row.spyBull != null ? { spyBull: Math.max(MIN_LOG_USD, Number(row.spyBull) || MIN_LOG_USD) } : {}),
+    ...(row.spyBear != null ? { spyBear: Math.max(MIN_LOG_USD, Number(row.spyBear) || MIN_LOG_USD) } : {}),
+    ...(row.spyReal != null ? { spyReal: Math.max(MIN_LOG_USD, Number(row.spyReal) || MIN_LOG_USD) } : {}),
   };
 }
 
@@ -65,11 +73,14 @@ export function PriceChart({
   data,
   first,
   inflation,
+  gdpGrowth,
   logScale,
   halvings,
   supplyShockYear,
   overlayPowerLaw,
   onOverlayPowerLawChange,
+  overlaySpy,
+  onOverlaySpyChange,
   showHistorical,
   onShowHistoricalChange,
   /** When historical series is merged, draw a vertical guide at the sim anchor (today). */
@@ -86,18 +97,50 @@ export function PriceChart({
         return { ...row, powerLawUpper: upper, powerLawLower: lower };
       });
     }
+    if (overlaySpy) {
+      rows = attachSpyOverlay(rows, {
+        yearStart: YEAR_START,
+        inflationPct: inflation,
+        gdpGrowthPct: gdpGrowth,
+      });
+    }
     if (logScale) {
       rows = rows.map(clampRowForLogScale);
     }
     return rows;
-  }, [data, overlayPowerLaw, logScale]);
+  }, [data, overlayPowerLaw, overlaySpy, logScale, inflation, gdpGrowth]);
 
   const floorForLog =
     chartData.length > 0 && chartData[0].price > 0 ? chartData[0].price : first?.price > 0 ? first.price : 1;
+  const spyFloorForLog = useMemo(() => {
+    if (!overlaySpy) return 1;
+    const values = [];
+    for (const row of chartData) {
+      if (row.spyHistorical > 0) values.push(row.spyHistorical);
+      if (row.spyBase > 0) values.push(row.spyBase);
+      if (row.spyBull > 0) values.push(row.spyBull);
+      if (row.spyBear > 0) values.push(row.spyBear);
+      if (row.spyReal > 0) values.push(row.spyReal);
+    }
+    if (!values.length) return 1;
+    return Math.min(...values);
+  }, [chartData, overlaySpy]);
 
   const yAxisPrice = {
     scale: logScale ? "log" : "linear",
     domain: logScale ? [Math.max(MIN_LOG_USD, floorForLog * 0.5), "auto"] : [0, "auto"],
+    tickFormatter: fmtUSD,
+    stroke: "#1e1e1e",
+    tick: { fontSize: 11, fill: C.dim, fontFamily: FONT_NUM },
+    tickLine: false,
+    width: 82,
+    allowDecimals: false,
+  };
+  const yAxisSpy = {
+    yAxisId: "spy",
+    orientation: "right",
+    scale: logScale ? "log" : "linear",
+    domain: logScale ? [Math.max(MIN_LOG_USD, spyFloorForLog * 0.5), "auto"] : [0, "auto"],
     tickFormatter: fmtUSD,
     stroke: "#1e1e1e",
     tick: { fontSize: 11, fill: C.dim, fontFamily: FONT_NUM },
@@ -116,6 +159,7 @@ export function PriceChart({
           <CartesianGrid stroke="#141414" strokeDasharray="3 3" />
           <XAxis {...XAXIS_PROPS} />
           <YAxis yAxisId="p" {...yAxisPrice} />
+          {overlaySpy && <YAxis {...yAxisSpy} />}
           <Tooltip content={<PriceTooltip />} />
           <Legend wrapperStyle={{ fontSize: 11, fontFamily: FONT_UI, paddingTop: 8 }} />
           <HalvingVLines halvings={halvings} yAxisId="p" />
@@ -183,6 +227,63 @@ export function PriceChart({
               />
             </>
           )}
+          {overlaySpy && (
+            <>
+              <Line
+                yAxisId="spy"
+                type="monotone"
+                dataKey="spyHistorical"
+                name="SPY Historical"
+                stroke={C.blue}
+                dot={false}
+                strokeWidth={2}
+                connectNulls={false}
+              />
+              <Line
+                yAxisId="spy"
+                type="monotone"
+                dataKey="spyBase"
+                name="SPY Base"
+                stroke="#5fcc8a"
+                dot={false}
+                strokeWidth={2}
+                connectNulls={false}
+              />
+              <Line
+                yAxisId="spy"
+                type="monotone"
+                dataKey="spyBull"
+                name="SPY Bull"
+                stroke="#4e9eff"
+                dot={false}
+                strokeWidth={1.5}
+                strokeDasharray="5 4"
+                connectNulls={false}
+              />
+              <Line
+                yAxisId="spy"
+                type="monotone"
+                dataKey="spyBear"
+                name="SPY Bear"
+                stroke="#e05a5a"
+                dot={false}
+                strokeWidth={1.5}
+                strokeDasharray="5 4"
+                connectNulls={false}
+              />
+              <Line
+                yAxisId="spy"
+                type="monotone"
+                dataKey="spyReal"
+                name="SPY Real"
+                stroke={C.ancient}
+                dot={false}
+                strokeWidth={1.5}
+                strokeDasharray="5 3"
+                connectNulls={false}
+              />
+            </>
+          )}
         </LineChart>
       </ResponsiveContainer>
       <div style={{ marginTop: 10 }}>
@@ -217,6 +318,42 @@ export function PriceChart({
             }}
           >
             Santostasi-style power-law corridor (reference only — not produced by this simulation).
+          </div>
+        )}
+      </div>
+      <div style={{ marginTop: 10 }}>
+        <label
+          style={{
+            fontSize: 11,
+            color: C.dim,
+            display: "flex",
+            alignItems: "center",
+            gap: 7,
+            cursor: "pointer",
+            fontFamily: FONT_UI,
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={overlaySpy}
+            onChange={(e) => onOverlaySpyChange(e.target.checked)}
+            style={{ accentColor: C.amber }}
+          />
+          Overlay SPY (S&P 500) historical + projection scenarios
+        </label>
+        {overlaySpy && (
+          <div
+            style={{
+              marginTop: 6,
+              maxWidth: 720,
+              fontSize: 10,
+              lineHeight: 1.4,
+              color: C.hint,
+              fontFamily: FONT_UI,
+            }}
+          >
+            Reference model: earnings growth tracks 65% of nominal GDP, assumes 1.5% dividends, fixed valuation, and smooth compounding.
+            Scenarios are base, bull (+2%/yr), bear (-2%/yr), and inflation-adjusted real value.
           </div>
         )}
       </div>
