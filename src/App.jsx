@@ -32,6 +32,7 @@ export default function App() {
   const [yAxisScale, setYAxisScale] = useState(1);
   const [overlayPowerLaw, setOverlayPowerLaw] = useState(false);
   const [overlaySpy, setOverlaySpy] = useState(false);
+  const [spyBullishness, setSpyBullishness] = useState(0.5);
   const [showHistorical, setShowHistorical] = useState(false);
   const [historicalRaw, setHistoricalRaw] = useState(null);
   const [historicalLoading, setHistoricalLoading] = useState(false);
@@ -243,6 +244,8 @@ export default function App() {
               onOverlayPowerLawChange={setOverlayPowerLaw}
               overlaySpy={overlaySpy}
               onOverlaySpyChange={setOverlaySpy}
+              spyBullishness={spyBullishness}
+              onSpyBullishnessChange={setSpyBullishness}
               showHistorical={showHistorical}
               onShowHistoricalChange={(v) => {
                 setShowHistorical(v);

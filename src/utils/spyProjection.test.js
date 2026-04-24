@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { attachSpyOverlay, scaleSpyOverlayToBtcAtAnchor, spyPriceAtYear, spyScenarioRates } from "./spyProjection.js";
+import {
+  attachSpyOverlay,
+  scaleSpyOverlayToBtcAtAnchor,
+  spyNominalProjectedReturn,
+  spyPriceAtYear,
+  spyScenarioRates,
+} from "./spyProjection.js";
 
 describe("spyPriceAtYear", () => {
   it("linearly interpolates between yearly closes", () => {
@@ -19,42 +25,58 @@ describe("spyScenarioRates", () => {
   });
 });
 
+describe("spyNominalProjectedReturn", () => {
+  it("matches bear at 0 and bull at 1", () => {
+    const rates = spyScenarioRates(3, 5);
+    expect(spyNominalProjectedReturn(rates, 0)).toBeCloseTo(rates.bearReturn, 10);
+    expect(spyNominalProjectedReturn(rates, 1)).toBeCloseTo(rates.bullReturn, 10);
+    expect(spyNominalProjectedReturn(rates, 0.5)).toBeCloseTo(rates.nominalReturn, 10);
+  });
+});
+
 describe("attachSpyOverlay", () => {
-  it("uses historical before anchor and scenarios at/after anchor", () => {
+  it("uses historical before anchor and projection at/after anchor", () => {
     const yearStart = 2025.25;
     const rows = [{ year: 2025.0 }, { year: 2025.25 }, { year: 2025.75 }];
     const out = attachSpyOverlay(rows, { yearStart, inflationPct: 3, gdpGrowthPct: 5 });
     const anchor = spyPriceAtYear(yearStart);
+    const rates = spyScenarioRates(3, 5);
 
-    expect(out[0].spyHistorical).toBeCloseTo(585, 8);
-    expect(out[0].spyBase).toBeUndefined();
+    expect(out[0].spy).toBeCloseTo(585, 8);
+    expect(out[0].spyReal).toBeUndefined();
 
-    expect(out[1].spyHistorical).toBeUndefined();
-    expect(out[1].spyBase).toBeCloseTo(anchor, 8);
-    expect(out[1].spyBull).toBeCloseTo(anchor, 8);
-    expect(out[1].spyBear).toBeCloseTo(anchor, 8);
+    expect(out[1].spy).toBeCloseTo(anchor, 8);
     expect(out[1].spyReal).toBeCloseTo(anchor, 8);
 
-    expect(out[2].spyBull).toBeGreaterThan(out[2].spyBase);
-    expect(out[2].spyBase).toBeGreaterThan(out[2].spyBear);
+    const delta = 0.5;
+    expect(out[2].spy).toBeCloseTo(anchor * Math.pow(1 + rates.nominalReturn, delta), 8);
+    expect(out[2].spyReal).toBeCloseTo(anchor * Math.pow(1 + rates.realReturn, delta), 8);
+  });
+
+  it("moves projected nominal from bear to bull with bullishness", () => {
+    const yearStart = 2025.25;
+    const rows = [{ year: 2025.25 }, { year: 2026.25 }];
+    const bear = attachSpyOverlay(rows, { yearStart, inflationPct: 3, gdpGrowthPct: 5, spyBullishness: 0 });
+    const bull = attachSpyOverlay(rows, { yearStart, inflationPct: 3, gdpGrowthPct: 5, spyBullishness: 1 });
+    expect(bull[1].spy).toBeGreaterThan(bear[1].spy);
   });
 });
 
 describe("scaleSpyOverlayToBtcAtAnchor", () => {
   it("scales all SPY fields so the anchor row meets nominal BTC", () => {
+    const yearStart = 2026.0;
     const rows = [
-      { year: 2025.0, price: 80000, spyHistorical: 400 },
-      { year: 2026.0, price: 100000, spyBase: 500, spyBull: 520, spyBear: 480, spyReal: 490 },
-      { year: 2027.0, price: 110000, spyBase: 550, spyBull: 590, spyBear: 510, spyReal: 530 },
+      { year: 2025.0, price: 80000, spy: 400 },
+      { year: 2026.0, price: 100000, spy: 500, spyReal: 490 },
+      { year: 2027.0, price: 110000, spy: 550, spyReal: 530 },
     ];
 
-    const out = scaleSpyOverlayToBtcAtAnchor(rows);
+    const out = scaleSpyOverlayToBtcAtAnchor(rows, yearStart);
     const scale = 100000 / 500;
 
-    expect(out[1].spyBase).toBeCloseTo(100000, 8);
-    expect(out[0].spyHistorical).toBeCloseTo(400 * scale, 8);
-    expect(out[2].spyBull).toBeCloseTo(590 * scale, 8);
-    expect(out[2].spyBear).toBeCloseTo(510 * scale, 8);
+    expect(out[1].spy).toBeCloseTo(100000, 8);
+    expect(out[0].spy).toBeCloseTo(400 * scale, 8);
+    expect(out[2].spy).toBeCloseTo(550 * scale, 8);
     expect(out[2].spyReal).toBeCloseTo(530 * scale, 8);
   });
 });

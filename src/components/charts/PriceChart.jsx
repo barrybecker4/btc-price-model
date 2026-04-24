@@ -44,7 +44,7 @@ function PriceTooltip({ active, payload, label }) {
 
 const POWER_LAW_UPPER_STROKE = C.ancient;
 const POWER_LAW_LOWER_STROKE = "#14b8a6";
-const SERIES_KEYS = ["price", "priceReal", "powerLawUpper", "powerLawLower", "spyHistorical", "spyBase", "spyBull", "spyBear", "spyReal"];
+const SERIES_KEYS = ["price", "priceReal", "powerLawUpper", "powerLawLower", "spy", "spyReal"];
 
 /** Recharts log scale requires every plotted value to be strictly positive. */
 const MIN_LOG_USD = 1e-9;
@@ -60,12 +60,7 @@ function clampRowForLogScale(row) {
           powerLawLower: Math.max(MIN_LOG_USD, row.powerLawLower),
         }
       : {}),
-    ...(row.spyHistorical != null
-      ? { spyHistorical: Math.max(MIN_LOG_USD, Number(row.spyHistorical) || MIN_LOG_USD) }
-      : {}),
-    ...(row.spyBase != null ? { spyBase: Math.max(MIN_LOG_USD, Number(row.spyBase) || MIN_LOG_USD) } : {}),
-    ...(row.spyBull != null ? { spyBull: Math.max(MIN_LOG_USD, Number(row.spyBull) || MIN_LOG_USD) } : {}),
-    ...(row.spyBear != null ? { spyBear: Math.max(MIN_LOG_USD, Number(row.spyBear) || MIN_LOG_USD) } : {}),
+    ...(row.spy != null ? { spy: Math.max(MIN_LOG_USD, Number(row.spy) || MIN_LOG_USD) } : {}),
     ...(row.spyReal != null ? { spyReal: Math.max(MIN_LOG_USD, Number(row.spyReal) || MIN_LOG_USD) } : {}),
   };
 }
@@ -83,6 +78,8 @@ export function PriceChart({
   onOverlayPowerLawChange,
   overlaySpy,
   onOverlaySpyChange,
+  spyBullishness,
+  onSpyBullishnessChange,
   showHistorical,
   onShowHistoricalChange,
   /** When historical series is merged, draw a vertical guide at the sim anchor (today). */
@@ -104,8 +101,9 @@ export function PriceChart({
         yearStart: YEAR_START,
         inflationPct: inflation,
         gdpGrowthPct: gdpGrowth,
+        spyBullishness,
       });
-      rows = scaleSpyOverlayToBtcAtAnchor(rows);
+      rows = scaleSpyOverlayToBtcAtAnchor(rows, YEAR_START);
     }
     if (logScale) rows = rows.map(clampRowForLogScale);
     const unscaledRows = rows;
@@ -124,7 +122,7 @@ export function PriceChart({
       : 0;
 
     return { chartData: rows, baseAxisMin: axisMin, baseAxisMax: axisMax };
-  }, [data, overlayPowerLaw, overlaySpy, logScale, inflation, gdpGrowth, first]);
+  }, [data, overlayPowerLaw, overlaySpy, logScale, inflation, gdpGrowth, first, spyBullishness]);
 
   const safeScale = Math.max(1, Number(yAxisScale) || 1);
   const scaledAxisMax = Math.max(baseAxisMin * (logScale ? 1.05 : 1), baseAxisMax / safeScale);
@@ -223,43 +221,11 @@ export function PriceChart({
               <Line
                 yAxisId="p"
                 type="monotone"
-                dataKey="spyHistorical"
-                name="SPY Historical"
+                dataKey="spy"
+                name="SPY"
                 stroke={C.blue}
                 dot={false}
                 strokeWidth={2}
-                connectNulls={false}
-              />
-              <Line
-                yAxisId="p"
-                type="monotone"
-                dataKey="spyBase"
-                name="SPY Base"
-                stroke="#5fcc8a"
-                dot={false}
-                strokeWidth={2}
-                connectNulls={false}
-              />
-              <Line
-                yAxisId="p"
-                type="monotone"
-                dataKey="spyBull"
-                name="SPY Bull"
-                stroke="#4e9eff"
-                dot={false}
-                strokeWidth={1.5}
-                strokeDasharray="5 4"
-                connectNulls={false}
-              />
-              <Line
-                yAxisId="p"
-                type="monotone"
-                dataKey="spyBear"
-                name="SPY Bear"
-                stroke="#e05a5a"
-                dot={false}
-                strokeWidth={1.5}
-                strokeDasharray="5 4"
                 connectNulls={false}
               />
               <Line
@@ -343,7 +309,16 @@ export function PriceChart({
           </div>
         )}
       </div>
-      <div style={{ marginTop: 10 }}>
+      <div
+        style={{
+          marginTop: 10,
+          display: "flex",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "6px 16px",
+          fontFamily: FONT_UI,
+        }}
+      >
         <label
           style={{
             fontSize: 11,
@@ -352,7 +327,6 @@ export function PriceChart({
             alignItems: "center",
             gap: 7,
             cursor: "pointer",
-            fontFamily: FONT_UI,
           }}
         >
           <input
@@ -366,21 +340,46 @@ export function PriceChart({
         {overlaySpy && (
           <div
             style={{
-              marginTop: 6,
-              maxWidth: 720,
-              fontSize: 10,
-              lineHeight: 1.4,
-              color: C.hint,
-              fontFamily: FONT_UI,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              flex: "1 1 200px",
+              maxWidth: 400,
+              minWidth: 0,
             }}
           >
-            SPY lines are scaled to match nominal BTC at the "Now" anchor for visual comparison.
-            {" "}
-            Reference model: earnings growth tracks 65% of nominal GDP, assumes 1.5% dividends, fixed valuation, and smooth compounding.
-            Scenarios are base, bull (+2%/yr), bear (-2%/yr), and inflation-adjusted real value.
+            <span style={{ fontSize: 11, color: C.dim, whiteSpace: "nowrap" }}>How Bullish?</span>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={spyBullishness}
+              onChange={(e) => onSpyBullishnessChange(Number(e.target.value))}
+              style={{ flex: 1, accentColor: C.amber, cursor: "ew-resize", minWidth: 80 }}
+            />
+            <span style={{ fontSize: 11, color: C.hint, minWidth: 36, textAlign: "right" }}>
+              {spyBullishness.toFixed(2)}
+            </span>
           </div>
         )}
       </div>
+      {overlaySpy && (
+        <div
+          style={{
+            marginTop: 6,
+            maxWidth: 720,
+            fontSize: 10,
+            lineHeight: 1.4,
+            color: C.hint,
+            fontFamily: FONT_UI,
+          }}
+        >
+          SPY is scaled to nominal BTC at the &ldquo;Now&rdquo; anchor. Past: historical closes. Future nominal path
+          interpolates between bear (&minus;2% vs. base) and bull (+2% vs. base) using the slider; SPY Real uses the
+          inflation-adjusted reference return.
+        </div>
+      )}
       <div
         style={{
           marginTop: 10,

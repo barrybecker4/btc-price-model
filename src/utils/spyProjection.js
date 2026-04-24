@@ -20,7 +20,17 @@ const EARNINGS_COEFF = 0.65;
 const DIVIDEND_YIELD = 0.015;
 const BULL_BEAR_SPREAD = 0.02;
 const YEAR_EPS = 1e-4;
-const SPY_KEYS = ["spyHistorical", "spyBase", "spyBull", "spyBear", "spyReal"];
+const SPY_KEYS = ["spy", "spyReal"];
+
+/**
+ * Annual return for nominal SPY projection between bear (0) and bull (1).
+ * @param {{ bearReturn: number, bullReturn: number }} rates
+ * @param {number} spyBullishness 0–1
+ */
+export function spyNominalProjectedReturn(rates, spyBullishness) {
+  const t = Math.min(1, Math.max(0, spyBullishness));
+  return rates.bearReturn + t * (rates.bullReturn - rates.bearReturn);
+}
 
 /**
  * @param {number} year fractional year
@@ -67,24 +77,23 @@ export function spyScenarioRates(inflationPct, gdpGrowthPct) {
 /**
  * Attach SPY historical/projection overlay fields to chart rows.
  * @param {object[]} rows
- * @param {{ yearStart: number, inflationPct: number, gdpGrowthPct: number }} input
+ * @param {{ yearStart: number, inflationPct: number, gdpGrowthPct: number, spyBullishness?: number }} input
  * @returns {object[]}
  */
 export function attachSpyOverlay(rows, input) {
-  const { yearStart, inflationPct, gdpGrowthPct } = input;
+  const { yearStart, inflationPct, gdpGrowthPct, spyBullishness = 0.5 } = input;
   const rates = spyScenarioRates(inflationPct, gdpGrowthPct);
   const anchor = spyPriceAtYear(yearStart);
+  const nominalR = spyNominalProjectedReturn(rates, spyBullishness);
 
   return rows.map((row) => {
     const deltaYears = row.year - yearStart;
     if (deltaYears < -YEAR_EPS) {
-      return { ...row, spyHistorical: spyPriceAtYear(row.year) };
+      return { ...row, spy: spyPriceAtYear(row.year) };
     }
     return {
       ...row,
-      spyBase: anchor * Math.pow(1 + rates.nominalReturn, deltaYears),
-      spyBull: anchor * Math.pow(1 + rates.bullReturn, deltaYears),
-      spyBear: anchor * Math.pow(1 + rates.bearReturn, deltaYears),
+      spy: anchor * Math.pow(1 + nominalR, deltaYears),
       spyReal: anchor * Math.pow(1 + rates.realReturn, deltaYears),
     };
   });
@@ -93,12 +102,15 @@ export function attachSpyOverlay(rows, input) {
 /**
  * Scale SPY chart fields so the first projected SPY point matches nominal BTC at the same row.
  * @param {object[]} rows
+ * @param {number} yearStart fractional year where projection begins (same as attachSpyOverlay)
  * @returns {object[]}
  */
-export function scaleSpyOverlayToBtcAtAnchor(rows) {
-  const anchorRow = rows.find((row) => Number(row.spyBase) > 0 && Number(row.price) > 0);
+export function scaleSpyOverlayToBtcAtAnchor(rows, yearStart) {
+  const anchorRow = rows.find(
+    (row) => row.year >= yearStart - YEAR_EPS && Number(row.spy) > 0 && Number(row.price) > 0
+  );
   if (!anchorRow) return rows;
-  const scale = anchorRow.price / anchorRow.spyBase;
+  const scale = anchorRow.price / anchorRow.spy;
   if (!Number.isFinite(scale) || scale <= 0) return rows;
 
   return rows.map((row) => {
