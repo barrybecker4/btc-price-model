@@ -44,6 +44,7 @@ function PriceTooltip({ active, payload, label }) {
 
 const POWER_LAW_UPPER_STROKE = C.ancient;
 const POWER_LAW_LOWER_STROKE = "#14b8a6";
+const SERIES_KEYS = ["price", "priceReal", "powerLawUpper", "powerLawLower", "spyHistorical", "spyBase", "spyBull", "spyBear", "spyReal"];
 
 /** Recharts log scale requires every plotted value to be strictly positive. */
 const MIN_LOG_USD = 1e-9;
@@ -75,6 +76,7 @@ export function PriceChart({
   inflation,
   gdpGrowth,
   logScale,
+  yAxisScale = 1,
   halvings,
   supplyShockYear,
   overlayPowerLaw,
@@ -88,7 +90,7 @@ export function PriceChart({
   historicalLoading = false,
   historicalError = null,
 }) {
-  const chartData = useMemo(() => {
+  const { chartData, baseAxisMin, baseAxisMax } = useMemo(() => {
     let rows = data;
     if (overlayPowerLaw) {
       rows = data.map((row) => {
@@ -105,17 +107,32 @@ export function PriceChart({
       });
       rows = scaleSpyOverlayToBtcAtAnchor(rows);
     }
-    if (logScale) {
-      rows = rows.map(clampRowForLogScale);
-    }
-    return rows;
-  }, [data, overlayPowerLaw, overlaySpy, logScale, inflation, gdpGrowth]);
+    if (logScale) rows = rows.map(clampRowForLogScale);
+    const unscaledRows = rows;
 
-  const floorForLog =
-    chartData.length > 0 && chartData[0].price > 0 ? chartData[0].price : first?.price > 0 ? first.price : 1;
+    let maxValue = 0;
+    for (const row of unscaledRows) {
+      for (const key of SERIES_KEYS) {
+        const value = Number(row[key]);
+        if (Number.isFinite(value) && value > maxValue) maxValue = value;
+      }
+    }
+    const fallbackMax = first?.price > 0 ? first.price : 1;
+    const axisMax = Math.max(1, maxValue || fallbackMax);
+    const axisMin = logScale
+      ? Math.max(MIN_LOG_USD, (unscaledRows[0]?.price > 0 ? unscaledRows[0].price : fallbackMax) * 0.5)
+      : 0;
+
+    return { chartData: rows, baseAxisMin: axisMin, baseAxisMax: axisMax };
+  }, [data, overlayPowerLaw, overlaySpy, logScale, inflation, gdpGrowth, first]);
+
+  const safeScale = Math.max(1, Number(yAxisScale) || 1);
+  const scaledAxisMax = Math.max(baseAxisMin * (logScale ? 1.05 : 1), baseAxisMax / safeScale);
+
   const yAxisPrice = {
     scale: logScale ? "log" : "linear",
-    domain: logScale ? [Math.max(MIN_LOG_USD, floorForLog * 0.5), "auto"] : [0, "auto"],
+    domain: [baseAxisMin, scaledAxisMax],
+    allowDataOverflow: true,
     tickFormatter: fmtUSD,
     stroke: "#1e1e1e",
     tick: { fontSize: 11, fill: C.dim, fontFamily: FONT_NUM },
@@ -129,7 +146,7 @@ export function PriceChart({
       <div style={{ fontSize: 11, color: C.hint, marginBottom: 8, letterSpacing: "0.04em", fontFamily: FONT_UI }}>
         BTC PRICE (USD) — Nominal vs Inflation-Adjusted · Halvings &amp; Supply Shock Marked
       </div>
-      <ResponsiveContainer width="100%" height={310}>
+      <ResponsiveContainer width="100%" height={620}>
         <LineChart data={chartData} margin={{ top: 5, right: 30, left: 5, bottom: 5 }}>
           <CartesianGrid stroke="#141414" strokeDasharray="3 3" />
           <XAxis {...XAXIS_PROPS} />

@@ -29,6 +29,7 @@ export default function App() {
   const [startPriceSliderMax, setStartPriceSliderMax] = useState(START_PRICE_SLIDER_BASE_MAX);
   const [tab, setTab] = useState("price");
   const [logScale, setLog] = useState(true);
+  const [yAxisScale, setYAxisScale] = useState(1);
   const [overlayPowerLaw, setOverlayPowerLaw] = useState(false);
   const [overlaySpy, setOverlaySpy] = useState(false);
   const [showHistorical, setShowHistorical] = useState(false);
@@ -188,20 +189,43 @@ export default function App() {
             {tabBtn("supply", "SUPPLY BREAKDOWN")}
             {tabBtn("flow", "DAILY FLOW")}
             {tab === "price" && (
-              <label
-                style={{
-                  marginLeft: "auto",
-                  fontSize: 11,
-                  color: C.dim,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 7,
-                  cursor: "pointer",
-                }}
-              >
-                <input type="checkbox" checked={logScale} onChange={(e) => setLog(e.target.checked)} style={{ accentColor: C.amber }} />
-                LOG SCALE (BTC & SPY)
-              </label>
+              <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 14 }}>
+                <label
+                  style={{
+                    fontSize: 11,
+                    color: C.dim,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 7,
+                    cursor: "pointer",
+                  }}
+                >
+                  <input type="checkbox" checked={logScale} onChange={(e) => setLog(e.target.checked)} style={{ accentColor: C.amber }} />
+                  LOG SCALE (BTC & SPY)
+                </label>
+                <label
+                  style={{
+                    fontSize: 11,
+                    color: C.dim,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    fontFamily: FONT_UI,
+                  }}
+                >
+                  Y SCALE
+                  <input
+                    type="range"
+                    min="1"
+                    max="40"
+                    step="0.1"
+                    value={yAxisScale}
+                    onChange={(e) => setYAxisScale(Number(e.target.value))}
+                    style={{ accentColor: C.amber, width: 140, cursor: "ew-resize" }}
+                  />
+                  <span style={{ minWidth: 34, textAlign: "right", color: C.hint }}>{yAxisScale.toFixed(2)}x</span>
+                </label>
+              </div>
             )}
           </div>
 
@@ -212,6 +236,7 @@ export default function App() {
               inflation={params.inflation}
               gdpGrowth={params.gdpGrowth}
               logScale={logScale}
+              yAxisScale={yAxisScale}
               halvings={halvingsPrice}
               supplyShockYear={supplyShockYear}
               overlayPowerLaw={overlayPowerLaw}
