@@ -275,25 +275,43 @@ export function PriceChart({
         )}
       </div>
       <div style={{ marginTop: 10 }}>
-        <label
+        <div
           style={{
             fontSize: 11,
             color: C.dim,
             display: "flex",
             alignItems: "center",
             gap: 7,
-            cursor: "pointer",
+            flexWrap: "wrap",
             fontFamily: FONT_UI,
           }}
         >
-          <input
-            type="checkbox"
-            checked={overlayPowerLaw}
-            onChange={(e) => onOverlayPowerLawChange(e.target.checked)}
-            style={{ accentColor: C.amber }}
-          />
-          Overlay power law bounds
-        </label>
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 7,
+              cursor: "pointer",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={overlayPowerLaw}
+              onChange={(e) => onOverlayPowerLawChange(e.target.checked)}
+              style={{ accentColor: C.amber }}
+            />
+            Overlay{" "}
+          </label>
+          <a
+            href="https://charts.bitbo.io/long-term-power-law/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: C.blue, textDecoration: "underline" }}
+          >
+            power law model
+          </a>
+          <span> bounds</span>
+        </div>
         {overlayPowerLaw && (
           <div
             style={{
