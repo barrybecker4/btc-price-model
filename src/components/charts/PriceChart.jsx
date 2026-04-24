@@ -291,6 +291,37 @@ export function PriceChart({
         >
           <input
             type="checkbox"
+            checked={showHistorical}
+            onChange={(e) => onShowHistoricalChange(e.target.checked)}
+            style={{ accentColor: C.amber }}
+          />
+          Show historical data (2011–present)
+        </label>
+        {historicalLoading && (
+          <div style={{ marginTop: 6, fontSize: 10, color: C.hint, fontFamily: FONT_UI }}>Loading historical prices…</div>
+        )}
+        {historicalError && !historicalLoading && (
+          <div style={{ marginTop: 6, fontSize: 10, color: C.red, fontFamily: FONT_UI, maxWidth: 720 }}>
+            {historicalError}
+            {" — "}
+            Uncheck and check again to retry.
+          </div>
+        )}
+      </div>
+      <div style={{ marginTop: 10 }}>
+        <label
+          style={{
+            fontSize: 11,
+            color: C.dim,
+            display: "flex",
+            alignItems: "center",
+            gap: 7,
+            cursor: "pointer",
+            fontFamily: FONT_UI,
+          }}
+        >
+          <input
+            type="checkbox"
             checked={overlayPowerLaw}
             onChange={(e) => onOverlayPowerLawChange(e.target.checked)}
             style={{ accentColor: C.amber }}
@@ -330,7 +361,7 @@ export function PriceChart({
             onChange={(e) => onOverlaySpyChange(e.target.checked)}
             style={{ accentColor: C.amber }}
           />
-          Overlay SPY (S&P 500) historical + projection scenarios
+          Overlay SPY (S&P 500)
         </label>
         {overlaySpy && (
           <div
@@ -347,37 +378,6 @@ export function PriceChart({
             {" "}
             Reference model: earnings growth tracks 65% of nominal GDP, assumes 1.5% dividends, fixed valuation, and smooth compounding.
             Scenarios are base, bull (+2%/yr), bear (-2%/yr), and inflation-adjusted real value.
-          </div>
-        )}
-      </div>
-      <div style={{ marginTop: 10 }}>
-        <label
-          style={{
-            fontSize: 11,
-            color: C.dim,
-            display: "flex",
-            alignItems: "center",
-            gap: 7,
-            cursor: "pointer",
-            fontFamily: FONT_UI,
-          }}
-        >
-          <input
-            type="checkbox"
-            checked={showHistorical}
-            onChange={(e) => onShowHistoricalChange(e.target.checked)}
-            style={{ accentColor: C.amber }}
-          />
-          Show historical BTC/USD (2011–present)
-        </label>
-        {historicalLoading && (
-          <div style={{ marginTop: 6, fontSize: 10, color: C.hint, fontFamily: FONT_UI }}>Loading historical prices…</div>
-        )}
-        {historicalError && !historicalLoading && (
-          <div style={{ marginTop: 6, fontSize: 10, color: C.red, fontFamily: FONT_UI, maxWidth: 720 }}>
-            {historicalError}
-            {" — "}
-            Uncheck and check again to retry.
           </div>
         )}
       </div>
