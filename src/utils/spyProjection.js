@@ -20,6 +20,7 @@ const EARNINGS_COEFF = 0.65;
 const DIVIDEND_YIELD = 0.015;
 const BULL_BEAR_SPREAD = 0.02;
 const YEAR_EPS = 1e-4;
+const SPY_KEYS = ["spyHistorical", "spyBase", "spyBull", "spyBear", "spyReal"];
 
 /**
  * @param {number} year fractional year
@@ -86,5 +87,29 @@ export function attachSpyOverlay(rows, input) {
       spyBear: anchor * Math.pow(1 + rates.bearReturn, deltaYears),
       spyReal: anchor * Math.pow(1 + rates.realReturn, deltaYears),
     };
+  });
+}
+
+/**
+ * Scale SPY chart fields so the first projected SPY point matches nominal BTC at the same row.
+ * @param {object[]} rows
+ * @returns {object[]}
+ */
+export function scaleSpyOverlayToBtcAtAnchor(rows) {
+  const anchorRow = rows.find((row) => Number(row.spyBase) > 0 && Number(row.price) > 0);
+  if (!anchorRow) return rows;
+  const scale = anchorRow.price / anchorRow.spyBase;
+  if (!Number.isFinite(scale) || scale <= 0) return rows;
+
+  return rows.map((row) => {
+    let hasScaledKey = false;
+    const scaledFields = {};
+    for (const key of SPY_KEYS) {
+      const value = row[key];
+      if (value == null) continue;
+      hasScaledKey = true;
+      scaledFields[key] = value * scale;
+    }
+    return hasScaledKey ? { ...row, ...scaledFields } : row;
   });
 }

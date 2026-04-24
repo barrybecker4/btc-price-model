@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { attachSpyOverlay, spyPriceAtYear, spyScenarioRates } from "./spyProjection.js";
+import { attachSpyOverlay, scaleSpyOverlayToBtcAtAnchor, spyPriceAtYear, spyScenarioRates } from "./spyProjection.js";
 
 describe("spyPriceAtYear", () => {
   it("linearly interpolates between yearly closes", () => {
@@ -37,5 +37,24 @@ describe("attachSpyOverlay", () => {
 
     expect(out[2].spyBull).toBeGreaterThan(out[2].spyBase);
     expect(out[2].spyBase).toBeGreaterThan(out[2].spyBear);
+  });
+});
+
+describe("scaleSpyOverlayToBtcAtAnchor", () => {
+  it("scales all SPY fields so the anchor row meets nominal BTC", () => {
+    const rows = [
+      { year: 2025.0, price: 80000, spyHistorical: 400 },
+      { year: 2026.0, price: 100000, spyBase: 500, spyBull: 520, spyBear: 480, spyReal: 490 },
+      { year: 2027.0, price: 110000, spyBase: 550, spyBull: 590, spyBear: 510, spyReal: 530 },
+    ];
+
+    const out = scaleSpyOverlayToBtcAtAnchor(rows);
+    const scale = 100000 / 500;
+
+    expect(out[1].spyBase).toBeCloseTo(100000, 8);
+    expect(out[0].spyHistorical).toBeCloseTo(400 * scale, 8);
+    expect(out[2].spyBull).toBeCloseTo(590 * scale, 8);
+    expect(out[2].spyBear).toBeCloseTo(510 * scale, 8);
+    expect(out[2].spyReal).toBeCloseTo(530 * scale, 8);
   });
 });
