@@ -186,7 +186,7 @@ export function PriceChart({
             yAxisId="p"
             type="monotone"
             dataKey="priceReal"
-            name={`Real Price (${inflation}% adj.)`}
+            name={`Price in today's dollars (${inflation}% inflation adj.)`}
             stroke="#aa6600"
             dot={false}
             strokeWidth={1.5}
@@ -232,7 +232,7 @@ export function PriceChart({
                 yAxisId="p"
                 type="monotone"
                 dataKey="spyReal"
-                name="SPY Real"
+                name="SPY (${inflation}% inflation adj.)"
                 stroke={C.ancient}
                 dot={false}
                 strokeWidth={1.5}
@@ -394,8 +394,8 @@ export function PriceChart({
           }}
         >
           SPY is scaled to nominal BTC at the &ldquo;Now&rdquo; anchor. Past: historical closes. Future nominal path
-          interpolates between bear (&minus;2% vs. base) and bull (+2% vs. base) using the slider; SPY Real uses the
-          inflation-adjusted reference return.
+          interpolates between bear (&minus;2% vs. base) and bull (+2% vs. base) using the slider; the
+          inflation-adjusted SPY line uses the reference return (nominal minus inflation).
         </div>
       )}
       <div
