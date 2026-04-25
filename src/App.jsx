@@ -114,8 +114,8 @@ export default function App() {
 
   const historicalEnriched = useMemo(() => {
     if (!historicalRaw?.length) return null;
-    return enrichHistoricalPriceRows(historicalRaw, params.inflation, YEAR_START);
-  }, [historicalRaw, params.inflation]);
+    return enrichHistoricalPriceRows(historicalRaw, YEAR_START);
+  }, [historicalRaw]);
 
   const priceChartData = useMemo(() => {
     if (!showHistorical || !historicalEnriched?.length) return cd;

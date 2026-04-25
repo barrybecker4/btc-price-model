@@ -19,6 +19,15 @@ import { attachSpyOverlay, scaleSpyOverlayToBtcAtAnchor } from "../../utils/spyP
 import { HalvingVLines } from "./HalvingVLines.jsx";
 import { ShockLine } from "./ShockLine.jsx";
 
+const DASH_BY_DATA_KEY = Object.freeze({
+  priceRealHistorical: "5 3",
+  priceRealProjected: "5 3",
+  powerLawUpper: "4 4",
+  powerLawLower: "4 4",
+  spyRealHistorical: "5 3",
+  spyRealProjected: "5 3",
+});
+
 function PriceTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   const row = payload[0]?.payload;
@@ -29,8 +38,32 @@ function PriceTooltip({ active, payload, label }) {
     <div style={TIP.contentStyle}>
       <div style={{ ...TIP.labelStyle, fontFamily: FONT_UI }}>YEAR {yr}</div>
       {payload.map((item) => (
-        <div key={String(item.dataKey)} style={{ ...TIP.itemStyle, fontFamily: FONT_NUM, marginTop: 2 }}>
-          {item.name}: {fmtUSD(item.value ?? 0)}
+        <div
+          key={String(item.dataKey)}
+          style={{
+            ...TIP.itemStyle,
+            fontFamily: FONT_NUM,
+            marginTop: 2,
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
+          <svg width="18" height="8" viewBox="0 0 18 8" aria-hidden="true" style={{ flex: "0 0 auto" }}>
+            <line
+              x1="0"
+              y1="4"
+              x2="18"
+              y2="4"
+              stroke={item.color ?? C.text}
+              strokeWidth={item.strokeWidth ?? 2}
+              strokeDasharray={item.strokeDasharray ?? DASH_BY_DATA_KEY[item.dataKey]}
+              strokeLinecap="round"
+            />
+          </svg>
+          <span>
+            {item.name}: {fmtUSD(item.value ?? 0)}
+          </span>
         </div>
       ))}
       {showPrem && (
@@ -44,7 +77,16 @@ function PriceTooltip({ active, payload, label }) {
 
 const POWER_LAW_UPPER_STROKE = C.ancient;
 const POWER_LAW_LOWER_STROKE = "#14b8a6";
-const SERIES_KEYS = ["price", "priceReal", "powerLawUpper", "powerLawLower", "spy", "spyReal"];
+const SERIES_KEYS = [
+  "price",
+  "priceRealHistorical",
+  "priceRealProjected",
+  "powerLawUpper",
+  "powerLawLower",
+  "spy",
+  "spyRealHistorical",
+  "spyRealProjected",
+];
 
 /** Recharts log scale requires every plotted value to be strictly positive. */
 const MIN_LOG_USD = 1e-9;
@@ -53,7 +95,12 @@ function clampRowForLogScale(row) {
   return {
     ...row,
     price: Math.max(MIN_LOG_USD, Number(row.price) || MIN_LOG_USD),
-    priceReal: Math.max(MIN_LOG_USD, Number(row.priceReal) || MIN_LOG_USD),
+    ...(row.priceRealHistorical != null
+      ? { priceRealHistorical: Math.max(MIN_LOG_USD, Number(row.priceRealHistorical) || MIN_LOG_USD) }
+      : {}),
+    ...(row.priceRealProjected != null
+      ? { priceRealProjected: Math.max(MIN_LOG_USD, Number(row.priceRealProjected) || MIN_LOG_USD) }
+      : {}),
     ...(row.powerLawUpper != null && row.powerLawLower != null
       ? {
           powerLawUpper: Math.max(MIN_LOG_USD, row.powerLawUpper),
@@ -61,7 +108,12 @@ function clampRowForLogScale(row) {
         }
       : {}),
     ...(row.spy != null ? { spy: Math.max(MIN_LOG_USD, Number(row.spy) || MIN_LOG_USD) } : {}),
-    ...(row.spyReal != null ? { spyReal: Math.max(MIN_LOG_USD, Number(row.spyReal) || MIN_LOG_USD) } : {}),
+    ...(row.spyRealHistorical != null
+      ? { spyRealHistorical: Math.max(MIN_LOG_USD, Number(row.spyRealHistorical) || MIN_LOG_USD) }
+      : {}),
+    ...(row.spyRealProjected != null
+      ? { spyRealProjected: Math.max(MIN_LOG_USD, Number(row.spyRealProjected) || MIN_LOG_USD) }
+      : {}),
   };
 }
 
@@ -105,6 +157,16 @@ export function PriceChart({
       });
       rows = scaleSpyOverlayToBtcAtAnchor(rows, YEAR_START);
     }
+    rows = rows.map((row) => {
+      const isHistorical = row.year < YEAR_START;
+      return {
+        ...row,
+        priceRealHistorical: isHistorical ? row.priceReal : null,
+        priceRealProjected: isHistorical ? null : row.priceReal,
+        spyRealHistorical: isHistorical ? row.spyReal : null,
+        spyRealProjected: isHistorical ? null : row.spyReal,
+      };
+    });
     if (logScale) rows = rows.map(clampRowForLogScale);
     const unscaledRows = rows;
 
@@ -185,7 +247,18 @@ export function PriceChart({
           <Line
             yAxisId="p"
             type="monotone"
-            dataKey="priceReal"
+            dataKey="priceRealHistorical"
+            name="Price in today's dollars (using historical CPI)"
+            stroke="#aa6600"
+            dot={false}
+            strokeWidth={1.5}
+            strokeDasharray="5 3"
+            legendType="none"
+          />
+          <Line
+            yAxisId="p"
+            type="monotone"
+            dataKey="priceRealProjected"
             name={`Price in today's dollars (${inflation}% inflation adj.)`}
             stroke="#aa6600"
             dot={false}
@@ -231,8 +304,20 @@ export function PriceChart({
               <Line
                 yAxisId="p"
                 type="monotone"
-                dataKey="spyReal"
-                name="SPY (${inflation}% inflation adj.)"
+                dataKey="spyRealHistorical"
+                name="SPY in today's dollars (using historical CPI)"
+                stroke={C.ancient}
+                dot={false}
+                strokeWidth={1.5}
+                strokeDasharray="5 3"
+                connectNulls={false}
+                legendType="none"
+              />
+              <Line
+                yAxisId="p"
+                type="monotone"
+                dataKey="spyRealProjected"
+                name={`SPY in today's dollars (${inflation}% inflation adj.)`}
                 stroke={C.ancient}
                 dot={false}
                 strokeWidth={1.5}
@@ -394,8 +479,9 @@ export function PriceChart({
           }}
         >
           SPY is scaled to nominal BTC at the &ldquo;Now&rdquo; anchor. Past: historical closes. Future nominal path
-          interpolates between bear (&minus;2% vs. base) and bull (+2% vs. base) using the slider; the
-          inflation-adjusted SPY line uses the reference return (nominal minus inflation).
+          interpolates between bear (&minus;2% vs. base) and bull (+2% vs. base) using the slider. The
+          inflation-adjusted line uses annual CPI-U ratios for the historical segment and the model real return
+          (nominal minus inflation) for the projection segment.
         </div>
       )}
       <div

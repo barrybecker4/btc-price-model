@@ -1,3 +1,5 @@
+import { toRealDollarsAtAnchor } from "./cpiUs.js";
+
 const SPY_HISTORICAL_YEARLY_CLOSES = [
   { year: 2011, price: 125.5 },
   { year: 2012, price: 142.4 },
@@ -85,16 +87,19 @@ export function attachSpyOverlay(rows, input) {
   const rates = spyScenarioRates(inflationPct, gdpGrowthPct);
   const anchor = spyPriceAtYear(yearStart);
   const nominalR = spyNominalProjectedReturn(rates, spyBullishness);
+  const inflation = inflationPct / 100;
+  const projectedRealR = nominalR - inflation;
 
   return rows.map((row) => {
     const deltaYears = row.year - yearStart;
     if (deltaYears < -YEAR_EPS) {
-      return { ...row, spy: spyPriceAtYear(row.year) };
+      const spy = spyPriceAtYear(row.year);
+      return { ...row, spy, spyReal: toRealDollarsAtAnchor(spy, row.year, yearStart) };
     }
     return {
       ...row,
       spy: anchor * Math.pow(1 + nominalR, deltaYears),
-      spyReal: anchor * Math.pow(1 + rates.realReturn, deltaYears),
+      spyReal: anchor * Math.pow(1 + projectedRealR, deltaYears),
     };
   });
 }

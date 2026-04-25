@@ -93,7 +93,7 @@ export function ParameterSidebar({
         <Slider
           label="USD Inflation Rate"
           hint="Expected annual rise in the general price level in the United States — the percentage by which a broad basket of goods and services becomes more expensive over a year (the same idea headline CPI inflation measures)."
-          hintDetail="Used to compute inflation-adjusted BTC price alongside the nominal path."
+          hintDetail="Used for projected real-price paths in the simulation and SPY projection. Historical inflation adjustment uses fixed CPI-U data."
           value={p.inflation}
           min={1}
           max={15}

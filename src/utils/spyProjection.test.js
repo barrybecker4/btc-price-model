@@ -6,6 +6,7 @@ import {
   spyPriceAtYear,
   spyScenarioRates,
 } from "./spyProjection.js";
+import { toRealDollarsAtAnchor } from "./cpiUs.js";
 
 describe("spyPriceAtYear", () => {
   it("linearly interpolates between yearly closes", () => {
@@ -43,7 +44,7 @@ describe("attachSpyOverlay", () => {
     const rates = spyScenarioRates(3, 5);
 
     expect(out[0].spy).toBeCloseTo(585, 8);
-    expect(out[0].spyReal).toBeUndefined();
+    expect(out[0].spyReal).toBeCloseTo(toRealDollarsAtAnchor(out[0].spy, out[0].year, yearStart), 8);
 
     expect(out[1].spy).toBeCloseTo(anchor, 8);
     expect(out[1].spyReal).toBeCloseTo(anchor, 8);
@@ -59,6 +60,7 @@ describe("attachSpyOverlay", () => {
     const bear = attachSpyOverlay(rows, { yearStart, inflationPct: 3, gdpGrowthPct: 5, spyBullishness: 0 });
     const bull = attachSpyOverlay(rows, { yearStart, inflationPct: 3, gdpGrowthPct: 5, spyBullishness: 1 });
     expect(bull[1].spy).toBeGreaterThan(bear[1].spy);
+    expect(bull[1].spyReal).toBeGreaterThan(bear[1].spyReal);
   });
 });
 

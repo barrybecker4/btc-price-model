@@ -2,26 +2,20 @@ import { describe, expect, it } from "vitest";
 import {
   enrichHistoricalPriceRows,
   mergePriceChartHistoricalSim,
-  priceRealForYear,
 } from "./priceChartMerge.js";
-
-describe("priceRealForYear", () => {
-  it("matches sim anchor (year === yearStart → real === nominal)", () => {
-    expect(priceRealForYear(100_000, 2026.0, 3, 2026.0)).toBe(100_000);
-  });
-
-  it("never returns 0 (log-scale safe)", () => {
-    expect(priceRealForYear(0.01, 2011.0, 3, 2026.0)).toBeGreaterThanOrEqual(0.01);
-  });
-});
 
 describe("enrichHistoricalPriceRows", () => {
   it("adds priceReal and zero unmetPremiumPct", () => {
-    const rows = enrichHistoricalPriceRows([{ year: 2020, price: 10_000 }], 3, 2026);
+    const rows = enrichHistoricalPriceRows([{ year: 2020, price: 10_000 }], 2026);
     expect(rows).toHaveLength(1);
     expect(rows[0].price).toBe(10_000);
     expect(rows[0].priceReal).toBeGreaterThan(0);
     expect(rows[0].unmetPremiumPct).toBe(0);
+  });
+
+  it("uses CPI ratio, so changing slider assumptions does not affect historical rows", () => {
+    const rows = enrichHistoricalPriceRows([{ year: 2020, price: 10_000 }], 2026);
+    expect(rows[0].priceReal).toBe(12_751);
   });
 });
 
