@@ -21,9 +21,15 @@
  * @property {number} otherDayBtc
  * @property {number} etfDayBtc
  * @property {number} minerSellDay
+ * @property {number} etfSellDay
  * @property {number} totalBuyDay
  * @property {number} totalSellDay
  * @property {number} buyScale
+ * @property {number} institutionalScale
+ * @property {number} priceDemandScale
+ * @property {number} momentumDemandScale
+ * @property {number} positiveDemandScale
+ * @property {number} etfFlowMultiplier
  */
 
 /**

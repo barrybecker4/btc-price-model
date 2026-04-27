@@ -67,8 +67,9 @@ export function rebalanceLiquidToFloor(liquid, youngLth, ancientBtc, floor) {
  * @param {number} youngLth
  * @param {number} ancientBtc
  * @param {import("./simTypes.js").SimParams} p
+ * @param {number} [price]
  */
-export function applyHolderFlows(liquid, youngLth, ancientBtc, p) {
+export function applyHolderFlows(liquid, youngLth, ancientBtc, p, price = p.startPrice) {
   const rL = typeof p.flowLiquidToLth155Annual === "number" ? p.flowLiquidToLth155Annual : 0;
   const rA = typeof p.flowLiquidToAncientAnnual === "number" ? p.flowLiquidToAncientAnnual : 0;
 
@@ -101,6 +102,20 @@ export function applyHolderFlows(liquid, youngLth, ancientBtc, p) {
     const tfr = Math.min(A, (Math.abs(rA) / 100) * A / MONTHS_PER_YEAR);
     A -= tfr;
     L += tfr;
+  }
+
+  const distributionRate =
+    typeof p.lthProfitDistributionAnnualPct === "number" ? Math.max(0, p.lthProfitDistributionAnnualPct) : 0;
+  const startPrice = Math.max(1, p.startPrice ?? price ?? 1);
+  const priceRatio = Math.max(0, (price ?? startPrice) / startPrice);
+  const profitPressure = priceRatio <= 1 ? 0 : Math.min(2, Math.log(priceRatio) / Math.log(3));
+  if (distributionRate > 0 && profitPressure > 0) {
+    const monthlyRate = (distributionRate / 100 / MONTHS_PER_YEAR) * profitPressure;
+    const fromYoung = Math.min(Y, Y * monthlyRate);
+    const fromAncient = Math.min(A, A * monthlyRate);
+    Y -= fromYoung;
+    A -= fromAncient;
+    L += fromYoung + fromAncient;
   }
 
   L = Math.max(L, LIQ_FLOOR);

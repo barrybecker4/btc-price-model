@@ -6,6 +6,7 @@ import { SupplyChart } from "./components/charts/SupplyChart.jsx";
 import { KpiBar } from "./components/KpiBar.jsx";
 import { ParameterSidebar } from "./components/ParameterSidebar.jsx";
 import { DEFAULTS, withParamDefaults, YEAR_START } from "./sim/constants.js";
+import { getEtfStressRedemptionYears } from "./sim/etfStressRedemptions.js";
 import { getHalvingYearsBetween, getHalvingYearsInRange } from "./sim/halving.js";
 import { runSim } from "./sim/runSim.js";
 import { C, FONT_UI } from "./theme.js";
@@ -133,6 +134,10 @@ export default function App() {
   }, [showHistorical, historicalEnriched, simEndYear, params.simYears]);
 
   const halvingsSim = useMemo(() => getHalvingYearsInRange(YEAR_START, params.simYears), [params.simYears]);
+  const etfStressYears = useMemo(
+    () => getEtfStressRedemptionYears(YEAR_START, params.simYears, params.etfStressRedemptionCount),
+    [params.simYears, params.etfStressRedemptionCount]
+  );
 
   const tabBtn = (key, lbl) => (
     <button
@@ -239,6 +244,7 @@ export default function App() {
               logScale={logScale}
               yAxisScale={yAxisScale}
               halvings={halvingsPrice}
+              etfStressYears={etfStressYears}
               supplyShockYear={supplyShockYear}
               overlayPowerLaw={overlayPowerLaw}
               onOverlayPowerLawChange={setOverlayPowerLaw}
@@ -256,8 +262,22 @@ export default function App() {
               historicalError={historicalError}
             />
           )}
-          {tab === "supply" && <SupplyChart data={cd} halvings={halvingsSim} supplyShockYear={supplyShockYear} />}
-          {tab === "flow" && <FlowChart data={cd} halvings={halvingsSim} supplyShockYear={supplyShockYear} />}
+          {tab === "supply" && (
+            <SupplyChart
+              data={cd}
+              halvings={halvingsSim}
+              etfStressYears={etfStressYears}
+              supplyShockYear={supplyShockYear}
+            />
+          )}
+          {tab === "flow" && (
+            <FlowChart
+              data={cd}
+              halvings={halvingsSim}
+              etfStressYears={etfStressYears}
+              supplyShockYear={supplyShockYear}
+            />
+          )}
 
           <ChartNotes />
         </div>

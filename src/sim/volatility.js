@@ -1,13 +1,27 @@
 import { MONTHS_PER_YEAR } from "./constants.js";
 
-/**
- * Deterministic pseudo-random shock in roughly [-1, 1] for month index `m`.
- * Same inputs always yield the same value (reproducible charts; no Math.random).
- */
-export function unitShockForMonth(m) {
-  const x = Math.sin(m * 12.9898 + 78.233) * 43758.5453123;
-  const u = x - Math.floor(x);
-  return u * 2 - 1;
+/** Deterministic uniform in [0, 1) from seed + key (xorshift/mix). */
+export function seededUnitRandom(seed, key) {
+  let x = ((seed | 0) ^ (key | 0)) >>> 0;
+  x ^= x >>> 16;
+  x = Math.imul(x, 0x7feb352d);
+  x ^= x >>> 15;
+  x = Math.imul(x, 0x846ca68b);
+  x ^= x >>> 16;
+  return x / 4294967296;
+}
+
+/** Deterministic standard-normal shock from seed + key using Box-Muller transform. */
+export function seededStandardNormal(seed, key) {
+  const u1 = Math.max(Number.MIN_VALUE, seededUnitRandom(seed, key * 2 + 1013904223));
+  const u2 = seededUnitRandom(seed, key * 2 + 362437);
+  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+}
+
+/** Deterministic clamped shock from seed + key for bounded single-month impact. */
+export function seededClampedNormal(seed, key, maxAbs = 2.5) {
+  const limit = Math.max(0, maxAbs);
+  return Math.max(-limit, Math.min(limit, seededStandardNormal(seed, key)));
 }
 
 /**

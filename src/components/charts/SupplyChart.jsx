@@ -1,10 +1,11 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { C, FONT_NUM, FONT_UI } from "../../theme.js";
 import { TIP, XAXIS_PROPS } from "../../charts/rechartsConfig.js";
+import { EtfStressLines } from "./EtfStressLines.jsx";
 import { HalvingVLines } from "./HalvingVLines.jsx";
 import { ShockLine } from "./ShockLine.jsx";
 
-export function SupplyChart({ data, halvings, supplyShockYear }) {
+export function SupplyChart({ data, halvings, etfStressYears, supplyShockYear }) {
   return (
     <>
       <div style={{ fontSize: 11, color: C.hint, marginBottom: 8, letterSpacing: "0.04em", fontFamily: FONT_UI }}>
@@ -28,6 +29,7 @@ export function SupplyChart({ data, halvings, supplyShockYear }) {
           />
           <Legend wrapperStyle={{ fontSize: 11, fontFamily: FONT_UI, paddingTop: 8 }} />
           <HalvingVLines halvings={halvings} />
+          <EtfStressLines years={etfStressYears} />
           <Area type="monotone" dataKey="lostM" name="Lost Forever" stackId="1" fill={C.lost} stroke={C.lost} fillOpacity={1} />
           <Area
             type="monotone"

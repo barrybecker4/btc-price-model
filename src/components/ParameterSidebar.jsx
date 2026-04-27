@@ -236,7 +236,7 @@ export function ParameterSidebar({
         />
       </Section>
 
-      <Section title="🏢 Other Treasuries &amp; ETFs" open={false}>
+      <Section title="🏢 Other Treasuries" open={false}>
         <Slider
           label="Other Corp. Initial Holdings"
           value={p.otherInitialBtc}
@@ -276,6 +276,9 @@ export function ParameterSidebar({
           onChange={set("otherTreasuryGrowthTaperYears")}
           fmt={(v) => `${v} yrs`}
         />
+      </Section>
+
+      <Section title="📈 ETFs" open={false}>
         <Slider
           label="ETF Initial Holdings"
           value={p.etfInitialBtc}
@@ -306,6 +309,39 @@ export function ParameterSidebar({
           fmt={(v) => `${v}%/yr`}
         />
         <Slider
+          label="ETF Flow Volatility"
+          hint="Small random month-to-month variation around normal ETF net inflows. Higher values make ETF demand less smooth and can occasionally create net outflow months."
+          hintDetail="This is ordinary ETF flow noise, separate from BTC price noise and separate from the larger stress redemption events below. 0% keeps the normal ETF flow path smooth."
+          value={p.etfFlowVolatilityPct}
+          min={0}
+          max={60}
+          step={1}
+          onChange={set("etfFlowVolatilityPct")}
+          fmt={(v) => `${v}%/yr`}
+        />
+        <Slider
+          label="ETF Stress Redemption Count"
+          hint="Number of larger ETF sell events to spread across the simulation period."
+          hintDetail="A stress redemption means ETF investors collectively redeem shares during a risk-off period, forcing ETF issuers or market makers to release/sell some BTC instead of absorbing BTC. 0 = no discrete ETF stress events; 1 = one event near the middle; 2–3 = events spaced throughout the simulation."
+          value={p.etfStressRedemptionCount}
+          min={0}
+          max={3}
+          step={1}
+          onChange={set("etfStressRedemptionCount")}
+          fmt={(v) => `${v} event${v === 1 ? "" : "s"}`}
+        />
+        <Slider
+          label="ETF Stress Redemption Size"
+          hint="Size of each ETF stress redemption event as a percentage of current ETF BTC holdings."
+          hintDetail="For example, 5% means each stress event removes/sells 5% of the BTC currently held by ETFs in that month. Set the count above to 0 to disable these events."
+          value={p.etfOutflowShockPct}
+          min={0}
+          max={25}
+          step={0.5}
+          onChange={set("etfOutflowShockPct")}
+          fmt={(v) => `${v.toFixed(1)}%`}
+        />
+        <Slider
           label="ETF inflow growth taper horizon"
           hint="Years for ETF net USD inflow growth to converge logistically to Nominal GDP Growth."
           value={p.etfGrowthTaperYears}
@@ -314,6 +350,17 @@ export function ParameterSidebar({
           step={1}
           onChange={set("etfGrowthTaperYears")}
           fmt={(v) => `${v} yrs`}
+        />
+        <Slider
+          label="Inst. Allocation Cap"
+          hint="Maximum share of total mined BTC that Strategy, other treasuries, and ETFs can hold together before new institutional buying is throttled."
+          hintDetail="Prevents institutional demand from compounding forever as if balance sheets and AUM were unlimited."
+          value={p.institutionalAllocationCapPct}
+          min={15}
+          max={70}
+          step={1}
+          onChange={set("institutionalAllocationCapPct")}
+          fmt={(v) => `${v}% of mined BTC`}
         />
       </Section>
 
@@ -395,6 +442,17 @@ export function ParameterSidebar({
           step={0.1}
           onChange={set("flowLiquidToAncientAnnual")}
           fmt={(v) => `${v >= 0 ? "+" : ""}${v.toFixed(1)} %/yr`}
+        />
+        <Slider
+          label="LTH Profit Distribution"
+          hint="Extra annual selling from young LTH and Ancient holders when BTC trades far above the starting price."
+          hintDetail="Scales from 0 near the starting price toward the slider rate around a 3× price move, adding coins back to liquid float."
+          value={p.lthProfitDistributionAnnualPct}
+          min={0}
+          max={12}
+          step={0.1}
+          onChange={set("lthProfitDistributionAnnualPct")}
+          fmt={(v) => `${v.toFixed(1)}%/yr`}
         />
       </Section>
 
@@ -490,24 +548,69 @@ export function ParameterSidebar({
           disabled={!floatCapOn}
         />
         <Slider
-          label="Initial annual volatility"
-          hint="Roughly how violent monthly moves are around the supply/demand path (spot BTC is often ~60–80% annualized vs ~15–25% equities). Applied as scaled monthly noise; fades over time per the next slider."
+          label="BTC Price Noise"
+          hint="Random month-to-month BTC price noise around the supply/demand path. Set to 0% to remove this price-noise term entirely."
+          hintDetail="The fade slider below only controls how this noise decays over the simulation. Other controls, like ETF stress outflows and halving-cycle effects, can still move the projected curve."
           value={p.initialAnnualVolatility}
-          min={10}
+          min={0}
           max={80}
           step={1}
           onChange={set("initialAnnualVolatility")}
           fmt={(v) => `${v}%/yr`}
         />
         <Slider
-          label="Volatility fade over time"
-          hint="0% = same noise amplitude every month. 100% = noise shrinks to ~0 by the last month of the simulation."
+          label="BTC Noise Fade Over Time"
+          hint="0% = same BTC price-noise amplitude every month. 100% = this noise starts at the slider value above and shrinks to ~0 by the final month."
           value={p.volatilityReduction}
           min={0}
           max={100}
           step={1}
           onChange={set("volatilityReduction")}
           fmt={(v) => `${v}%`}
+        />
+        <Slider
+          label="Valuation Demand Drag"
+          hint="How much planned USD demand cools as BTC gets expensive relative to the starting price."
+          hintDetail="Valuation multiplier = (starting price ÷ current price)^sensitivity. This is separate from the momentum boost below, so rising price can still attract buyers."
+          value={p.priceSensitiveDemandElasticity}
+          min={0}
+          max={2}
+          step={0.05}
+          onChange={set("priceSensitiveDemandElasticity")}
+          fmt={(v) => `${v.toFixed(2)}×`}
+        />
+        <Slider
+          label="Momentum Demand Boost"
+          hint="How strongly positive recent BTC returns increase treasury, ETF, and retail buy demand."
+          hintDetail="A value of 1.25 means a +10% recent monthly momentum signal adds roughly +12.5% demand before the maximum boost cap."
+          value={p.momentumDemandBoost}
+          min={0}
+          max={5}
+          step={0.05}
+          onChange={set("momentumDemandBoost")}
+          fmt={(v) => `${v.toFixed(2)}×`}
+        />
+        <Slider
+          label="Momentum Decay Window"
+          hint="How many months recent returns continue to influence FOMO / trend-following demand."
+          hintDetail="Shorter windows react quickly and fade quickly. Longer windows make momentum demand smoother and more persistent."
+          value={p.momentumDecayMonths}
+          min={1}
+          max={24}
+          step={1}
+          onChange={set("momentumDecayMonths")}
+          fmt={(v) => `${v} mo`}
+        />
+        <Slider
+          label="Max Momentum Boost"
+          hint="Hard cap on the extra demand multiplier created by positive price momentum."
+          hintDetail="Prevents reflexive demand from exploding during very sharp rallies."
+          value={p.maxMomentumBoostPct}
+          min={0}
+          max={300}
+          step={5}
+          onChange={set("maxMomentumBoostPct")}
+          fmt={(v) => `+${v}%`}
         />
         <Slider
           label="Base Price Elasticity"

@@ -22,6 +22,7 @@ export const DEFAULT_TAPER_YEARS = 12;
 
 /** Default taper horizon (years) for organic retail USD demand growth toward Nominal GDP. */
 export const DEFAULT_ORGANIC_BUY_GROWTH_TAPER_YEARS = 16;
+const SESSION_RANDOM_SEED = Math.floor(Math.random() * 0x7fffffff);
 
 export const DEFAULTS = {
   simYears: 10,
@@ -33,7 +34,7 @@ export const DEFAULTS = {
   annualLossRate: 1.0,
   minerSellPct: 45,
   miningCostFloor: 65000,
-  strcInitialBtc: 870000,
+  strcInitialBtc: 815000,
   strcInitialUsdB: 30,
   strcGrowthRate: 15,
   /** Years over which MSTR USD raise growth logistically tapers to nominal GDP. */
@@ -46,15 +47,33 @@ export const DEFAULTS = {
   etfInitialBtc: 1600000,
   etfDailyInflowM: 100,
   etfGrowthRate: 20,
+  /** Annualized variation around ETF net flow. 0 = smooth inflow path; higher = more random monthly inflow/outflow noise. */
+  etfFlowVolatilityPct: 5,
+  /** Number of ETF stress redemption months spread through the simulation. */
+  etfStressRedemptionCount: 1,
+  /** One stress redemption as % of current ETF BTC holdings. */
+  etfOutflowShockPct: 5,
   /** Years over which ETF USD inflow growth tapers to nominal GDP. */
   etfGrowthTaperYears: DEFAULT_TAPER_YEARS,
+  /** Max BTC held by Strategy + other treasuries + ETFs, as % of total mined BTC. */
+  institutionalAllocationCapPct: 50,
+  /** Valuation drag: USD flows are multiplied by (startPrice / currentPrice)^sensitivity before momentum boost. */
+  priceSensitiveDemandElasticity: 0.15,
+  /** Multiplier applied to recent positive monthly returns before the max momentum cap. */
+  momentumDemandBoost: 1.25,
+  /** Lookback-style decay window for recent price momentum that feeds demand. */
+  momentumDecayMonths: 6,
+  /** Maximum extra positive-demand boost from recent price momentum. */
+  maxMomentumBoostPct: 75,
+  /** Session-level seed so stochastic paths stay stable for identical params during one app session. */
+  randomSeed: SESSION_RANDOM_SEED,
   /** Net retail USD demand, $M/day (signed: positive = net buying, negative = net selling pressure). */
   initialRetailPurchaseRateM: 20,
   organicBuyGrowth: 10,
   /** Years over which retail USD demand growth logistically tapers to Nominal GDP Growth. */
   organicBuyGrowthTaperYears: DEFAULT_ORGANIC_BUY_GROWTH_TAPER_YEARS,
   baseElasticity: 1.1,
-  maxMonthlyPctGain: 20,
+  maxMonthlyPctGain: 30,
   /** Annualized BTC-style price volatility (%), wide range vs typical equities. */
   initialAnnualVolatility: 73,
   /**
@@ -93,6 +112,11 @@ export const DEFAULTS = {
    * Signed annual flow: % of current liquid / year → Ancient. Positive = lock from liquid; negative = ancient coins selling to liquid.
    */
   flowLiquidToAncientAnnual: 0.5,
+  /**
+   * Extra annual % of long-term holder stock distributed to liquid when BTC trades well above the start price.
+   * Scales from 0 near startPrice toward this rate around a 3x move and above.
+   */
+  lthProfitDistributionAnnualPct: 1.5,
 };
 
 /** Merge saved/partial state with DEFAULTS so new params never read as undefined (avoids NaN in UI and math). */

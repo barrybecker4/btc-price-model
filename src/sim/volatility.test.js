@@ -2,21 +2,35 @@ import { describe, expect, it } from "vitest";
 import { MONTHS_PER_YEAR } from "./constants.js";
 import {
   monthlySigmaFromAnnual,
-  unitShockForMonth,
+  seededClampedNormal,
+  seededStandardNormal,
+  seededUnitRandom,
   volatilityTimeDecayMultiplier,
 } from "./volatility.js";
 
-describe("unitShockForMonth", () => {
-  it("is deterministic and in roughly [-1, 1]", () => {
-    const a = unitShockForMonth(0);
-    const b = unitShockForMonth(0);
-    expect(a).toBe(b);
-    expect(a).toBeGreaterThanOrEqual(-1);
-    expect(a).toBeLessThanOrEqual(1);
+describe("seededUnitRandom", () => {
+  it("is deterministic for the same seed + key", () => {
+    expect(seededUnitRandom(42, 7)).toBe(seededUnitRandom(42, 7));
+    expect(seededUnitRandom(42, 7)).not.toBe(seededUnitRandom(42, 8));
   });
+});
 
-  it("differs across months", () => {
-    expect(unitShockForMonth(1)).not.toBe(unitShockForMonth(2));
+describe("seededStandardNormal", () => {
+  it("returns finite deterministic shocks", () => {
+    const a = seededStandardNormal(1234, 9);
+    const b = seededStandardNormal(1234, 9);
+    expect(Number.isFinite(a)).toBe(true);
+    expect(a).toBe(b);
+  });
+});
+
+describe("seededClampedNormal", () => {
+  it("clamps deterministic shocks to the requested absolute limit", () => {
+    for (let i = 0; i < 100; i += 1) {
+      const shock = seededClampedNormal(555, i, 1.5);
+      expect(shock).toBeGreaterThanOrEqual(-1.5);
+      expect(shock).toBeLessThanOrEqual(1.5);
+    }
   });
 });
 

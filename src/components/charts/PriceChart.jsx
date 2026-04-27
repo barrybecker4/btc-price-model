@@ -16,6 +16,7 @@ import { fmtUSD } from "../../utils/format.js";
 import { TIP, XAXIS_PROPS } from "../../charts/rechartsConfig.js";
 import { daysSinceGenesis, powerLawBoundsUsd } from "../../utils/powerLaw.js";
 import { attachSpyOverlay, scaleSpyOverlayToBtcAtAnchor } from "../../utils/spyProjection.js";
+import { EtfStressLines } from "./EtfStressLines.jsx";
 import { HalvingVLines } from "./HalvingVLines.jsx";
 import { ShockLine } from "./ShockLine.jsx";
 
@@ -125,6 +126,7 @@ export function PriceChart({
   logScale,
   yAxisScale = 1,
   halvings,
+  etfStressYears,
   supplyShockYear,
   overlayPowerLaw,
   onOverlayPowerLawChange,
@@ -214,6 +216,7 @@ export function PriceChart({
           <Tooltip content={<PriceTooltip />} />
           <Legend wrapperStyle={{ fontSize: 11, fontFamily: FONT_UI, paddingTop: 8 }} />
           <HalvingVLines halvings={halvings} yAxisId="p" />
+          <EtfStressLines years={etfStressYears} yAxisId="p" />
           <ShockLine supplyShockYear={supplyShockYear} yAxisId="p" />
           {showProjectionStartLine && (
             <ReferenceLine

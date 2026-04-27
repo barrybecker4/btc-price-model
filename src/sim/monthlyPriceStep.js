@@ -2,7 +2,7 @@ import { getHalvingCycleMonthlyAdj } from "./halving.js";
 import { LIQ_FLOOR } from "./holderBuckets.js";
 import {
   monthlySigmaFromAnnual,
-  unitShockForMonth,
+  seededClampedNormal,
   volatilityTimeDecayMultiplier,
 } from "./volatility.js";
 
@@ -39,7 +39,8 @@ export function computePriceAfterMonthTransition(input) {
   const sigmaMonth = monthlySigmaFromAnnual(annualFraction);
   const reductionFraction = (parameters.volatilityReduction ?? 0) / 100;
   const volatilityDecay = volatilityTimeDecayMultiplier(reductionFraction, input.monthIndex, input.totalMonths);
-  const volatilityShock = unitShockForMonth(input.monthIndex) * sigmaMonth * volatilityDecay;
+  const randomSeed = parameters.randomSeed ?? 0;
+  const volatilityShock = seededClampedNormal(randomSeed, input.monthIndex, 2.5) * sigmaMonth * volatilityDecay;
   percentChange += volatilityShock;
   percentChange = Math.max(-0.6, Math.min(percentChange, monthlyGainCap));
 

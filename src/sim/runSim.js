@@ -50,6 +50,7 @@ export function runSim(parameters) {
 
   const data = [];
   let supplyShockYear = null;
+  let momentumReturn = 0;
 
   for (let monthIndex = 0; monthIndex <= months; monthIndex++) {
     const year = YEAR_START + monthIndex / MONTHS_PER_YEAR;
@@ -65,6 +66,11 @@ export function runSim(parameters) {
       etfUSD,
       retailNetUsd,
       dailyMining,
+      monthIndex,
+      totalMonths: months,
+      treasury,
+      etfBtc,
+      momentumReturn,
       parameters,
     });
 
@@ -94,8 +100,9 @@ export function runSim(parameters) {
       demand.organicRetailNetBtcExecuted -
       demand.minerSales;
 
-    price = computePriceAfterMonthTransition({
-      price,
+    const priorPrice = price;
+    const nextPrice = computePriceAfterMonthTransition({
+      price: priorPrice,
       liquid,
       initLiq: initialLiquid,
       netDemand,
@@ -105,13 +112,18 @@ export function runSim(parameters) {
       totalMonths: months,
       parameters,
     });
+    const realizedReturn = nextPrice / priorPrice - 1;
+    const decayMonths = Math.max(1, parameters.momentumDecayMonths ?? DEFAULTS.momentumDecayMonths);
+    const momentumAlpha = 2 / (decayMonths + 1);
+    momentumReturn = momentumReturn * (1 - momentumAlpha) + realizedReturn * momentumAlpha;
+    price = nextPrice;
 
     liquid = Math.max(liquid - netDemand - demand.coinsLost, LIQ_FLOOR);
     treasury += demand.strcBtc + demand.otherBtc;
-    etfBtc += demand.etfBtc2;
+    etfBtc = Math.max(0, etfBtc + demand.etfBtc2);
     lostBtc += demand.coinsLost;
 
-    const holderFlows = applyHolderFlows(liquid, youngLthBtc, ancientBtc, parameters);
+    const holderFlows = applyHolderFlows(liquid, youngLthBtc, ancientBtc, parameters, price);
     liquid = holderFlows.liquid;
     youngLthBtc = holderFlows.youngLth;
     ancientBtc = holderFlows.ancientBtc;

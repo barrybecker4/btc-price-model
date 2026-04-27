@@ -10,6 +10,7 @@ import {
 } from "recharts";
 import { C, FONT_NUM, FONT_UI } from "../../theme.js";
 import { TIP, XAXIS_PROPS } from "../../charts/rechartsConfig.js";
+import { EtfStressLines } from "./EtfStressLines.jsx";
 import { HalvingVLines } from "./HalvingVLines.jsx";
 import { ShockLine } from "./ShockLine.jsx";
 
@@ -35,11 +36,11 @@ function FlowTooltip({ active, payload, label }) {
   );
 }
 
-export function FlowChart({ data, halvings, supplyShockYear }) {
+export function FlowChart({ data, halvings, etfStressYears, supplyShockYear }) {
   return (
     <>
       <div style={{ fontSize: 11, color: C.hint, marginBottom: 8, letterSpacing: "0.04em", fontFamily: FONT_UI }}>
-        DAILY FLOW (BTC/DAY) — Totals are executed demand (capped by liquid float when enabled). Retail is net flow from Initial Retail Purchase Rate (USD/day → BTC). MSTR buys fewer BTC as price rises. Halvings cut mining supply.
+        DAILY FLOW (BTC/DAY) — Totals are executed demand (capped by liquid float when enabled). Retail is net flow from Initial Retail Purchase Rate (USD/day → BTC). ETF stress outflows can add sell pressure. Halvings cut mining supply.
       </div>
       <ResponsiveContainer width="100%" height={310}>
         <LineChart data={data} margin={{ top: 5, right: 30, left: 5, bottom: 5 }}>
@@ -55,8 +56,9 @@ export function FlowChart({ data, halvings, supplyShockYear }) {
           <Tooltip content={<FlowTooltip />} />
           <Legend wrapperStyle={{ fontSize: 11, fontFamily: FONT_UI, paddingTop: 8 }} />
           <HalvingVLines halvings={halvings} />
+          <EtfStressLines years={etfStressYears} />
           <Line type="monotone" dataKey="totalBuyDay" name="Total Buying (incl. retail net)" stroke={C.green} dot={false} strokeWidth={2.5} />
-          <Line type="monotone" dataKey="totalSellDay" name="Total Selling (miners + retail net)" stroke={C.red} dot={false} strokeWidth={2} />
+          <Line type="monotone" dataKey="totalSellDay" name="Total Selling (miners + retail + ETF)" stroke={C.red} dot={false} strokeWidth={2} />
           <Line
             type="monotone"
             dataKey="dailyMining"
@@ -78,7 +80,7 @@ export function FlowChart({ data, halvings, supplyShockYear }) {
           <Line
             type="monotone"
             dataKey="etfDayBtc"
-            name="ETF Daily Absorption (BTC)"
+            name="ETF Net Daily Absorption (BTC)"
             stroke={C.blue}
             dot={false}
             strokeWidth={1.5}
