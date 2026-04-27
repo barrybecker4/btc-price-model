@@ -52,7 +52,7 @@ export const DEFAULTS = {
   /** Number of ETF stress redemption months spread through the simulation. */
   etfStressRedemptionCount: 1,
   /** One stress redemption as % of current ETF BTC holdings. */
-  etfOutflowShockPct: 5,
+  etfOutflowShockPct: 2,
   /** Years over which ETF USD inflow growth tapers to nominal GDP. */
   etfGrowthTaperYears: DEFAULT_TAPER_YEARS,
   /** Max BTC held by Strategy + other treasuries + ETFs, as % of total mined BTC. */
@@ -75,7 +75,7 @@ export const DEFAULTS = {
   baseElasticity: 1.1,
   maxMonthlyPctGain: 30,
   /** Annualized BTC-style price volatility (%), wide range vs typical equities. */
-  initialAnnualVolatility: 73,
+  initialAnnualVolatility: 50,
   /**
    * How much of that monthly noise fades from sim start to end (0–100%).
    * 0 = full initial vol throughout; 100 = noise → 0 by the last month. Default 90%.
@@ -113,10 +113,10 @@ export const DEFAULTS = {
    */
   flowLiquidToAncientAnnual: 0.5,
   /**
-   * Extra annual % of long-term holder stock distributed to liquid when BTC trades well above the start price.
-   * Scales from 0 near startPrice toward this rate around a 3x move and above.
+   * Extra annual % of young LTH + Ancient stock distributed to liquid when BTC trades well above its
+   * trailing 52-week (12-month) average price. Scales from 0 at the MA toward this rate around a 3× move vs the MA.
    */
-  lthProfitDistributionAnnualPct: 1.5,
+  lthProfitDistributionAnnualPct: 1,
 };
 
 /** Merge saved/partial state with DEFAULTS so new params never read as undefined (avoids NaN in UI and math). */
@@ -141,5 +141,13 @@ export function withParamDefaults(p) {
   delete merged.organicDailyBuy;
   delete merged.organicDailySell;
   delete merged.organicSellDecline;
+  if (typeof merged.lthProfitDistributionAnnualPct === "number") {
+    merged.lthProfitDistributionAnnualPct = Math.max(0, Math.min(5, merged.lthProfitDistributionAnnualPct));
+  }
+  if (typeof merged.etfOutflowShockPct === "number") {
+    if (merged.etfOutflowShockPct > 10) merged.etfOutflowShockPct = 10;
+    if (merged.etfOutflowShockPct > 0 && merged.etfOutflowShockPct < 0.1) merged.etfOutflowShockPct = 0.1;
+    if (merged.etfOutflowShockPct < 0) merged.etfOutflowShockPct = 0;
+  }
   return merged;
 }

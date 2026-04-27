@@ -28,4 +28,16 @@ describe("withParamDefaults", () => {
     const merged = withParamDefaults({ initialRetailPurchaseRateM: 0 });
     expect(merged.initialRetailPurchaseRateM).toBe(0);
   });
+
+  it("clamps LTH profit distribution to 0–5%/yr", () => {
+    expect(withParamDefaults({ lthProfitDistributionAnnualPct: 15 }).lthProfitDistributionAnnualPct).toBe(5);
+    expect(withParamDefaults({ lthProfitDistributionAnnualPct: -3 }).lthProfitDistributionAnnualPct).toBe(0);
+  });
+
+  it("clamps ETF stress redemption size to ≤10% and bumps (0, 0.1) to 0.1%; leaves 0", () => {
+    expect(withParamDefaults({ etfOutflowShockPct: 25 }).etfOutflowShockPct).toBe(10);
+    expect(withParamDefaults({ etfOutflowShockPct: 0.05 }).etfOutflowShockPct).toBeCloseTo(0.1, 10);
+    expect(withParamDefaults({ etfOutflowShockPct: 0 }).etfOutflowShockPct).toBe(0);
+    expect(withParamDefaults({ etfOutflowShockPct: -2 }).etfOutflowShockPct).toBe(0);
+  });
 });

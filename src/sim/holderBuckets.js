@@ -67,9 +67,10 @@ export function rebalanceLiquidToFloor(liquid, youngLth, ancientBtc, floor) {
  * @param {number} youngLth
  * @param {number} ancientBtc
  * @param {import("./simTypes.js").SimParams} p
- * @param {number} [price]
+ * @param {number} [price] Current (month-end) BTC price.
+ * @param {number} [priceMa52w] Trailing 52-week (12-month) average price; when omitted, falls back to start price for backward compatibility.
  */
-export function applyHolderFlows(liquid, youngLth, ancientBtc, p, price = p.startPrice) {
+export function applyHolderFlows(liquid, youngLth, ancientBtc, p, price = p.startPrice, priceMa52w) {
   const rL = typeof p.flowLiquidToLth155Annual === "number" ? p.flowLiquidToLth155Annual : 0;
   const rA = typeof p.flowLiquidToAncientAnnual === "number" ? p.flowLiquidToAncientAnnual : 0;
 
@@ -106,8 +107,10 @@ export function applyHolderFlows(liquid, youngLth, ancientBtc, p, price = p.star
 
   const distributionRate =
     typeof p.lthProfitDistributionAnnualPct === "number" ? Math.max(0, p.lthProfitDistributionAnnualPct) : 0;
-  const startPrice = Math.max(1, p.startPrice ?? price ?? 1);
-  const priceRatio = Math.max(0, (price ?? startPrice) / startPrice);
+  const fallbackRef = Math.max(1, p.startPrice ?? price ?? 1);
+  const ref =
+    typeof priceMa52w === "number" && Number.isFinite(priceMa52w) && priceMa52w > 0 ? priceMa52w : fallbackRef;
+  const priceRatio = Math.max(0, (price ?? ref) / ref);
   const profitPressure = priceRatio <= 1 ? 0 : Math.min(2, Math.log(priceRatio) / Math.log(3));
   if (distributionRate > 0 && profitPressure > 0) {
     const monthlyRate = (distributionRate / 100 / MONTHS_PER_YEAR) * profitPressure;

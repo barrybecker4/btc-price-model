@@ -94,14 +94,14 @@ describe("applyHolderFlows", () => {
     expect(out.ancientBtc).toBeLessThan(40_000);
   });
 
-  it("distributes LTH supply to liquid when price is well above start price", () => {
+  it("distributes LTH supply to liquid when price is well above the 52-week average", () => {
     const parameters = withParamDefaults({
       startPrice: 100_000,
       flowLiquidToLth155Annual: 0,
       flowLiquidToAncientAnnual: 0,
-      lthProfitDistributionAnnualPct: 12,
+      lthProfitDistributionAnnualPct: 5,
     });
-    const out = applyHolderFlows(100_000, 50_000, 50_000, parameters, 300_000);
+    const out = applyHolderFlows(100_000, 50_000, 50_000, parameters, 300_000, 100_000);
     expect(out.liquid).toBeGreaterThan(100_000);
     expect(out.youngLth + out.ancientBtc).toBeLessThan(100_000);
   });

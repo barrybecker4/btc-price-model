@@ -333,11 +333,11 @@ export function ParameterSidebar({
         <Slider
           label="ETF Stress Redemption Size"
           hint="Size of each ETF stress redemption event as a percentage of current ETF BTC holdings."
-          hintDetail="For example, 5% means each stress event removes/sells 5% of the BTC currently held by ETFs in that month. Set the count above to 0 to disable these events."
+          hintDetail="For example, 2% means each stress event removes/sells 2% of the BTC currently held by ETFs in that month. Set the count above to 0 to disable these events."
           value={p.etfOutflowShockPct}
-          min={0}
-          max={25}
-          step={0.5}
+          min={0.1}
+          max={10}
+          step={0.1}
           onChange={set("etfOutflowShockPct")}
           fmt={(v) => `${v.toFixed(1)}%`}
         />
@@ -445,11 +445,11 @@ export function ParameterSidebar({
         />
         <Slider
           label="LTH Profit Distribution"
-          hint="Extra annual selling from young LTH and Ancient holders when BTC trades far above the starting price."
-          hintDetail="Scales from 0 near the starting price toward the slider rate around a 3× price move, adding coins back to liquid float."
+          hint="Extra annual selling from young LTH and Ancient holders when BTC trades far above its 52-week moving average (12 trailing month-end closes in this model)."
+          hintDetail="Scales from 0 at the MA toward the slider rate around a 3× price vs that average, adding coins back to liquid float."
           value={p.lthProfitDistributionAnnualPct}
           min={0}
-          max={12}
+          max={5}
           step={0.1}
           onChange={set("lthProfitDistributionAnnualPct")}
           fmt={(v) => `${v.toFixed(1)}%/yr`}

@@ -49,6 +49,8 @@ export function runSim(parameters) {
   let retailNetUsd = (parameters.initialRetailPurchaseRateM ?? 0) * 1e6 * 30;
 
   const data = [];
+  /** Month-end closes for trailing 52-week (12-month) average in LTH profit distribution. */
+  const monthEndCloses = [];
   let supplyShockYear = null;
   let momentumReturn = 0;
 
@@ -118,12 +120,20 @@ export function runSim(parameters) {
     momentumReturn = momentumReturn * (1 - momentumAlpha) + realizedReturn * momentumAlpha;
     price = nextPrice;
 
+    monthEndCloses.push(price);
+    const w = Math.min(MONTHS_PER_YEAR, monthEndCloses.length);
+    let maSum = 0;
+    for (let i = monthEndCloses.length - w; i < monthEndCloses.length; i++) {
+      maSum += monthEndCloses[i];
+    }
+    const ma52w = maSum / w;
+
     liquid = Math.max(liquid - netDemand - demand.coinsLost, LIQ_FLOOR);
     treasury += demand.strcBtc + demand.otherBtc;
     etfBtc = Math.max(0, etfBtc + demand.etfBtc2);
     lostBtc += demand.coinsLost;
 
-    const holderFlows = applyHolderFlows(liquid, youngLthBtc, ancientBtc, parameters, price);
+    const holderFlows = applyHolderFlows(liquid, youngLthBtc, ancientBtc, parameters, price, ma52w);
     liquid = holderFlows.liquid;
     youngLthBtc = holderFlows.youngLth;
     ancientBtc = holderFlows.ancientBtc;
