@@ -60,6 +60,16 @@ export function runSim(parameters) {
     const liquidPercentOfInitial = (liquid / initialLiquid) * 100;
     if (liquidPercentOfInitial < 30 && supplyShockYear === null) supplyShockYear = year;
 
+    let valuationMa52w;
+    if (monthEndCloses.length > 0) {
+      const wv = Math.min(MONTHS_PER_YEAR, monthEndCloses.length);
+      let vSum = 0;
+      for (let i = monthEndCloses.length - wv; i < monthEndCloses.length; i++) {
+        vSum += monthEndCloses[i];
+      }
+      valuationMa52w = vSum / wv;
+    }
+
     const demand = computeMonthlyDemandFromUsd({
       price,
       liquid,
@@ -74,6 +84,7 @@ export function runSim(parameters) {
       etfBtc,
       momentumReturn,
       parameters,
+      ...(valuationMa52w !== undefined ? { priceMa52w: valuationMa52w } : {}),
     });
 
     const row = buildSimulationRow({

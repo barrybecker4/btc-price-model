@@ -17,6 +17,7 @@ import { monthlySigmaFromAnnual, seededClampedNormal } from "./volatility.js";
  * @param {number} input.treasury
  * @param {number} input.etfBtc
  * @param {number} input.momentumReturn
+ * @param {number} [input.priceMa52w] Trailing 52-week (12-month) average of month-end closes for valuation drag; when omitted, uses start price (backward compatible).
  * @param {import("./simTypes.js").SimParams} input.parameters
  */
 export function computeMonthlyDemandFromUsd(input) {
@@ -30,8 +31,12 @@ export function computeMonthlyDemandFromUsd(input) {
   const coinsLost = liquid * (parameters.annualLossRate / 100 / MONTHS_PER_YEAR);
 
   const sensitivity = Math.max(0, parameters.priceSensitiveDemandElasticity ?? 0);
+  const valuationRef =
+    typeof input.priceMa52w === "number" && Number.isFinite(input.priceMa52w) && input.priceMa52w > 0
+      ? input.priceMa52w
+      : Math.max(1, parameters.startPrice ?? price ?? 1);
   const priceDemandScale =
-    sensitivity === 0 ? 1 : Math.pow(Math.min(1, parameters.startPrice / Math.max(price, 1)), sensitivity);
+    sensitivity === 0 ? 1 : Math.pow(Math.min(1, valuationRef / Math.max(price, 1)), sensitivity);
   const positiveMomentumReturn = Math.max(0, input.momentumReturn ?? 0);
   const maxMomentumBoost = Math.max(0, parameters.maxMomentumBoostPct ?? 0) / 100;
   const momentumDemandScale =

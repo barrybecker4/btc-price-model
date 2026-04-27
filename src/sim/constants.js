@@ -57,8 +57,8 @@ export const DEFAULTS = {
   etfGrowthTaperYears: DEFAULT_TAPER_YEARS,
   /** Max BTC held by Strategy + other treasuries + ETFs, as % of total mined BTC. */
   institutionalAllocationCapPct: 50,
-  /** Valuation drag: USD flows are multiplied by (startPrice / currentPrice)^sensitivity before momentum boost. */
-  priceSensitiveDemandElasticity: 0.15,
+  /** Valuation drag: USD flows are multiplied by (52w MA ÷ current price)^sensitivity before momentum boost (MA = trailing 12 month-end closes; early months fall back to start price). */
+  priceSensitiveDemandElasticity: 0.01,
   /** Multiplier applied to recent positive monthly returns before the max momentum cap. */
   momentumDemandBoost: 1.25,
   /** Lookback-style decay window for recent price momentum that feeds demand. */

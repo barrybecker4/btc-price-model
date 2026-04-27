@@ -570,14 +570,14 @@ export function ParameterSidebar({
         />
         <Slider
           label="Valuation Demand Drag"
-          hint="How much planned USD demand cools as BTC gets expensive relative to the starting price."
-          hintDetail="Valuation multiplier = (starting price ÷ current price)^sensitivity. This is separate from the momentum boost below, so rising price can still attract buyers."
+          hint="How much planned USD demand cools as BTC trades above its 52-week moving average (12 trailing month-end closes in this model)."
+          hintDetail="Multiplier = (52w MA ÷ current price)^exponent; the label is exponent × 100 (e.g. 1% → 0.01). No boost when price is below the MA. Early months use the start price until enough closes exist. Separate from momentum boost."
           value={p.priceSensitiveDemandElasticity}
           min={0}
           max={2}
-          step={0.05}
+          step={0.01}
           onChange={set("priceSensitiveDemandElasticity")}
-          fmt={(v) => `${v.toFixed(2)}×`}
+          fmt={(v) => `${(v * 100).toFixed(0)}%`}
         />
         <Slider
           label="Momentum Demand Boost"

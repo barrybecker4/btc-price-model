@@ -103,6 +103,22 @@ describe("computeMonthlyDemandFromUsd", () => {
     expect(demand.strcBtc).toBe(5_000);
   });
 
+  it("uses 52w MA for valuation drag when priceMa52w is passed", () => {
+    const parameters = demandParameters({ priceSensitiveDemandElasticity: 1, startPrice: 10_000 });
+    const demand = computeMonthlyDemandFromUsd({
+      price: 100_000,
+      priceMa52w: 40_000,
+      liquid: 500_000,
+      strcUSD: 1e9,
+      otherUSD: 0,
+      etfUSD: 0,
+      retailNetUsd: 0,
+      dailyMining: 0,
+      parameters,
+    });
+    expect(demand.priceDemandScale).toBe(0.4);
+  });
+
   it("boosts positive USD demand from recent price momentum", () => {
     const parameters = demandParameters({
       momentumDemandBoost: 2,
