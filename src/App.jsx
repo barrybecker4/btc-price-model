@@ -12,6 +12,7 @@ import { runSim } from "./sim/runSim.js";
 import { C, FONT_UI } from "./theme.js";
 import { fetchBtcUsdHistoryRange } from "./utils/fetchBtcHistory.js";
 import { fetchBtcUsd } from "./utils/fetchBtcUsd.js";
+import { fetchSpyMonthlyHistory } from "./utils/fetchSpyMonthlyHistory.js";
 import { enrichHistoricalPriceRows, mergePriceChartHistoricalSim } from "./utils/priceChartMerge.js";
 import { fractionalYearToLocalMs } from "./utils/powerLaw.js";
 import {
@@ -38,7 +39,9 @@ export default function App() {
   const [historicalRaw, setHistoricalRaw] = useState(null);
   const [historicalLoading, setHistoricalLoading] = useState(false);
   const [historicalError, setHistoricalError] = useState(null);
+  const [spyHistoricalRaw, setSpyHistoricalRaw] = useState(null);
   const historicalFetchAttemptedRef = useRef(false);
+  const spyHistoricalFetchAttemptedRef = useRef(false);
 
   useEffect(() => {
     const ac = new AbortController();
@@ -95,6 +98,33 @@ export default function App() {
     })();
     return () => ac.abort();
   }, [showHistorical, historicalRaw]);
+
+  useEffect(() => {
+    if (!overlaySpy || !showHistorical) {
+      spyHistoricalFetchAttemptedRef.current = false;
+      return;
+    }
+    if (spyHistoricalRaw != null) return;
+    if (spyHistoricalFetchAttemptedRef.current) return;
+    spyHistoricalFetchAttemptedRef.current = true;
+
+    const ac = new AbortController();
+    (async () => {
+      try {
+        const rows = await fetchSpyMonthlyHistory({
+          fromMs: FROM_HISTORICAL_START_MS,
+          toMs: fractionalYearToLocalMs(YEAR_START),
+          signal: ac.signal,
+        });
+        if (ac.signal.aborted) return;
+        if (!rows.length) return;
+        setSpyHistoricalRaw(rows);
+      } catch {
+        // The fetch helper already falls back to bundled monthly data.
+      }
+    })();
+    return () => ac.abort();
+  }, [overlaySpy, showHistorical, spyHistoricalRaw]);
 
   const params = useMemo(() => withParamDefaults(p), [p]);
 
@@ -250,6 +280,7 @@ export default function App() {
               onOverlayPowerLawChange={setOverlayPowerLaw}
               overlaySpy={overlaySpy}
               onOverlaySpyChange={setOverlaySpy}
+              spyHistoricalPoints={spyHistoricalRaw}
               spyBullishness={spyBullishness}
               onSpyBullishnessChange={setSpyBullishness}
               showHistorical={showHistorical}

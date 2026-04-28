@@ -38,15 +38,15 @@ export function spyNominalProjectedReturn(rates, spyBullishness) {
  * @param {number} year fractional year
  * @returns {number}
  */
-export function spyPriceAtYear(year) {
-  const first = SPY_HISTORICAL_YEARLY_CLOSES[0];
-  const last = SPY_HISTORICAL_YEARLY_CLOSES[SPY_HISTORICAL_YEARLY_CLOSES.length - 1];
+export function spyPriceAtYear(year, historicalPoints = SPY_HISTORICAL_YEARLY_CLOSES) {
+  const first = historicalPoints[0];
+  const last = historicalPoints[historicalPoints.length - 1];
   if (year <= first.year) return first.price;
   if (year >= last.year) return last.price;
 
-  for (let i = 0; i < SPY_HISTORICAL_YEARLY_CLOSES.length - 1; i++) {
-    const left = SPY_HISTORICAL_YEARLY_CLOSES[i];
-    const right = SPY_HISTORICAL_YEARLY_CLOSES[i + 1];
+  for (let i = 0; i < historicalPoints.length - 1; i++) {
+    const left = historicalPoints[i];
+    const right = historicalPoints[i + 1];
     if (year >= left.year && year <= right.year) {
       const span = right.year - left.year;
       if (span <= 0) return left.price;
@@ -83,9 +83,13 @@ export function spyScenarioRates(inflationPct, gdpGrowthPct) {
  * @returns {object[]}
  */
 export function attachSpyOverlay(rows, input) {
-  const { yearStart, inflationPct, gdpGrowthPct, spyBullishness = 0.5 } = input;
+  const { yearStart, inflationPct, gdpGrowthPct, spyBullishness = 0.5, spyHistoricalPoints } = input;
+  const historicalPoints =
+    Array.isArray(spyHistoricalPoints) && spyHistoricalPoints.length >= 2
+      ? [...spyHistoricalPoints].sort((a, b) => a.year - b.year)
+      : SPY_HISTORICAL_YEARLY_CLOSES;
   const rates = spyScenarioRates(inflationPct, gdpGrowthPct);
-  const anchor = spyPriceAtYear(yearStart);
+  const anchor = spyPriceAtYear(yearStart, historicalPoints);
   const nominalR = spyNominalProjectedReturn(rates, spyBullishness);
   const inflation = inflationPct / 100;
   const projectedRealR = nominalR - inflation;
@@ -93,7 +97,7 @@ export function attachSpyOverlay(rows, input) {
   return rows.map((row) => {
     const deltaYears = row.year - yearStart;
     if (deltaYears < -YEAR_EPS) {
-      const spy = spyPriceAtYear(row.year);
+      const spy = spyPriceAtYear(row.year, historicalPoints);
       return { ...row, spy, spyReal: toRealDollarsAtAnchor(spy, row.year, yearStart) };
     }
     return {

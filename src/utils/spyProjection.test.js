@@ -9,9 +9,14 @@ import {
 import { toRealDollarsAtAnchor } from "./cpiUs.js";
 
 describe("spyPriceAtYear", () => {
-  it("linearly interpolates between yearly closes", () => {
-    const midpoint = spyPriceAtYear(2011.5);
-    expect(midpoint).toBeCloseTo((125.5 + 142.4) / 2, 8);
+  it("linearly interpolates between adjacent monthly closes", () => {
+    const monthly = [
+      { year: 2011.0, price: 100 },
+      { year: 2011.083, price: 112 },
+      { year: 2011.167, price: 118 },
+    ];
+    const interpolated = spyPriceAtYear(2011.0415, monthly);
+    expect(interpolated).toBeCloseTo(106, 6);
   });
 });
 
@@ -61,6 +66,25 @@ describe("attachSpyOverlay", () => {
     const bull = attachSpyOverlay(rows, { yearStart, inflationPct: 3, gdpGrowthPct: 5, spyBullishness: 1 });
     expect(bull[1].spy).toBeGreaterThan(bear[1].spy);
     expect(bull[1].spyReal).toBeGreaterThan(bear[1].spyReal);
+  });
+
+  it("uses provided monthly historical points when available", () => {
+    const yearStart = 2025.25;
+    const rows = [{ year: 2025.0 }, { year: 2025.25 }];
+    const spyHistoricalPoints = [
+      { year: 2025.0, price: 610 },
+      { year: 2025.083, price: 560 },
+      { year: 2025.25, price: 590 },
+    ];
+    const out = attachSpyOverlay(rows, {
+      yearStart,
+      inflationPct: 3,
+      gdpGrowthPct: 5,
+      spyHistoricalPoints,
+    });
+
+    expect(out[0].spy).toBeCloseTo(610, 8);
+    expect(out[1].spy).toBeCloseTo(590, 8);
   });
 });
 

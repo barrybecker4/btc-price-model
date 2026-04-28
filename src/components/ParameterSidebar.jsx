@@ -571,7 +571,7 @@ export function ParameterSidebar({
         <Slider
           label="Valuation Demand Drag"
           hint="How much planned USD demand cools as BTC trades above its 52-week moving average (12 trailing month-end closes in this model)."
-          hintDetail="Multiplier = (52w MA ÷ current price)^exponent; the label is exponent × 100 (e.g. 1% → 0.01). No boost when price is below the MA. Early months use the start price until enough closes exist. Separate from momentum boost."
+          hintDetail="Multiplier = (52w MA ÷ current price)^exponent; the label is exponent × 100 (e.g. 20% → 0.2). No boost when price is below the MA. Early months use the start price until enough closes exist. Separate from momentum boost."
           value={p.priceSensitiveDemandElasticity}
           min={0}
           max={2}

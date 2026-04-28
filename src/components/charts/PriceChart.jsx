@@ -132,6 +132,7 @@ export function PriceChart({
   onOverlayPowerLawChange,
   overlaySpy,
   onOverlaySpyChange,
+  spyHistoricalPoints,
   spyBullishness,
   onSpyBullishnessChange,
   showHistorical,
@@ -155,6 +156,7 @@ export function PriceChart({
         yearStart: YEAR_START,
         inflationPct: inflation,
         gdpGrowthPct: gdpGrowth,
+        spyHistoricalPoints,
         spyBullishness,
       });
       rows = scaleSpyOverlayToBtcAtAnchor(rows, YEAR_START);
@@ -186,7 +188,7 @@ export function PriceChart({
       : 0;
 
     return { chartData: rows, baseAxisMin: axisMin, baseAxisMax: axisMax };
-  }, [data, overlayPowerLaw, overlaySpy, logScale, inflation, gdpGrowth, first, spyBullishness]);
+  }, [data, overlayPowerLaw, overlaySpy, logScale, inflation, gdpGrowth, first, spyBullishness, spyHistoricalPoints]);
 
   const safeScale = Math.max(1, Number(yAxisScale) || 1);
   const scaledAxisMax = Math.max(baseAxisMin * (logScale ? 1.05 : 1), baseAxisMax / safeScale);
@@ -296,7 +298,7 @@ export function PriceChart({
             <>
               <Line
                 yAxisId="p"
-                type="monotone"
+                type="linear"
                 dataKey="spy"
                 name="SPY"
                 stroke={C.blue}
@@ -306,7 +308,7 @@ export function PriceChart({
               />
               <Line
                 yAxisId="p"
-                type="monotone"
+                type="linear"
                 dataKey="spyRealHistorical"
                 name="SPY in today's dollars (using historical CPI)"
                 stroke={C.ancient}
@@ -318,7 +320,7 @@ export function PriceChart({
               />
               <Line
                 yAxisId="p"
-                type="monotone"
+                type="linear"
                 dataKey="spyRealProjected"
                 name={`SPY in today's dollars (${inflation}% inflation adj.)`}
                 stroke={C.ancient}
@@ -481,7 +483,7 @@ export function PriceChart({
             fontFamily: FONT_UI,
           }}
         >
-          SPY is scaled to nominal BTC at the &ldquo;Now&rdquo; anchor. Past: historical closes. Future nominal path
+          SPY is scaled to nominal BTC at the &ldquo;Now&rdquo; anchor. Past: historical monthly closes. Future nominal path
           interpolates between bear (&minus;2% vs. base) and bull (+2% vs. base) using the slider. The
           inflation-adjusted line uses annual CPI-U ratios for the historical segment and the model real return
           (nominal minus inflation) for the projection segment.

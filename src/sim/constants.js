@@ -58,7 +58,7 @@ export const DEFAULTS = {
   /** Max BTC held by Strategy + other treasuries + ETFs, as % of total mined BTC. */
   institutionalAllocationCapPct: 50,
   /** Valuation drag: USD flows are multiplied by (52w MA ÷ current price)^sensitivity before momentum boost (MA = trailing 12 month-end closes; early months fall back to start price). */
-  priceSensitiveDemandElasticity: 0.01,
+  priceSensitiveDemandElasticity: 0.2,
   /** Multiplier applied to recent positive monthly returns before the max momentum cap. */
   momentumDemandBoost: 1.25,
   /** Lookback-style decay window for recent price momentum that feeds demand. */
@@ -75,7 +75,7 @@ export const DEFAULTS = {
   baseElasticity: 1.1,
   maxMonthlyPctGain: 30,
   /** Annualized BTC-style price volatility (%), wide range vs typical equities. */
-  initialAnnualVolatility: 50,
+  initialAnnualVolatility: 40,
   /**
    * How much of that monthly noise fades from sim start to end (0–100%).
    * 0 = full initial vol throughout; 100 = noise → 0 by the last month. Default 90%.
@@ -116,7 +116,7 @@ export const DEFAULTS = {
    * Extra annual % of young LTH + Ancient stock distributed to liquid when BTC trades well above its
    * trailing 52-week (12-month) average price. Scales from 0 at the MA toward this rate around a 3× move vs the MA.
    */
-  lthProfitDistributionAnnualPct: 1,
+  lthProfitDistributionAnnualPct: 2,
 };
 
 /** Merge saved/partial state with DEFAULTS so new params never read as undefined (avoids NaN in UI and math). */
