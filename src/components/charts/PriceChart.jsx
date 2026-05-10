@@ -7,7 +7,6 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
 import { C, FONT_NUM, FONT_UI } from "../../theme.js";
@@ -18,6 +17,7 @@ import { daysSinceGenesis, powerLawBoundsUsd } from "../../utils/powerLaw.js";
 import { attachSpyOverlay, scaleSpyOverlayToBtcAtAnchor } from "../../utils/spyProjection.js";
 import { EtfStressLines } from "./EtfStressLines.jsx";
 import { HalvingVLines } from "./HalvingVLines.jsx";
+import { ChartFrame } from "./ChartFrame.jsx";
 import { ShockLine } from "./ShockLine.jsx";
 
 const DASH_BY_DATA_KEY = Object.freeze({
@@ -104,8 +104,8 @@ function clampRowForLogScale(row) {
       : {}),
     ...(row.powerLawUpper != null && row.powerLawLower != null
       ? {
-          powerLawUpper: Math.max(MIN_LOG_USD, row.powerLawUpper),
-          powerLawLower: Math.max(MIN_LOG_USD, row.powerLawLower),
+          powerLawUpper: Math.max(MIN_LOG_USD, Number(row.powerLawUpper) || MIN_LOG_USD),
+          powerLawLower: Math.max(MIN_LOG_USD, Number(row.powerLawLower) || MIN_LOG_USD),
         }
       : {}),
     ...(row.spy != null ? { spy: Math.max(MIN_LOG_USD, Number(row.spy) || MIN_LOG_USD) } : {}),
@@ -141,6 +141,7 @@ export function PriceChart({
   showProjectionStartLine = false,
   historicalLoading = false,
   historicalError = null,
+  spyHistoricalError = null,
 }) {
   const { chartData, baseAxisMin, baseAxisMax } = useMemo(() => {
     let rows = data;
@@ -207,15 +208,15 @@ export function PriceChart({
 
   return (
     <>
-      <div style={{ fontSize: 11, color: C.hint, marginBottom: 8, letterSpacing: "0.04em", fontFamily: FONT_UI }}>
-        BTC PRICE (USD) — Nominal vs Inflation-Adjusted · Halvings &amp; Supply Shock Marked
-      </div>
-      <ResponsiveContainer width="100%" height={620}>
+      <ChartFrame
+        height={620}
+        title="BTC PRICE (USD) — Nominal vs Inflation-Adjusted · Halvings &amp; Supply Shock Marked"
+      >
         <LineChart data={chartData} margin={{ top: 5, right: 30, left: 5, bottom: 5 }}>
           <CartesianGrid stroke="#141414" strokeDasharray="3 3" />
           <XAxis {...XAXIS_PROPS} />
           <YAxis yAxisId="p" {...yAxisPrice} />
-          <Tooltip content={<PriceTooltip />} />
+          <Tooltip content={PriceTooltip} />
           <Legend wrapperStyle={{ fontSize: 11, fontFamily: FONT_UI, paddingTop: 8 }} />
           <HalvingVLines halvings={halvings} yAxisId="p" />
           <EtfStressLines years={etfStressYears} yAxisId="p" />
@@ -332,7 +333,7 @@ export function PriceChart({
             </>
           )}
         </LineChart>
-      </ResponsiveContainer>
+      </ChartFrame>
       <div style={{ marginTop: 10 }}>
         <label
           style={{
@@ -464,6 +465,7 @@ export function PriceChart({
               step="0.01"
               value={spyBullishness}
               onChange={(e) => onSpyBullishnessChange(Number(e.target.value))}
+              aria-label="SPY projection bullishness"
               style={{ flex: 1, accentColor: C.amber, cursor: "ew-resize", minWidth: 80 }}
             />
             <span style={{ fontSize: 11, color: C.hint, minWidth: 36, textAlign: "right" }}>
@@ -487,6 +489,11 @@ export function PriceChart({
           interpolates between bear (&minus;2% vs. base) and bull (+2% vs. base) using the slider. The
           inflation-adjusted line uses annual CPI-U ratios for the historical segment and the model real return
           (nominal minus inflation) for the projection segment.
+        </div>
+      )}
+      {overlaySpy && spyHistoricalError && (
+        <div style={{ marginTop: 8, maxWidth: 720, fontSize: 10, color: C.red, fontFamily: FONT_UI }}>
+          {spyHistoricalError}
         </div>
       )}
       <div

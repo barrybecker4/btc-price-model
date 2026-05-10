@@ -1,12 +1,25 @@
-import { useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { C, FONT_UI } from "../theme.js";
 
-export function Section({ title, children, open: def = true }) {
-  const [open, setOpen] = useState(def);
+/**
+ * @param {object} props
+ * @param {string} props.title
+ * @param {boolean} [props.defaultOpen=true] Initial expanded state; also re-syncs when this prop changes.
+ */
+export function Section({ title, children, defaultOpen = true }) {
+  const [open, setOpen] = useState(defaultOpen);
+  const panelId = useId();
+
+  useEffect(() => {
+    setOpen(defaultOpen);
+  }, [defaultOpen]);
+
   return (
     <div style={{ marginBottom: 5 }}>
       <button
         type="button"
+        aria-expanded={open}
+        aria-controls={panelId}
         onClick={() => setOpen(!open)}
         style={{
           width: "100%",
@@ -30,7 +43,12 @@ export function Section({ title, children, open: def = true }) {
         <span style={{ color: C.dim, fontSize: 10 }}>{open ? "▲" : "▼"}</span>
       </button>
       {open && (
-        <div style={{ padding: "10px 6px 4px 8px", borderLeft: "1px solid #1c1c1c", marginLeft: 2 }}>
+        <div
+          id={panelId}
+          role="region"
+          aria-label={title}
+          style={{ padding: "10px 6px 4px 8px", borderLeft: "1px solid #1c1c1c", marginLeft: 2 }}
+        >
           {children}
         </div>
       )}

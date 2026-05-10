@@ -190,6 +190,12 @@ export function ParamHintHotspot({ hint, hintDetail, ariaLabel, focusable = true
           "aria-controls": tooltipId,
           onFocus: openSelf,
           onBlur: () => setOpen(false),
+          onKeyDown: (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              toggle();
+            }
+          },
         }
       : {
           role: "group",

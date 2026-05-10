@@ -40,4 +40,9 @@ describe("withParamDefaults", () => {
     expect(withParamDefaults({ etfOutflowShockPct: 0 }).etfOutflowShockPct).toBe(0);
     expect(withParamDefaults({ etfOutflowShockPct: -2 }).etfOutflowShockPct).toBe(0);
   });
+
+  it("clamps already-lost coins above 90% of circulating (capped at 7M)", () => {
+    const merged = withParamDefaults({ circulatingSupply: 1_000_000, alreadyLostCoins: 1_000_000 });
+    expect(merged.alreadyLostCoins).toBe(900_000);
+  });
 });

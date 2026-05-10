@@ -30,3 +30,8 @@ describe("getEtfStressRedemptionYears", () => {
     expect(getEtfStressRedemptionYears(2026, 10, 2)).toEqual([2026 + 40 / 12, 2026 + 80 / 12]);
   });
 });
+
+
+  it("clamps stress months when the horizon cannot fit distinct slots", () => {
+    expect(getEtfStressRedemptionMonths(3, 3)).toEqual([1, 2]);
+  });

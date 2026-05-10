@@ -13,6 +13,7 @@ import { C, FONT_UI } from "./theme.js";
 import { fetchBtcUsdHistoryRange } from "./utils/fetchBtcHistory.js";
 import { fetchBtcUsd } from "./utils/fetchBtcUsd.js";
 import { fetchSpyMonthlyHistory } from "./utils/fetchSpyMonthlyHistory.js";
+import { safeDivide } from "./utils/format.js";
 import { enrichHistoricalPriceRows, mergePriceChartHistoricalSim } from "./utils/priceChartMerge.js";
 import { fractionalYearToLocalMs } from "./utils/powerLaw.js";
 import {
@@ -40,13 +41,20 @@ export default function App() {
   const [historicalLoading, setHistoricalLoading] = useState(false);
   const [historicalError, setHistoricalError] = useState(null);
   const [spyHistoricalRaw, setSpyHistoricalRaw] = useState(null);
+  const [spyHistoricalError, setSpyHistoricalError] = useState(null);
   const historicalFetchAttemptedRef = useRef(false);
   const spyHistoricalFetchAttemptedRef = useRef(false);
 
   useEffect(() => {
     const ac = new AbortController();
     (async () => {
-      const spot = await fetchBtcUsd(ac.signal);
+      let spot;
+      try {
+        spot = await fetchBtcUsd(ac.signal);
+      } catch (e) {
+        if (e?.name === "AbortError" || ac.signal.aborted) return;
+        return;
+      }
       if (spot == null || ac.signal.aborted) return;
       const { min, max, value } = boundsForSpotPrice(spot);
       if (ac.signal.aborted) return;
@@ -100,8 +108,13 @@ export default function App() {
   }, [showHistorical, historicalRaw]);
 
   useEffect(() => {
+    if (!overlaySpy) setSpyHistoricalError(null);
+  }, [overlaySpy]);
+
+  useEffect(() => {
     if (!overlaySpy || !showHistorical) {
       spyHistoricalFetchAttemptedRef.current = false;
+      setSpyHistoricalError(null);
       return;
     }
     if (spyHistoricalRaw != null) return;
@@ -109,6 +122,7 @@ export default function App() {
     spyHistoricalFetchAttemptedRef.current = true;
 
     const ac = new AbortController();
+    setSpyHistoricalError(null);
     (async () => {
       try {
         const rows = await fetchSpyMonthlyHistory({
@@ -117,10 +131,15 @@ export default function App() {
           signal: ac.signal,
         });
         if (ac.signal.aborted) return;
-        if (!rows.length) return;
+        if (!rows.length) {
+          setSpyHistoricalError("No SPY / S&P history returned for this range.");
+          return;
+        }
         setSpyHistoricalRaw(rows);
-      } catch {
-        // The fetch helper already falls back to bundled monthly data.
+      } catch (e) {
+        if (!ac.signal.aborted) {
+          setSpyHistoricalError(e instanceof Error ? e.message : "Failed to load SPY history.");
+        }
       }
     })();
     return () => ac.abort();
@@ -141,7 +160,7 @@ export default function App() {
   }, [data, params.capBuyingToLiquidFloat]);
   const first = data[0];
   const last = data[data.length - 1];
-  const mult = last.price / first.price;
+  const mult = safeDivide(last?.price, first?.price, NaN);
 
   const historicalEnriched = useMemo(() => {
     if (!historicalRaw?.length) return null;
@@ -286,11 +305,17 @@ export default function App() {
               showHistorical={showHistorical}
               onShowHistoricalChange={(v) => {
                 setShowHistorical(v);
-                if (!v) setHistoricalError(null);
+                if (!v) {
+                  setHistoricalError(null);
+                  setSpyHistoricalError(null);
+                  setSpyHistoricalRaw(null);
+                  spyHistoricalFetchAttemptedRef.current = false;
+                }
               }}
               showProjectionStartLine={showHistorical && !!historicalEnriched?.length}
               historicalLoading={historicalLoading}
               historicalError={historicalError}
+              spyHistoricalError={spyHistoricalError}
             />
           )}
           {tab === "supply" && (

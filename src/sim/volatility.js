@@ -37,14 +37,14 @@ export function monthlySigmaFromAnnual(annualFraction) {
  * Linear fade of volatility over the simulation: 1 at start → (1 − reduction) at end.
  * @param {number} reductionFraction — 0–1, fraction of initial vol removed by the final month
  * @param {number} m — current month index (0 … months-1) for transition m → m+1
- * @param {number} months — total simulated months (simYears * 12)
+ * @param {number} months — total simulated months (simYears * 12); decay reaches (1−r) when m = months−1
  */
 export function volatilityTimeDecayMultiplier(reductionFraction, m, months) {
   const r =
     typeof reductionFraction === "number" && Number.isFinite(reductionFraction)
       ? Math.max(0, Math.min(1, reductionFraction))
       : 0;
-  const denom = Math.max(months, 1);
-  const t = m / denom;
+  const denom = months <= 1 ? 1 : months - 1;
+  const t = months <= 1 ? 1 : m / denom;
   return 1 - r * t;
 }

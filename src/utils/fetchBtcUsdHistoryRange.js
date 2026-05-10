@@ -1,7 +1,7 @@
 import { fetchCoinGeckoMarketChartRange } from "./coingeckoMarketChartRange.js";
 import { fetchCryptoCompareHistodayRange } from "./cryptoCompareHistodayRange.js";
 import { downsampleToMonthly } from "./downsampleToMonthly.js";
-import { fractionalYearFromUtcMs } from "./powerLaw.js";
+import { utcMsToBtcChartYear } from "./timeAxis.js";
 
 /**
  * Fetches BTC/USD daily history and returns monthly chart rows (fractional year + rounded nominal price).
@@ -13,7 +13,11 @@ export async function fetchBtcUsdHistoryRange({ fromMs, toMs, signal }) {
   const hasGeckoKey = Boolean(import.meta.env.VITE_COINGECKO_DEMO_API_KEY);
   let raw = null;
   if (hasGeckoKey) {
-    raw = await fetchCoinGeckoMarketChartRange({ fromMs, toMs, signal });
+    try {
+      raw = await fetchCoinGeckoMarketChartRange({ fromMs, toMs, signal });
+    } catch {
+      raw = null;
+    }
   }
   if (!raw?.length) {
     const fromSec = Math.floor(fromMs / 1000);
@@ -26,7 +30,7 @@ export async function fetchBtcUsdHistoryRange({ fromMs, toMs, signal }) {
 
   const monthly = downsampleToMonthly(raw);
   return monthly.map((point) => ({
-    year: parseFloat(fractionalYearFromUtcMs(point.timestampMs).toFixed(3)),
+    year: utcMsToBtcChartYear(point.timestampMs),
     /** Never 0: log-scale charts require strictly positive values (early BTC under $0.50 rounds to 0). */
     price: Math.max(0.01, Math.round(point.price)),
   }));

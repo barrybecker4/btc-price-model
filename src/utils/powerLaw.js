@@ -70,8 +70,10 @@ export function fractionalYearFromUtcMs(ms) {
  * @returns {number} days since genesis (clamped)
  */
 export function daysSinceGenesis(fractionalYear) {
+  if (!Number.isFinite(fractionalYear)) return MIN_DAYS;
   const msSinceGenesis = fractionalYearToMs(fractionalYear) - GENESIS_MS;
   const d = msSinceGenesis / MS_PER_DAY;
+  if (!Number.isFinite(d)) return MIN_DAYS;
   return Math.max(MIN_DAYS, d);
 }
 

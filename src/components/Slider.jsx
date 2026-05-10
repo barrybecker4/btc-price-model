@@ -48,6 +48,7 @@ export function Slider({ label, hint, hintDetail, value, min, max, step, onChang
       )}
       <input
         type="range"
+        aria-label={label}
         min={min}
         max={max}
         step={step}

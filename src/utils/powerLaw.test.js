@@ -41,6 +41,11 @@ describe("daysSinceGenesis", () => {
     expect(early2009).toBeLessThan(GENESIS_MS);
     expect(daysSinceGenesis(2009.0)).toBe(1);
   });
+
+  it("returns the minimum day count for non-finite fractional years", () => {
+    expect(daysSinceGenesis(NaN)).toBe(1);
+    expect(daysSinceGenesis(Number.POSITIVE_INFINITY)).toBe(1);
+  });
 });
 
 describe("powerLawTrendUsd", () => {

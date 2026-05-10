@@ -52,4 +52,30 @@ describe("fetchSpyMonthlyHistory", () => {
     expect(rows).toHaveLength(3);
     expect(rows[0].price).toBeGreaterThan(0);
   });
+
+  it("still merges cached bulk when only the recent-segment fetch fails", async () => {
+    const csvBulk = ["Date,SP500", "2026-06-01,5000", "2026-06-30,5050"].join("\n");
+    let calls = 0;
+    vi.stubGlobal("fetch", vi.fn(async () => {
+      calls += 1;
+      if (calls === 1) {
+        return { ok: true, text: async () => csvBulk };
+      }
+      throw new Error("network");
+    }));
+
+    const first = await fetchSpyMonthlyHistory({
+      fromMs: Date.UTC(2011, 0, 1),
+      toMs: Date.UTC(2026, 5, 15),
+      signal: undefined,
+    });
+    expect(first.some((r) => r.price === 5050)).toBe(true);
+
+    const second = await fetchSpyMonthlyHistory({
+      fromMs: Date.UTC(2026, 5, 1),
+      toMs: Date.UTC(2027, 0, 1),
+      signal: undefined,
+    });
+    expect(second.some((r) => r.price === 5050)).toBe(true);
+  });
 });

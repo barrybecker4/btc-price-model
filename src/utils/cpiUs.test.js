@@ -22,7 +22,7 @@ describe("toRealDollarsAtAnchor", () => {
   });
 
   it("uses CPI ratio for historical inflation adjustment", () => {
-    expect(toRealDollarsAtAnchor(10_000, 2020, 2026)).toBe(12_751);
+    expect(toRealDollarsAtAnchor(10_000, 2020, 2026)).toBeCloseTo(10_000 * (330 / 258.811), 0);
   });
 
   it("keeps a positive floor for log scale safety", () => {

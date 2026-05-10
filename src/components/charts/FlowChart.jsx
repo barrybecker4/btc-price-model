@@ -6,10 +6,10 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer,
 } from "recharts";
 import { C, FONT_NUM, FONT_UI } from "../../theme.js";
 import { TIP, XAXIS_PROPS } from "../../charts/rechartsConfig.js";
+import { ChartFrame } from "./ChartFrame.jsx";
 import { EtfStressLines } from "./EtfStressLines.jsx";
 import { HalvingVLines } from "./HalvingVLines.jsx";
 import { ShockLine } from "./ShockLine.jsx";
@@ -29,7 +29,7 @@ function FlowTooltip({ active, payload, label }) {
       ))}
       {showRation && (
         <div style={{ color: C.hint, fontSize: 10, marginTop: 8, fontFamily: FONT_UI, lineHeight: 1.35 }}>
-          Unmet hoarding demand: {Math.round(row.unmetBuyBtcM).toLocaleString()} BTC/mo ({row.buyRationPct?.toFixed(1)}% of desired not executed)
+          Unmet hoarding demand: {Math.round(row.unmetBuyBtcM).toLocaleString()} BTC/mo ({Number.isFinite(row.buyRationPct) ? row.buyRationPct.toFixed(1) : "0.0"}% of desired not executed)
         </div>
       )}
     </div>
@@ -39,10 +39,10 @@ function FlowTooltip({ active, payload, label }) {
 export function FlowChart({ data, halvings, etfStressYears, supplyShockYear }) {
   return (
     <>
-      <div style={{ fontSize: 11, color: C.hint, marginBottom: 8, letterSpacing: "0.04em", fontFamily: FONT_UI }}>
-        DAILY FLOW (BTC/DAY) — Totals are executed demand (capped by liquid float when enabled). Retail is net flow from Initial Retail Purchase Rate (USD/day → BTC). ETF stress outflows can add sell pressure. Halvings cut mining supply.
-      </div>
-      <ResponsiveContainer width="100%" height={310}>
+      <ChartFrame
+        height={310}
+        title="DAILY FLOW (BTC/DAY) — Totals are executed demand (capped by liquid float when enabled). Retail is net flow from Initial Retail Purchase Rate (USD/day → BTC). ETF stress outflows can add sell pressure. Halvings cut mining supply."
+      >
         <LineChart data={data} margin={{ top: 5, right: 30, left: 5, bottom: 5 }}>
           <CartesianGrid stroke="#141414" strokeDasharray="3 3" />
           <XAxis {...XAXIS_PROPS} />
@@ -53,7 +53,7 @@ export function FlowChart({ data, halvings, etfStressYears, supplyShockYear }) {
             tickFormatter={(v) => (v >= 1000 ? `${(v / 1000).toFixed(1)}K` : v)}
             width={55}
           />
-          <Tooltip content={<FlowTooltip />} />
+          <Tooltip content={FlowTooltip} />
           <Legend wrapperStyle={{ fontSize: 11, fontFamily: FONT_UI, paddingTop: 8 }} />
           <HalvingVLines halvings={halvings} />
           <EtfStressLines years={etfStressYears} />
@@ -88,7 +88,7 @@ export function FlowChart({ data, halvings, etfStressYears, supplyShockYear }) {
           />
           <ShockLine supplyShockYear={supplyShockYear} />
         </LineChart>
-      </ResponsiveContainer>
+      </ChartFrame>
     </>
   );
 }

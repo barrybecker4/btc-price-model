@@ -1,6 +1,6 @@
 import { YEAR_START } from "../sim/constants.js";
 import { C, FONT_UI } from "../theme.js";
-import { fmtUSD, formatSimRangeLabel } from "../utils/format.js";
+import { fmtUSD, formatSimRangeLabel, safeDivide } from "../utils/format.js";
 import { KPI } from "./KPI.jsx";
 
 export function KpiBar({ p, last, supplyShockYear, mult, floatCapInfo }) {
@@ -53,7 +53,7 @@ export function KpiBar({ p, last, supplyShockYear, mult, floatCapInfo }) {
         <KPI
           label={`BTC Price · ${Math.floor(YEAR_START + p.simYears)}`}
           value={fmtUSD(last.price)}
-          sub={`${mult.toFixed(1)}× from ${fmtUSD(p.startPrice)}.`}
+          sub={`${Number.isFinite(mult) && mult > 0 ? mult.toFixed(1) : "—"}× from ${fmtUSD(p.startPrice)}.`}
           tooltip="Terminal nominal BTC/USD at the end of the simulation horizon, given your demand, supply, and market-dynamics parameters."
           highlight
         />
@@ -99,7 +99,7 @@ export function KpiBar({ p, last, supplyShockYear, mult, floatCapInfo }) {
         <KPI
           label="Corp Treasury Total"
           value={`${last.treasuryM.toFixed(2)}M BTC`}
-          sub={`${((last.treasuryM / (p.circulatingSupply / 1e6)) * 100).toFixed(0)}% of modeled circulating supply.`}
+          sub={`${(safeDivide(last.treasuryM, p.circulatingSupply / 1e6, 0) * 100).toFixed(0)}% of modeled circulating supply.`}
           tooltip="Sum of modeled corporate treasury holdings (e.g. MSTR-style path plus any other treasury sliders you enabled)."
         />
       </div>

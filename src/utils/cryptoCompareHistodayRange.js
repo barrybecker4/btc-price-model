@@ -1,3 +1,5 @@
+import { fetchWithTimeout } from "./httpFetch.js";
+
 const CC_PAGE_LIMIT = 2000;
 const MAX_PAGES = 24;
 const BETWEEN_PAGES_MS = 120;
@@ -62,7 +64,7 @@ export async function fetchCryptoCompareHistodayRange({ fromSec, toSec, signal }
 
   for (let page = 0; page < MAX_PAGES; page++) {
     const url = buildHistodayUrl(toTs);
-    const res = await fetch(url, { signal });
+    const res = await fetchWithTimeout(url, { signal, timeoutMs: 30000 });
     if (!res.ok) {
       throw new Error(`CryptoCompare histoday failed (${res.status})`);
     }

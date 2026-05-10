@@ -1,6 +1,7 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { C, FONT_NUM, FONT_UI } from "../../theme.js";
 import { TIP, XAXIS_PROPS } from "../../charts/rechartsConfig.js";
+import { ChartFrame } from "./ChartFrame.jsx";
 import { EtfStressLines } from "./EtfStressLines.jsx";
 import { HalvingVLines } from "./HalvingVLines.jsx";
 import { ShockLine } from "./ShockLine.jsx";
@@ -8,10 +9,10 @@ import { ShockLine } from "./ShockLine.jsx";
 export function SupplyChart({ data, halvings, etfStressYears, supplyShockYear }) {
   return (
     <>
-      <div style={{ fontSize: 11, color: C.hint, marginBottom: 8, letterSpacing: "0.04em", fontFamily: FONT_UI }}>
-        BTC SUPPLY BREAKDOWN (MILLIONS) — Treasuries, ETFs &amp; LTH vs tradeable liquid
-      </div>
-      <ResponsiveContainer width="100%" height={310}>
+      <ChartFrame
+        height={310}
+        title="BTC SUPPLY BREAKDOWN (MILLIONS) — Treasuries, ETFs &amp; LTH vs tradeable liquid"
+      >
         <AreaChart data={data} margin={{ top: 5, right: 30, left: 5, bottom: 5 }}>
           <CartesianGrid stroke="#141414" strokeDasharray="3 3" />
           <XAxis {...XAXIS_PROPS} />
@@ -24,8 +25,15 @@ export function SupplyChart({ data, halvings, etfStressYears, supplyShockYear })
           />
           <Tooltip
             {...TIP}
-            formatter={(v, n) => [`${parseFloat(v).toFixed(3)}M BTC`, n]}
-            labelFormatter={(v) => `YEAR ${parseFloat(v).toFixed(1)}`}
+            formatter={(v, n) => {
+              const x = parseFloat(v);
+              const t = Number.isFinite(x) ? x.toFixed(3) : "—";
+              return [`${t}M BTC`, n];
+            }}
+            labelFormatter={(v) => {
+              const x = parseFloat(v);
+              return `YEAR ${Number.isFinite(x) ? x.toFixed(1) : "—"}`;
+            }}
           />
           <Legend wrapperStyle={{ fontSize: 11, fontFamily: FONT_UI, paddingTop: 8 }} />
           <HalvingVLines halvings={halvings} />
@@ -70,7 +78,7 @@ export function SupplyChart({ data, halvings, etfStressYears, supplyShockYear })
           />
           <ShockLine supplyShockYear={supplyShockYear} />
         </AreaChart>
-      </ResponsiveContainer>
+      </ChartFrame>
       <div
         style={{
           marginTop: 10,

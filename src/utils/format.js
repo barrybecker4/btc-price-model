@@ -1,5 +1,9 @@
-/** Map a fractional calendar year to a Date (inverse of getSimulationAnchorYear). */
+/**
+ * Map a fractional **local** calendar year to a Date (inverse of getSimulationAnchorYear).
+ * For UTC fractional years from API timestamps, see {@link ./timeAxis.js} and {@link ./powerLaw.js}.
+ */
 export function decimalYearToDate(y) {
+  if (!Number.isFinite(y)) return new Date(NaN);
   const yi = Math.floor(y);
   const frac = Math.min(1, Math.max(0, y - yi));
   const start = new Date(yi, 0, 1);
@@ -53,4 +57,11 @@ export function fmtUSD(v) {
   if (v >= 1e3) return fmtUsdThousands(v);
   const rounded = Math.round(v);
   return `$${rounded.toLocaleString()}`;
+}
+
+
+/** Safe ratio for KPIs and charts. */
+export function safeDivide(numerator, denominator, fallback = 0) {
+  if (!Number.isFinite(numerator) || !Number.isFinite(denominator) || denominator === 0) return fallback;
+  return numerator / denominator;
 }

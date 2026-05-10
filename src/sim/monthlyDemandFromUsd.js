@@ -59,8 +59,9 @@ export function computeMonthlyDemandFromUsd(input) {
   const etfNetBtcDesired = (input.etfUSD * positiveDemandScale * etfFlowMultiplier) / price - etfShockBtc;
   const etfBuyRaw = Math.max(0, etfNetBtcDesired);
   const etfSellRaw = Math.min(input.etfBtc ?? 0, Math.max(0, -etfNetBtcDesired));
-  const organicRetailBtcRaw =
-    input.retailNetUsd >= 0 ? (input.retailNetUsd * positiveDemandScale) / price : input.retailNetUsd / price;
+  // Scale signed retail USD by the same valuation/momentum factor as institutional buy legs
+  // so net selling is not oddly insensitive to overvaluation when elasticity > 0.
+  const organicRetailBtcRaw = (input.retailNetUsd * positiveDemandScale) / price;
   const retailBuyRaw = Math.max(0, organicRetailBtcRaw);
   const retailSellRaw = Math.max(0, -organicRetailBtcRaw);
 

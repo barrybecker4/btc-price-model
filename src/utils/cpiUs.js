@@ -69,6 +69,7 @@ export function cpiForFractionalYear(year) {
 export function toRealDollarsAtAnchor(amountNominal, observationYear, anchorYear) {
   const observationCpi = cpiForFractionalYear(observationYear);
   const anchorCpi = cpiForFractionalYear(anchorYear);
-  const adjusted = Math.round(amountNominal * (anchorCpi / observationCpi));
+  const adjusted = amountNominal * (anchorCpi / observationCpi);
+  if (!Number.isFinite(adjusted)) return 0.01;
   return Math.max(0.01, adjusted);
 }

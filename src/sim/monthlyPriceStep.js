@@ -21,6 +21,9 @@ import {
  */
 export function computePriceAfterMonthTransition(input) {
   const parameters = input.parameters;
+  if (!(input.initLiq > 0)) {
+    return Math.max(input.price, parameters.miningCostFloor);
+  }
   const liquidRatio = Math.max(input.liquid / input.initLiq, 0.03);
   const elasticity = parameters.baseElasticity / liquidRatio;
   const liquidForDemand = Math.max(input.liquid, LIQ_FLOOR);

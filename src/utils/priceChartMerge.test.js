@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { toRealDollarsAtAnchor } from "./cpiUs.js";
 import {
   enrichHistoricalPriceRows,
   mergePriceChartHistoricalSim,
@@ -15,7 +16,7 @@ describe("enrichHistoricalPriceRows", () => {
 
   it("uses CPI ratio, so changing slider assumptions does not affect historical rows", () => {
     const rows = enrichHistoricalPriceRows([{ year: 2020, price: 10_000 }], 2026);
-    expect(rows[0].priceReal).toBe(12_751);
+    expect(rows[0].priceReal).toBe(toRealDollarsAtAnchor(10_000, 2020, 2026));
   });
 });
 

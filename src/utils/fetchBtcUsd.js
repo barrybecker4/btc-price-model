@@ -1,7 +1,9 @@
+import { fetchJsonWithTimeout } from "./httpFetch.js";
 import { parsePositiveUsdNumber } from "./parseUsd.js";
 
 /**
  * Fetches spot BTC/USD from a public API (no key). CoinGecko first, Coinbase fallback.
+ * Rethrows {@link DOMException} `AbortError` so callers can distinguish user abort from outage.
  * @param {AbortSignal} [signal]
  * @returns {Promise<number | null>}
  */
@@ -13,29 +15,27 @@ export async function fetchBtcUsd(signal) {
 
 async function tryCoinGecko(signal) {
   try {
-    const res = await fetch(
+    const data = await fetchJsonWithTimeout(
       "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd",
-      { signal },
+      { signal, timeoutMs: 15000 },
     );
-    if (!res.ok) return null;
-    const data = await res.json();
     const bitcoin = data.bitcoin;
     if (!bitcoin) return null;
     return parsePositiveUsdNumber(bitcoin.usd);
-  } catch {
+  } catch (e) {
+    if (e?.name === "AbortError") throw e;
     return null;
   }
 }
 
 async function tryCoinbase(signal) {
   try {
-    const res = await fetch("https://api.coinbase.com/v2/prices/BTC-USD/spot", { signal });
-    if (!res.ok) return null;
-    const data = await res.json();
+    const data = await fetchJsonWithTimeout("https://api.coinbase.com/v2/prices/BTC-USD/spot", { signal, timeoutMs: 15000 });
     const payload = data.data;
     if (!payload) return null;
     return parsePositiveUsdNumber(payload.amount);
-  } catch {
+  } catch (e) {
+    if (e?.name === "AbortError") throw e;
     return null;
   }
 }

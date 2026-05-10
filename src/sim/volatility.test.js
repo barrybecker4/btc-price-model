@@ -48,10 +48,10 @@ describe("monthlySigmaFromAnnual", () => {
 });
 
 describe("volatilityTimeDecayMultiplier", () => {
-  it("is 1 at start and 1 - r at end when months > 0", () => {
+  it("is 1 at start and 1 - r at last transition index", () => {
     const months = 120;
     expect(volatilityTimeDecayMultiplier(0.9, 0, months)).toBe(1);
-    expect(volatilityTimeDecayMultiplier(0.9, months, months)).toBeCloseTo(0.1);
+    expect(volatilityTimeDecayMultiplier(0.9, months - 1, months)).toBeCloseTo(0.1);
   });
 
   it("clamps reduction fraction to [0, 1]", () => {

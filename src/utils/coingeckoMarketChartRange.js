@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from "./httpFetch.js";
 import { parsePositiveUsdNumber } from "./parseUsd.js";
 
 /**
@@ -27,8 +28,9 @@ export async function fetchCoinGeckoMarketChartRange({ fromMs, toMs, signal }) {
   const query = "?vs_currency=usd&from=" + fromSec + "&to=" + toSec;
   const url = base + query;
 
-  const res = await fetch(url, {
+  const res = await fetchWithTimeout(url, {
     signal,
+    timeoutMs: 30000,
     headers: { "x-cg-demo-api-key": String(apiKey) },
   });
 

@@ -8,6 +8,7 @@ export function downsampleToMonthly(points) {
   const sorted = [...points].sort((a, b) => a.timestampMs - b.timestampMs);
   const byMonth = new Map();
   for (const point of sorted) {
+    if (!Number.isFinite(point.timestampMs)) continue;
     const date = new Date(point.timestampMs);
     const key = date.getUTCFullYear() * 12 + date.getUTCMonth();
     byMonth.set(key, point);

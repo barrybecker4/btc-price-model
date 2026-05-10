@@ -1,5 +1,7 @@
 import spyMonthlyFallback from "../data/spyMonthlyFallback.json";
 import { downsampleToMonthly } from "./downsampleToMonthly.js";
+import { fetchWithTimeout } from "./httpFetch.js";
+import { utcMsToSpyAxisYear } from "./timeAxis.js";
 
 const SP500_CSV_URL = "https://raw.githubusercontent.com/datasets/s-and-p-500/master/data/data.csv";
 const BULK_START_MS = Date.UTC(2011, 0, 1);
@@ -7,11 +9,6 @@ const BULK_END_MS = Date.UTC(2026, 11, 31);
 const RECENT_START_MS = Date.UTC(2027, 0, 1);
 
 let cachedBulkLive = null;
-
-function toMonthYear(timestampMs) {
-  const date = new Date(timestampMs);
-  return parseFloat((date.getUTCFullYear() + date.getUTCMonth() / 12).toFixed(3));
-}
 
 function parseSp500CsvMonthly(csv, { fromMs, toMs }) {
   const rows = csv.split(/\r?\n/);
@@ -27,23 +24,36 @@ function parseSp500CsvMonthly(csv, { fromMs, toMs }) {
     daily.push({ timestampMs, price: sp500 });
   }
   return downsampleToMonthly(daily).map((point) => ({
-    year: toMonthYear(point.timestampMs),
+    year: utcMsToSpyAxisYear(point.timestampMs),
     price: Math.round(point.price),
   }));
 }
 
 async function fetchMonthlyRange({ fromMs, toMs, signal }) {
   if (fromMs > toMs) return [];
-  const res = await fetch(SP500_CSV_URL, { signal });
+  const res = await fetchWithTimeout(SP500_CSV_URL, { signal, timeoutMs: 25000 });
   if (!res.ok) throw new Error(`SPY monthly history request failed (${res.status})`);
   const csv = await res.text();
   return parseSp500CsvMonthly(csv, { fromMs, toMs });
 }
 
 function fallbackRange({ fromMs, toMs }) {
-  const fromYear = toMonthYear(fromMs);
-  const toYear = toMonthYear(toMs);
+  const fromYear = utcMsToSpyAxisYear(fromMs);
+  const toYear = utcMsToSpyAxisYear(toMs);
   return spyMonthlyFallback.filter((row) => row.year >= fromYear && row.year <= toYear);
+}
+
+function mergeSpyRows({ fromMs, toMs, fallback, recentLive }) {
+  const fromYear = utcMsToSpyAxisYear(fromMs);
+  const toYear = utcMsToSpyAxisYear(toMs);
+  const merged = new Map(fallback.map((row) => [row.year, row]));
+  for (const row of cachedBulkLive) {
+    if (row.year < fromYear) continue;
+    if (row.year > toYear) continue;
+    merged.set(row.year, row);
+  }
+  for (const row of recentLive) merged.set(row.year, row);
+  return Array.from(merged.values()).sort((a, b) => a.year - b.year);
 }
 
 /**
@@ -63,23 +73,23 @@ export async function fetchSpyMonthlyHistory({ fromMs, toMs, signal }) {
         signal,
       });
     }
+  } catch {
+    return fallback;
+  }
+
+  let recentLive = [];
+  try {
     const recentFromMs = Math.max(RECENT_START_MS, fromMs);
-    const recentLive = await fetchMonthlyRange({
+    recentLive = await fetchMonthlyRange({
       fromMs: recentFromMs,
       toMs,
       signal,
     });
-    const merged = new Map(fallback.map((row) => [row.year, row]));
-    for (const row of cachedBulkLive) {
-      if (row.year < toMonthYear(fromMs)) continue;
-      if (row.year > toMonthYear(toMs)) continue;
-      merged.set(row.year, row);
-    }
-    for (const row of recentLive) merged.set(row.year, row);
-    return Array.from(merged.values()).sort((a, b) => a.year - b.year);
   } catch {
-    return fallback;
+    // Preserve cached bulk + JSON fallback when the optional recent segment fails.
   }
+
+  return mergeSpyRows({ fromMs, toMs, fallback, recentLive });
 }
 
 export function __resetSpyHistoryCacheForTests() {

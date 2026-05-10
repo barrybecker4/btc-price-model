@@ -6,6 +6,9 @@ export const MINING_COST_FLOOR_STEP = 1000;
 
 /** Slider range: one-third of spot to 2× spot (aligned to MINING_COST_FLOOR_STEP). */
 export function miningCostFloorBounds(startPrice) {
+  if (!Number.isFinite(startPrice) || startPrice <= 0) {
+    return { min: MINING_COST_FLOOR_STEP, max: MINING_COST_FLOOR_STEP * 100 };
+  }
   return {
     min: Math.max(
       MINING_COST_FLOOR_STEP,
@@ -20,6 +23,13 @@ export function miningCostFloorBounds(startPrice) {
  * @returns {{ min: number; max: number; value: number }}
  */
 export function boundsForSpotPrice(spotUsd) {
+  if (!Number.isFinite(spotUsd) || spotUsd <= 0) {
+    return {
+      min: START_PRICE_SLIDER_BASE_MIN,
+      max: START_PRICE_SLIDER_BASE_MAX,
+      value: START_PRICE_SLIDER_BASE_MIN,
+    };
+  }
   const STEP = START_PRICE_SLIDER_STEP;
   const snapped = Math.round(spotUsd / STEP) * STEP;
   const min = Math.min(START_PRICE_SLIDER_BASE_MIN, Math.floor(spotUsd / STEP) * STEP);

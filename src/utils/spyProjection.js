@@ -96,7 +96,7 @@ export function attachSpyOverlay(rows, input) {
 
   return rows.map((row) => {
     const deltaYears = row.year - yearStart;
-    if (deltaYears < -YEAR_EPS) {
+    if (deltaYears < 0) {
       const spy = spyPriceAtYear(row.year, historicalPoints);
       return { ...row, spy, spyReal: toRealDollarsAtAnchor(spy, row.year, yearStart) };
     }

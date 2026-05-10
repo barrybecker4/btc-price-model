@@ -149,5 +149,9 @@ export function withParamDefaults(p) {
     if (merged.etfOutflowShockPct > 0 && merged.etfOutflowShockPct < 0.1) merged.etfOutflowShockPct = 0.1;
     if (merged.etfOutflowShockPct < 0) merged.etfOutflowShockPct = 0;
   }
+  const lostCap = Math.min(7_000_000, Math.floor(Math.max(0, merged.circulatingSupply) * 0.9));
+  if (typeof merged.alreadyLostCoins === "number" && merged.alreadyLostCoins > lostCap) {
+    merged.alreadyLostCoins = lostCap;
+  }
   return merged;
 }

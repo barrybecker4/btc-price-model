@@ -1,14 +1,25 @@
-import { useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { C, FONT_NUM, FONT_UI } from "../theme.js";
 
 export function KPI({ label, value, sub, tooltip, warn, highlight }) {
   const [open, setOpen] = useState(false);
+  const tipId = useId();
   const hasTip = Boolean(sub || tooltip);
   const color = warn ? C.red : highlight ? C.amber : C.text;
+
+  useEffect(() => {
+    if (!open || !hasTip) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, hasTip]);
 
   return (
     <div
       tabIndex={hasTip ? 0 : undefined}
+      aria-describedby={open && hasTip ? tipId : undefined}
       onMouseEnter={() => hasTip && setOpen(true)}
       onMouseLeave={() => setOpen(false)}
       onFocus={() => hasTip && setOpen(true)}
@@ -52,7 +63,6 @@ export function KPI({ label, value, sub, tooltip, warn, highlight }) {
       </div>
       {open && hasTip && (
         <>
-          {/* Keeps hover alive between the card and the tooltip (no pointer dead zone). */}
           <div
             aria-hidden
             style={{
@@ -65,6 +75,7 @@ export function KPI({ label, value, sub, tooltip, warn, highlight }) {
             }}
           />
           <div
+            id={tipId}
             role="tooltip"
             style={{
               position: "absolute",
