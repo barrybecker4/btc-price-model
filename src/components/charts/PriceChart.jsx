@@ -355,7 +355,29 @@ export function PriceChart({
           Show historical data (2011–present)
         </label>
         {historicalLoading && (
-          <div style={{ marginTop: 6, fontSize: 10, color: C.hint, fontFamily: FONT_UI }}>Loading historical prices…</div>
+          <div
+            style={{
+              marginTop: 6,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              fontSize: 10,
+              color: C.hint,
+              fontFamily: FONT_UI,
+            }}
+            aria-busy="true"
+            aria-live="polite"
+          >
+            <div
+              className="btc-spinner"
+              style={{
+                border: `2px solid ${C.hint}33`,
+                borderTopColor: C.amber,
+              }}
+              aria-hidden
+            />
+            Loading historical prices…
+          </div>
         )}
         {historicalError && !historicalLoading && (
           <div style={{ marginTop: 6, fontSize: 10, color: C.red, fontFamily: FONT_UI, maxWidth: 720 }}>

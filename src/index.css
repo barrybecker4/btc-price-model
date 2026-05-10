@@ -13,3 +13,18 @@ body {
   flex-direction: column;
   box-sizing: border-box;
 }
+
+@keyframes btc-spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.btc-spinner {
+  box-sizing: border-box;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  animation: btc-spinner-rotate 0.75s linear infinite;
+  flex-shrink: 0;
+}
