@@ -17,6 +17,18 @@ export const YEAR_START = getSimulationAnchorYear();
 /** Months per calendar year (annual ↔ monthly rates in the sim). Not the same as DEFAULT_TAPER_YEARS. */
 export const MONTHS_PER_YEAR = 12;
 
+/** Stylized days per simulated month for USD→BTC flows and daily chart breakdowns (not calendar-accurate). */
+export const SIM_MONTH_DAYS = 30;
+
+/** Upper bound for “already lost” BTC in UI and param merge (headline Satoshi-era cap). */
+export const ALREADY_LOST_COINS_CAP_BTC = 7_000_000;
+
+/** Sidebar reference line: rough network issuance (BTC/day); the sim uses halving-aware mining. */
+export const REFERENCE_MINING_BTC_PER_DAY = 450;
+
+/** Liquid pool as % of initial at which the supply-shock marker is recorded. */
+export const SUPPLY_SHOCK_LIQUID_PCT_THRESHOLD = 30;
+
 /** Default logistic taper horizon (years) for MSTR, other treasury, and ETF growth; single source of truth. */
 export const DEFAULT_TAPER_YEARS = 12;
 
@@ -149,7 +161,7 @@ export function withParamDefaults(p) {
     if (merged.etfOutflowShockPct > 0 && merged.etfOutflowShockPct < 0.1) merged.etfOutflowShockPct = 0.1;
     if (merged.etfOutflowShockPct < 0) merged.etfOutflowShockPct = 0;
   }
-  const lostCap = Math.min(7_000_000, Math.floor(Math.max(0, merged.circulatingSupply) * 0.9));
+  const lostCap = Math.min(ALREADY_LOST_COINS_CAP_BTC, Math.floor(Math.max(0, merged.circulatingSupply) * 0.9));
   if (typeof merged.alreadyLostCoins === "number" && merged.alreadyLostCoins > lostCap) {
     merged.alreadyLostCoins = lostCap;
   }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULTS, withParamDefaults } from "./constants.js";
+import { ALREADY_LOST_COINS_CAP_BTC, DEFAULTS, withParamDefaults } from "./constants.js";
 
 describe("withParamDefaults", () => {
   it("fills undefined and NaN numeric fields from DEFAULTS", () => {
@@ -41,8 +41,9 @@ describe("withParamDefaults", () => {
     expect(withParamDefaults({ etfOutflowShockPct: -2 }).etfOutflowShockPct).toBe(0);
   });
 
-  it("clamps already-lost coins above 90% of circulating (capped at 7M)", () => {
+  it("clamps already-lost coins above 90% of circulating (capped at headline max)", () => {
     const merged = withParamDefaults({ circulatingSupply: 1_000_000, alreadyLostCoins: 1_000_000 });
     expect(merged.alreadyLostCoins).toBe(900_000);
+    expect(merged.alreadyLostCoins).toBeLessThanOrEqual(ALREADY_LOST_COINS_CAP_BTC);
   });
 });

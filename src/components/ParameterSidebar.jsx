@@ -1,4 +1,4 @@
-import { DEFAULTS } from "../sim/constants.js";
+import { ALREADY_LOST_COINS_CAP_BTC, DEFAULTS } from "../sim/constants.js";
 import {
   miningCostFloorBounds,
   START_PRICE_SLIDER_BASE_MAX,
@@ -17,7 +17,7 @@ export function ParameterSidebar({
 
   const { min: miningCostMin, max: miningCostMax } = miningCostFloorBounds(p.startPrice);
 
-  const lostCoinsMax = Math.min(7_000_000, Math.floor(p.circulatingSupply * 0.9));
+  const lostCoinsMax = Math.min(ALREADY_LOST_COINS_CAP_BTC, Math.floor(p.circulatingSupply * 0.9));
   const safeLostCoins = Math.min(p.alreadyLostCoins, lostCoinsMax);
   const effectiveSupply = p.circulatingSupply - safeLostCoins;
   const strcInitialDayBtc = Math.round((p.strcInitialUsdB * 1e9) / 365 / Math.max(p.startPrice, 1));

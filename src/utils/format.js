@@ -17,7 +17,10 @@ const SIM_RANGE_FMT = new Intl.DateTimeFormat("en", {
   year: "numeric",
 });
 
-/** Human-readable sim window from fractional-year anchor and horizon (years). */
+/**
+ * Human-readable sim window from fractional-year anchor and horizon (years).
+ * Uses local calendar interpolation; for UTC API timestamps see {@link ./timeAxis.js}.
+ */
 export function formatSimRangeLabel(anchorYear, simYears) {
   const a = decimalYearToDate(anchorYear);
   const b = decimalYearToDate(anchorYear + simYears);

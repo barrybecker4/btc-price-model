@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MONTHS_PER_YEAR, withParamDefaults } from "./constants.js";
+import { MONTHS_PER_YEAR, SUPPLY_SHOCK_LIQUID_PCT_THRESHOLD, withParamDefaults } from "./constants.js";
 import { runSim } from "./runSim.js";
 
 function baseParams(overrides = {}) {
@@ -35,7 +35,7 @@ describe("runSim", () => {
     expect(data[0].price).toBe(p.startPrice);
   });
 
-  it("records supply shock year when liquid share falls below 30%", () => {
+  it(`records supply shock year when liquid share falls below ${SUPPLY_SHOCK_LIQUID_PCT_THRESHOLD}%`, () => {
     const p = baseParams({
       simYears: 15,
       circulatingSupply: 800_000,
@@ -44,7 +44,7 @@ describe("runSim", () => {
       minerSellPct: 0,
     });
     const { supplyShockYear, data } = runSim(p);
-    const crossed = data.some((row) => row.liquidPct < 30);
+    const crossed = data.some((row) => row.liquidPct < SUPPLY_SHOCK_LIQUID_PCT_THRESHOLD);
     expect(crossed).toBe(true);
     expect(supplyShockYear).not.toBeNull();
   });

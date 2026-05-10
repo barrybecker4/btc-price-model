@@ -1,4 +1,10 @@
-import { DEFAULTS, MONTHS_PER_YEAR, YEAR_START } from "./constants.js";
+import {
+  DEFAULTS,
+  MONTHS_PER_YEAR,
+  SIM_MONTH_DAYS,
+  SUPPLY_SHOCK_LIQUID_PCT_THRESHOLD,
+  YEAR_START,
+} from "./constants.js";
 import {
   applyHolderFlows,
   initialHolderSplit,
@@ -45,8 +51,8 @@ export function runSim(parameters) {
 
   let strcUSD = (parameters.strcInitialUsdB * 1e9) / MONTHS_PER_YEAR;
   let otherUSD = (parameters.otherTreasuryUsdB * 1e9) / MONTHS_PER_YEAR;
-  let etfUSD = parameters.etfDailyInflowM * 1e6 * 30;
-  let retailNetUsd = (parameters.initialRetailPurchaseRateM ?? 0) * 1e6 * 30;
+  let etfUSD = parameters.etfDailyInflowM * 1e6 * SIM_MONTH_DAYS;
+  let retailNetUsd = (parameters.initialRetailPurchaseRateM ?? 0) * 1e6 * SIM_MONTH_DAYS;
 
   const data = [];
   /** Month-end closes for trailing 52-week (12-month) average in LTH profit distribution. */
@@ -58,7 +64,8 @@ export function runSim(parameters) {
     const year = YEAR_START + monthIndex / MONTHS_PER_YEAR;
     const dailyMining = getDailyMining(year);
     const liquidPercentOfInitial = (liquid / initialLiquid) * 100;
-    if (liquidPercentOfInitial < 30 && supplyShockYear === null) supplyShockYear = year;
+    if (liquidPercentOfInitial < SUPPLY_SHOCK_LIQUID_PCT_THRESHOLD && supplyShockYear === null)
+      supplyShockYear = year;
 
     let valuationMa52w;
     if (monthEndCloses.length > 0) {

@@ -1,4 +1,4 @@
-import { MONTHS_PER_YEAR } from "./constants.js";
+import { MONTHS_PER_YEAR, SIM_MONTH_DAYS } from "./constants.js";
 import { getEtfStressRedemptionMonths } from "./etfStressRedemptions.js";
 import { LIQ_FLOOR } from "./holderBuckets.js";
 import { monthlySigmaFromAnnual, seededClampedNormal } from "./volatility.js";
@@ -26,7 +26,7 @@ export function computeMonthlyDemandFromUsd(input) {
   const parameters = input.parameters;
   const dailyMining = input.dailyMining;
 
-  const dailyMiningMonthly = dailyMining * 30;
+  const dailyMiningMonthly = dailyMining * SIM_MONTH_DAYS;
   const minerSales = dailyMiningMonthly * (parameters.minerSellPct / 100);
   const coinsLost = liquid * (parameters.annualLossRate / 100 / MONTHS_PER_YEAR);
 
@@ -106,13 +106,13 @@ export function computeMonthlyDemandFromUsd(input) {
     unmetDemandPremiumMonthly = Math.min(tightness * strength, maxPremiumFraction);
   }
 
-  const strcDayBtc = strcBtc / 30;
-  const otherDayBtc = otherBtc / 30;
-  const etfDayBtc = etfBtc2 / 30;
+  const strcDayBtc = strcBtc / SIM_MONTH_DAYS;
+  const otherDayBtc = otherBtc / SIM_MONTH_DAYS;
+  const etfDayBtc = etfBtc2 / SIM_MONTH_DAYS;
   const minerSellDay = dailyMining * (parameters.minerSellPct / 100);
-  const retailBuyDay = Math.max(0, organicRetailNetBtcExecuted) / 30;
-  const retailSellDay = Math.max(0, -organicRetailNetBtcExecuted) / 30;
-  const etfSellDay = etfSellRaw / 30;
+  const retailBuyDay = Math.max(0, organicRetailNetBtcExecuted) / SIM_MONTH_DAYS;
+  const retailSellDay = Math.max(0, -organicRetailNetBtcExecuted) / SIM_MONTH_DAYS;
+  const etfSellDay = etfSellRaw / SIM_MONTH_DAYS;
   const totalBuyDay = strcDayBtc + otherDayBtc + Math.max(0, etfDayBtc) + retailBuyDay;
   const totalSellDay = minerSellDay + retailSellDay + etfSellDay;
 

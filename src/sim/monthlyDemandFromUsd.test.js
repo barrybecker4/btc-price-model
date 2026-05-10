@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { withParamDefaults } from "./constants.js";
+import { SIM_MONTH_DAYS, withParamDefaults } from "./constants.js";
 import { computeMonthlyDemandFromUsd } from "./monthlyDemandFromUsd.js";
 
 function demandParameters(overrides = {}) {
@@ -174,7 +174,7 @@ describe("computeMonthlyDemandFromUsd", () => {
       parameters,
     });
     expect(demand.etfBtc2).toBe(-10_000);
-    expect(demand.totalSellDay).toBeCloseTo(10_000 / 30, 6);
+    expect(demand.totalSellDay).toBeCloseTo(10_000 / SIM_MONTH_DAYS, 6);
   });
 
   it("does not apply ETF stress outflows when stress redemption count is zero", () => {
