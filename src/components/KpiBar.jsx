@@ -1,6 +1,7 @@
 import { YEAR_START } from "../sim/constants.js";
 import { C, FONT_UI } from "../theme.js";
 import { fmtUSD, formatSimRangeLabel, safeDivide } from "../utils/format.js";
+import { AboutLink } from "./AboutLink.jsx";
 import { KPI } from "./KPI.jsx";
 
 export function KpiBar({ p, last, supplyShockYear, mult, floatCapInfo }) {
@@ -40,14 +41,25 @@ export function KpiBar({ p, last, supplyShockYear, mult, floatCapInfo }) {
     >
       <div
         style={{
-          fontSize: 12,
-          color: C.amberDim,
-          fontFamily: FONT_UI,
-          fontWeight: 500,
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
           marginBottom: 8,
         }}
       >
-        Bitcoin Supply Shock Simulator &nbsp;·&nbsp; {formatSimRangeLabel(YEAR_START, p.simYears)}
+        <div
+          style={{
+            fontSize: 12,
+            color: C.amberDim,
+            fontFamily: FONT_UI,
+            fontWeight: 500,
+          }}
+        >
+          Bitcoin Supply Shock Simulator &nbsp;·&nbsp; {formatSimRangeLabel(YEAR_START, p.simYears)}
+        </div>
+        <div style={{ marginLeft: "auto" }}>
+          <AboutLink />
+        </div>
       </div>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <KPI
