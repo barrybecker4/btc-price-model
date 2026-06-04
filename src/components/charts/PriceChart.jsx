@@ -7,6 +7,7 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
+  DefaultLegendContent,
   ReferenceLine,
 } from "recharts";
 import { C, FONT_NUM, FONT_UI } from "../../theme.js";
@@ -76,8 +77,34 @@ function PriceTooltip({ active, payload, label }) {
   );
 }
 
-const POWER_LAW_UPPER_STROKE = C.ancient;
-const POWER_LAW_LOWER_STROKE = "#14b8a6";
+const POWER_LAW_UPPER_STROKE = "#2db8a8";
+const POWER_LAW_LOWER_STROKE = "#a8c936";
+const SPY_REAL_STROKE = "#2d8fd6";
+
+/** Legend order (Recharts otherwise sorts entries alphabetically by `name`). */
+function legendKeysForOverlays({ overlayPowerLaw, overlaySpy }) {
+  const keys = ["price", "priceRealProjected"];
+  if (overlayPowerLaw) keys.push("powerLawUpper", "powerLawLower");
+  if (overlaySpy) keys.push("spy", "spyRealProjected");
+  return keys;
+}
+
+function orderLegendPayload(payload, overlayFlags) {
+  if (!payload?.length) return payload ?? [];
+  const order = legendKeysForOverlays(overlayFlags);
+  const byKey = new Map(payload.map((item) => [item.dataKey, item]));
+  return order.map((key) => byKey.get(key)).filter(Boolean);
+}
+
+function PriceChartLegend({ payload, overlayPowerLaw, overlaySpy, ...rest }) {
+  return (
+    <DefaultLegendContent
+      {...rest}
+      payload={orderLegendPayload(payload, { overlayPowerLaw, overlaySpy })}
+    />
+  );
+}
+
 const SERIES_KEYS = [
   "price",
   "priceRealHistorical",
@@ -230,7 +257,16 @@ export function PriceChart({
           <XAxis {...XAXIS_PROPS} />
           <YAxis yAxisId="p" {...yAxisPrice} />
           <Tooltip content={PriceTooltip} />
-          <Legend wrapperStyle={{ fontSize: 11, fontFamily: FONT_UI, paddingTop: 8 }} />
+          <Legend
+            wrapperStyle={{ fontSize: 11, fontFamily: FONT_UI, paddingTop: 8 }}
+            content={(props) => (
+              <PriceChartLegend
+                {...props}
+                overlayPowerLaw={overlayPowerLaw}
+                overlaySpy={overlaySpy}
+              />
+            )}
+          />
           <HalvingVLines halvings={halvings} yAxisId="p" />
           <EtfStressLines years={etfStressYears} yAxisId="p" />
           <ShockLine supplyShockYear={supplyShockYear} yAxisId="p" />
@@ -238,7 +274,7 @@ export function PriceChart({
             <ReferenceLine
               x={parseFloat(YEAR_START.toFixed(4))}
               yAxisId="p"
-              stroke={C.blue}
+              stroke={C.dim}
               strokeWidth={1.5}
               strokeDasharray="5 4"
               label={{
@@ -248,7 +284,7 @@ export function PriceChart({
                 dy: 17,
                 // Anchor is on the line; nudge left so the dash does not run through the text.
                 dx: -22,
-                fill: C.blue,
+                fill: C.dim,
                 fontSize: 10,
                 fontFamily: FONT_UI,
               }}
@@ -278,7 +314,7 @@ export function PriceChart({
             yAxisId="p"
             type="monotone"
             dataKey="priceRealProjected"
-            name={`Price in today's dollars (${inflation}% inflation adj.)`}
+            name="Price in today's dollars"
             stroke="#aa6600"
             dot={false}
             strokeWidth={1.5}
@@ -325,7 +361,7 @@ export function PriceChart({
                 type="linear"
                 dataKey="spyRealHistorical"
                 name="SPY in today's dollars (using historical CPI)"
-                stroke={C.ancient}
+                stroke={SPY_REAL_STROKE}
                 dot={false}
                 strokeWidth={1.5}
                 strokeDasharray="5 3"
@@ -336,8 +372,8 @@ export function PriceChart({
                 yAxisId="p"
                 type="linear"
                 dataKey="spyRealProjected"
-                name={`SPY in today's dollars (${inflation}% inflation adj.)`}
-                stroke={C.ancient}
+                name="SPY in today's dollars"
+                stroke={SPY_REAL_STROKE}
                 dot={false}
                 strokeWidth={1.5}
                 strokeDasharray="5 3"
