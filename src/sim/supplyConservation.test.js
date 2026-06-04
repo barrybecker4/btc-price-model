@@ -1,11 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { withParamDefaults } from "./config/constants.js";
+import { MONTHS_PER_YEAR, SIM_MONTH_DAYS, YEAR_START, withParamDefaults } from "./config/constants.js";
 import { LIQ_FLOOR } from "./holders/holderBuckets.js";
+import { getDailyMining } from "./supply/mining.js";
 import { runSim } from "./runSim.js";
 
 /** Sum of every modeled BTC bucket in a row (millions of BTC). */
 function totalSupplyM(row) {
-  return row.liquidM + row.treasuryM + row.etfM + row.lostM + row.lthYoungM + row.ancientM;
+  return (
+    row.liquidM +
+    row.treasuryM +
+    row.etfM +
+    row.lostM +
+    row.lthYoungM +
+    row.ancientM +
+    row.retailM +
+    row.minerHeldM
+  );
 }
 
 function conservationParams(overrides = {}) {
@@ -14,27 +24,48 @@ function conservationParams(overrides = {}) {
     simYears: 10,
     initialAnnualVolatility: 0,
     halvingNarrativeAmp: 0,
-    minerSellPct: 0,
+    minerSellPct: 100,
     annualLossRate: 0,
     initialRetailPurchaseRateM: 0,
+    strcInitialUsdB: 0,
+    otherTreasuryUsdB: 0,
+    etfDailyInflowM: 0,
+    strcGrowthRate: 0,
+    otherTreasuryGrowth: 0,
+    etfGrowthRate: 0,
+    organicBuyGrowth: 0,
     ...overrides,
   });
 }
 
+/** Approximate cumulative issuance (BTC) over simYears with default halving schedule. */
+function expectedCumulativeIssuanceBtc(simYears) {
+  let sum = 0;
+  const months = simYears * MONTHS_PER_YEAR;
+  for (let m = 0; m < months; m++) {
+    const year = YEAR_START + m / MONTHS_PER_YEAR;
+    sum += getDailyMining(year) * SIM_MONTH_DAYS;
+  }
+  return sum;
+}
+
 describe("runSim supply accounting", () => {
-  it("conserves total BTC across all buckets when there are no external inflows (no mining, loss, or retail)", () => {
-    // With miner sales, coin loss, and retail flow disabled, every monthly step is an internal
-    // transfer between liquid / treasury / ETF / young-LTH / ancient, so the grand total is invariant.
+  it("keeps retailM and minerHeldM at zero without retail and with full miner sell-through", () => {
     const { data } = runSim(conservationParams());
-    const initialTotal = totalSupplyM(data[0]);
     for (const row of data) {
-      // Tolerance reflects per-field rounding to 1e-3 M (1,000 BTC) on six stacked buckets.
-      expect(Math.abs(totalSupplyM(row) - initialTotal)).toBeLessThan(0.005);
+      expect(row.retailM).toBe(0);
+      expect(row.minerHeldM).toBe(0);
     }
   });
 
+  it("increases total supply only by cumulative issuance when retail and loss are off", () => {
+    const p = conservationParams({ simYears: 10 });
+    const { data } = runSim(p);
+    const growthM = totalSupplyM(data[data.length - 1]) - totalSupplyM(data[0]);
+    expect(growthM).toBeCloseTo(expectedCumulativeIssuanceBtc(p.simYears) / 1e6, 2);
+  });
+
   it("keeps liquid at or above LIQ_FLOOR for every month when the float cap is on", () => {
-    // Aggressive institutional demand against a small float would otherwise drive liquid negative.
     const { data } = runSim(
       conservationParams({
         circulatingSupply: 1_000_000,
@@ -43,6 +74,7 @@ describe("runSim supply accounting", () => {
         otherInitialBtc: 0,
         etfInitialBtc: 0,
         strcInitialUsdB: 1_000,
+        strcGrowthRate: 15,
         capBuyingToLiquidFloat: true,
       })
     );
@@ -60,6 +92,8 @@ describe("runSim supply accounting", () => {
         etfOutflowShockPct: 10,
         etfStressRedemptionCount: 3,
         simYears: 15,
+        strcInitialBtc: 0,
+        otherInitialBtc: 0,
       })
     );
     for (const row of data) {
@@ -82,26 +116,61 @@ describe("runSim supply accounting", () => {
     expect(a).not.toBe(c);
   });
 
-  // --- Known accounting limitation (documented as a regression guard) ---
-  // Retail net flow drains/refills the liquid float but is NOT credited to or debited from any
-  // tracked holder bucket. As a result the stacked-supply total is NOT conserved when retail flow
-  // is non-zero: sustained net BUYING makes tracked coins disappear, and (more problematically)
-  // sustained net SELLING injects phantom BTC into liquid with no stock limit. The price mechanism
-  // (float drain) is intentional, but the supply breakdown chart will not reconcile to a constant.
-  it("documents that retail net buying reduces the tracked total (coins leave the visible accounting)", () => {
-    const base = conservationParams({ strcInitialUsdB: 0, otherTreasuryUsdB: 0, etfDailyInflowM: 0 });
+  it("conserves total supply under sustained retail net buying (liquid ↔ retail only)", () => {
+    const base = conservationParams({
+      strcInitialBtc: 0,
+      otherInitialBtc: 0,
+      etfInitialBtc: 0,
+    });
     const buyer = runSim({ ...base, initialRetailPurchaseRateM: 20 }).data;
     const flat = runSim({ ...base, initialRetailPurchaseRateM: 0 }).data;
     const buyerChange = totalSupplyM(buyer[buyer.length - 1]) - totalSupplyM(buyer[0]);
     const flatChange = totalSupplyM(flat[flat.length - 1]) - totalSupplyM(flat[0]);
-    expect(Math.abs(flatChange)).toBeLessThan(0.005);
-    expect(buyerChange).toBeLessThan(-0.1);
+    expect(Math.abs(buyerChange - flatChange)).toBeLessThan(0.005);
+    expect(buyer[buyer.length - 1].retailM).toBeGreaterThan(0);
   });
 
-  it("documents that retail net selling inflates the tracked total (phantom supply, unbounded by any stock)", () => {
-    const base = conservationParams({ strcInitialUsdB: 0, otherTreasuryUsdB: 0, etfDailyInflowM: 0 });
-    const seller = runSim({ ...base, initialRetailPurchaseRateM: -20 }).data;
+  it("conserves total supply under sustained retail net selling and caps sells by retail stock", () => {
+    const base = conservationParams({
+      strcInitialBtc: 0,
+      otherInitialBtc: 0,
+      etfInitialBtc: 0,
+      initialRetailPurchaseRateM: 50,
+      simYears: 3,
+    });
+    const { data: hoard } = runSim(base);
+    const hoardRetail = hoard[hoard.length - 1].retailM;
+    expect(hoardRetail).toBeGreaterThan(0);
+
+    const seller = runSim({
+      ...base,
+      initialRetailPurchaseRateM: -20,
+      simYears: 10,
+    }).data;
+    const flat = runSim({ ...base, initialRetailPurchaseRateM: 0, simYears: 10 }).data;
+    const flatChange = totalSupplyM(flat[flat.length - 1]) - totalSupplyM(flat[0]);
     const sellerChange = totalSupplyM(seller[seller.length - 1]) - totalSupplyM(seller[0]);
-    expect(sellerChange).toBeGreaterThan(0.1);
+    expect(Math.abs(sellerChange - flatChange)).toBeLessThan(0.01);
+    for (const row of seller) {
+      expect(row.retailM).toBeGreaterThanOrEqual(0);
+    }
+    const maxRetail = Math.max(...seller.map((r) => r.retailM));
+    expect(maxRetail).toBeLessThanOrEqual(hoardRetail + 0.01);
+  });
+
+  it("grows total supply by cumulative issuance when mining sells and holds are tracked", () => {
+    const p = conservationParams({
+      minerSellPct: 45,
+      simYears: 10,
+    });
+    const { data } = runSim(p);
+    const initialTotal = totalSupplyM(data[0]);
+    const finalTotal = totalSupplyM(data[data.length - 1]);
+    const expectedGrowthM = expectedCumulativeIssuanceBtc(p.simYears) / 1e6;
+    expect(finalTotal - initialTotal).toBeCloseTo(expectedGrowthM, 2);
+    for (let i = 1; i < data.length; i++) {
+      expect(data[i].minerHeldM).toBeGreaterThanOrEqual(data[i - 1].minerHeldM - 1e-9);
+    }
+    expect(data[data.length - 1].minerHeldM).toBeGreaterThan(0);
   });
 });

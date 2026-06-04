@@ -62,6 +62,17 @@ describe("runSim", () => {
     expect(rationed).toBe(true);
   });
 
+  it("tracks retailM and minerHeldM on output rows when retail and mining are enabled", () => {
+    const p = baseParams({
+      initialRetailPurchaseRateM: 10,
+      minerSellPct: 45,
+    });
+    const { data } = runSim(p);
+    const last = data[data.length - 1];
+    expect(last.retailM).toBeGreaterThan(0);
+    expect(last.minerHeldM).toBeGreaterThan(0);
+  });
+
   it("throws when initial liquid is zero after rebalance", () => {
     const p = baseParams({
       simYears: 1,

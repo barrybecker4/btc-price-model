@@ -41,7 +41,7 @@ export function FlowChart({ data, halvings, etfStressYears, supplyShockYear }) {
     <>
       <ChartFrame
         height={310}
-        title="DAILY FLOW (BTC/DAY) — Totals are executed demand (capped by liquid float when enabled). Retail is net flow from Initial Retail Purchase Rate (USD/day → BTC). ETF stress outflows can add sell pressure. Halvings cut mining supply."
+        title="DAILY FLOW (BTC/DAY) — Totals are executed demand (capped by liquid float when enabled). Retail is net flow from Initial Retail Purchase Rate (USD/day → BTC); retail sells are capped by accumulated retail stock. ETF stress outflows can add sell pressure. Halvings cut mining supply."
       >
         <LineChart data={data} margin={{ top: 5, right: 30, left: 5, bottom: 5 }}>
           <CartesianGrid stroke="#141414" strokeDasharray="3 3" />

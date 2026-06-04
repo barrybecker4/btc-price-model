@@ -16,6 +16,7 @@ import { monthlySigmaFromAnnual, seededClampedNormal } from "../price/volatility
  * @param {number} input.totalMonths
  * @param {number} input.treasury
  * @param {number} input.etfBtc
+ * @param {number} [input.retailHeldBtc] BTC accumulated in retail/HODL bucket (caps sell pressure).
  * @param {number} input.momentumReturn
  * @param {number} [input.priceMa52w] Trailing 52-week (12-month) average of month-end closes for valuation drag; when omitted, uses start price (backward compatible).
  * @param {import("../config/simTypes.js").SimParams} input.parameters
@@ -64,6 +65,7 @@ export function computeMonthlyDemandFromUsd(input) {
   const organicRetailBtcRaw = (input.retailNetUsd * positiveDemandScale) / price;
   const retailBuyRaw = Math.max(0, organicRetailBtcRaw);
   const retailSellRaw = Math.max(0, -organicRetailBtcRaw);
+  const retailSellExecuted = Math.min(input.retailHeldBtc ?? 0, retailSellRaw);
 
   const institutionCapBtc =
     parameters.circulatingSupply * Math.max(0, parameters.institutionalAllocationCapPct ?? 100) / 100;
@@ -80,7 +82,7 @@ export function computeMonthlyDemandFromUsd(input) {
   const capOn = parameters.capBuyingToLiquidFloat !== false;
   let buyScale = 1;
   if (capOn && grossHoardingBtcRaw > 0) {
-    const grossBuyMaximum = liquid - LIQ_FLOOR + minerSales + retailSellRaw + etfSellRaw - coinsLost;
+    const grossBuyMaximum = liquid - LIQ_FLOOR + minerSales + retailSellExecuted + etfSellRaw - coinsLost;
     buyScale = grossBuyMaximum <= 0 ? 0 : Math.min(1, grossBuyMaximum / grossHoardingBtcRaw);
   }
 
@@ -89,7 +91,7 @@ export function computeMonthlyDemandFromUsd(input) {
   const etfBuyExecuted = etfBtcBuyRaw * buyScale;
   const etfBtc2 = etfBuyExecuted - etfSellRaw;
   const retailBuyExecuted = retailBuyRaw * buyScale;
-  const organicRetailNetBtcExecuted = retailBuyExecuted + Math.min(0, organicRetailBtcRaw);
+  const organicRetailNetBtcExecuted = retailBuyExecuted - retailSellExecuted;
   const grossHoardingExecuted = strcBtc + otherBtc + etfBuyExecuted + retailBuyExecuted;
   const unmetBuyBtcMonthly = grossHoardingBtcRaw - grossHoardingExecuted;
   const buyRationPercent = grossHoardingBtcRaw > 0 ? (unmetBuyBtcMonthly / grossHoardingBtcRaw) * 100 : 0;
@@ -110,8 +112,8 @@ export function computeMonthlyDemandFromUsd(input) {
   const otherDayBtc = otherBtc / SIM_MONTH_DAYS;
   const etfDayBtc = etfBtc2 / SIM_MONTH_DAYS;
   const minerSellDay = dailyMining * (parameters.minerSellPct / 100);
-  const retailBuyDay = Math.max(0, organicRetailNetBtcExecuted) / SIM_MONTH_DAYS;
-  const retailSellDay = Math.max(0, -organicRetailNetBtcExecuted) / SIM_MONTH_DAYS;
+  const retailBuyDay = retailBuyExecuted / SIM_MONTH_DAYS;
+  const retailSellDay = retailSellExecuted / SIM_MONTH_DAYS;
   const etfSellDay = etfSellRaw / SIM_MONTH_DAYS;
   const totalBuyDay = strcDayBtc + otherDayBtc + Math.max(0, etfDayBtc) + retailBuyDay;
   const totalSellDay = minerSellDay + retailSellDay + etfSellDay;
@@ -121,6 +123,8 @@ export function computeMonthlyDemandFromUsd(input) {
     otherBtc,
     etfBtc2,
     organicRetailNetBtcExecuted,
+    retailBuyExecuted,
+    retailSellExecuted,
     grossHoardingBtcRaw,
     grossHoardingExecuted,
     unmetBuyBtcMonthly,
@@ -132,6 +136,8 @@ export function computeMonthlyDemandFromUsd(input) {
     otherDayBtc,
     etfDayBtc,
     minerSellDay,
+    retailBuyDay,
+    retailSellDay,
     etfSellDay,
     totalBuyDay,
     totalSellDay,

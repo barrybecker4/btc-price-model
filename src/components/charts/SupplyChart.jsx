@@ -69,6 +69,24 @@ export function SupplyChart({ data, halvings, etfStressYears, supplyShockYear })
           />
           <Area
             type="monotone"
+            dataKey="retailM"
+            name="Retail / HODL"
+            stackId="1"
+            fill={C.retail}
+            stroke={C.retail}
+            fillOpacity={0.85}
+          />
+          <Area
+            type="monotone"
+            dataKey="minerHeldM"
+            name="Miner inventory (unsold)"
+            stackId="1"
+            fill={C.minerHeld}
+            stroke={C.minerHeld}
+            fillOpacity={0.85}
+          />
+          <Area
+            type="monotone"
             dataKey="liquidM"
             name="Liquid (tradeable float)"
             stackId="1"
@@ -90,7 +108,8 @@ export function SupplyChart({ data, halvings, etfStressYears, supplyShockYear })
         }}
       >
         <strong style={{ color: C.text }}>Ancient</strong> here is 7y+ among coins <strong>not</strong> counted as Lost — headline on-chain &ldquo;ancient&rdquo; often includes unmoved Satoshi coins; if Satoshi is in{' '}
-        <strong style={{ color: C.text }}>Already-Lost</strong>, those BTC appear under Lost Forever, not Ancient. Model Ancient % can run below glassnode-style headlines when Satoshi is modeled as Lost.
+        <strong style={{ color: C.text }}>Already-Lost</strong>, those BTC appear under Lost Forever, not Ancient. Model Ancient % can run below glassnode-style headlines when Satoshi is modeled as Lost.{' '}
+        Stacked height is starting circulating supply <strong>plus</strong> cumulative block issuance; retail and miner inventory buckets track organic HODL and unsold mined coins.
       </div>
     </>
   );

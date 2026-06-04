@@ -53,6 +53,8 @@ export function runSim(parameters) {
   let otherUSD = (parameters.otherTreasuryUsdB * 1e9) / MONTHS_PER_YEAR;
   let etfUSD = parameters.etfDailyInflowM * 1e6 * SIM_MONTH_DAYS;
   let retailNetUsd = (parameters.initialRetailPurchaseRateM ?? 0) * 1e6 * SIM_MONTH_DAYS;
+  let retailHeldBtc = 0;
+  let minerHeldBtc = 0;
 
   const data = [];
   /** Month-end closes for trailing 52-week (12-month) average in LTH profit distribution. */
@@ -89,6 +91,7 @@ export function runSim(parameters) {
       totalMonths: months,
       treasury,
       etfBtc,
+      retailHeldBtc,
       momentumReturn,
       parameters,
       ...(valuationMa52w !== undefined ? { priceMa52w: valuationMa52w } : {}),
@@ -105,6 +108,8 @@ export function runSim(parameters) {
       lostBtc,
       youngLthBtc,
       ancientBtc,
+      retailHeldBtc,
+      minerHeldBtc,
       liquidPercentOfInitial,
       demand,
       dailyMining,
@@ -150,6 +155,11 @@ export function runSim(parameters) {
     treasury += demand.strcBtc + demand.otherBtc;
     etfBtc = Math.max(0, etfBtc + demand.etfBtc2);
     lostBtc += demand.coinsLost;
+    retailHeldBtc = Math.max(
+      0,
+      retailHeldBtc + demand.retailBuyExecuted - demand.retailSellExecuted
+    );
+    minerHeldBtc += dailyMining * SIM_MONTH_DAYS - demand.minerSales;
 
     const holderFlows = applyHolderFlows(liquid, youngLthBtc, ancientBtc, parameters, price, ma52w);
     liquid = holderFlows.liquid;

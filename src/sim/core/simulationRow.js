@@ -21,6 +21,8 @@ function roundToDecimalPlaces(value, decimalPlaces) {
  * @param {number} input.lostBtc
  * @param {number} input.youngLthBtc
  * @param {number} input.ancientBtc
+ * @param {number} input.retailHeldBtc
+ * @param {number} input.minerHeldBtc
  * @param {number} input.liquidPercentOfInitial
  * @param {import("../config/simTypes.js").MonthlyDemandSnapshot} input.demand
  * @param {number} input.dailyMining
@@ -40,6 +42,8 @@ export function buildSimulationRow(input) {
     lostM: roundToDecimalPlaces(input.lostBtc / 1e6, 3),
     lthYoungM: roundToDecimalPlaces(input.youngLthBtc / 1e6, 3),
     ancientM: roundToDecimalPlaces(input.ancientBtc / 1e6, 3),
+    retailM: roundToDecimalPlaces(input.retailHeldBtc / 1e6, 3),
+    minerHeldM: roundToDecimalPlaces(input.minerHeldBtc / 1e6, 3),
     liquidPct: roundToDecimalPlaces(input.liquidPercentOfInitial, 1),
     strcDayBtc: roundToDecimalPlaces(demand.strcDayBtc, 0),
     etfDayBtc: roundToDecimalPlaces(demand.etfDayBtc, 0),

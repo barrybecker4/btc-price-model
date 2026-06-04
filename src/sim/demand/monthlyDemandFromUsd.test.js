@@ -218,4 +218,22 @@ describe("computeMonthlyDemandFromUsd", () => {
     expect(shockMonths).toEqual([3, 6, 9]);
     expect(nonShock.etfBtc2).toBe(0);
   });
+
+  it("caps retail sells by retailHeldBtc stock", () => {
+    const parameters = demandParameters({ capBuyingToLiquidFloat: false });
+    const demand = computeMonthlyDemandFromUsd({
+      price: 50_000,
+      liquid: 500_000,
+      strcUSD: 0,
+      otherUSD: 0,
+      etfUSD: 0,
+      retailNetUsd: -500_000_000_000,
+      dailyMining: 0,
+      retailHeldBtc: 3_000,
+      parameters,
+    });
+    expect(demand.retailSellExecuted).toBe(3_000);
+    expect(demand.organicRetailNetBtcExecuted).toBe(-3_000);
+    expect(demand.retailSellDay).toBeCloseTo(3_000 / 30, 6);
+  });
 });

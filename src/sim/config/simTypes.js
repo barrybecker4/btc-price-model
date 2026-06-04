@@ -10,6 +10,8 @@
  * @property {number} otherBtc
  * @property {number} etfBtc2
  * @property {number} organicRetailNetBtcExecuted
+ * @property {number} retailBuyExecuted
+ * @property {number} retailSellExecuted
  * @property {number} grossHoardingBtcRaw
  * @property {number} grossHoardingExecuted
  * @property {number} unmetBuyBtcMonthly
@@ -44,6 +46,8 @@
  * @property {number} lostM
  * @property {number} lthYoungM
  * @property {number} ancientM
+ * @property {number} retailM
+ * @property {number} minerHeldM
  * @property {number} liquidPct
  * @property {number} strcDayBtc
  * @property {number} etfDayBtc

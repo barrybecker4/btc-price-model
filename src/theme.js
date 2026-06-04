@@ -27,4 +27,8 @@ export const C = {
   lth: "#c4a012",
   /** Ancient (7y+) — distinct from lost/treasury */
   ancient: "#8b5cf6",
+  /** Retail / organic HODL bucket */
+  retail: "#f59e0b",
+  /** Miner inventory (unsold issuance) */
+  minerHeld: "#64748b",
 };
