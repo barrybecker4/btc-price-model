@@ -1,5 +1,5 @@
 import { ALREADY_LOST_COINS_CAP_BTC } from "../../sim/config/constants.js";
-import { MINING_COST_FLOOR_STEP } from "../../utils/startPriceSlider.js";
+import { MINING_COST_FLOOR_STEP } from "../../params/startPriceSlider.js";
 import { fmtUSD } from "../../utils/format.js";
 import { C, FONT_NUM, FONT_UI } from "../../theme.js";
 import { Section } from "../Section.jsx";

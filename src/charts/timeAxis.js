@@ -4,7 +4,7 @@
  * SPY CSV monthly rows use {@link utcMsToSpyAxisYear} (year + month/12, 3 decimals).
  */
 
-import { fractionalYearFromUtcMs } from "./powerLaw.js";
+import { fractionalYearFromUtcMs } from "../reference/powerLaw.js";
 
 export { fractionalYearFromUtcMs };
 

@@ -16,7 +16,7 @@ import {
   trailingCagr,
   valuationPremium,
 } from "./spyProjection.js";
-import { toRealDollarsAtAnchor } from "./cpiUs.js";
+import { toRealDollarsAtAnchor } from "../data/cpiUs.js";
 
 describe("spyPriceAtYear", () => {
   it("linearly interpolates between adjacent monthly closes", () => {

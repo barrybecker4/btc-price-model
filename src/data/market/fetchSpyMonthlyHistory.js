@@ -1,7 +1,7 @@
-import spyMonthlyFallback from "../data/spyMonthlyFallback.json";
+import spyMonthlyFallback from "../spyMonthlyFallback.json";
 import { downsampleToMonthly } from "./downsampleToMonthly.js";
-import { fetchWithTimeout } from "./httpFetch.js";
-import { utcMsToSpyAxisYear } from "./timeAxis.js";
+import { fetchWithTimeout } from "../../utils/httpFetch.js";
+import { utcMsToSpyAxisYear } from "../../charts/timeAxis.js";
 
 const SP500_CSV_URL = "https://raw.githubusercontent.com/datasets/s-and-p-500/master/data/data.csv";
 const BULK_START_MS = Date.UTC(2011, 0, 1);

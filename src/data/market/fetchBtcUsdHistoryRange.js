@@ -1,7 +1,7 @@
 import { fetchCoinGeckoMarketChartRange } from "./coingeckoMarketChartRange.js";
 import { fetchCryptoCompareHistodayRange } from "./cryptoCompareHistodayRange.js";
 import { downsampleToMonthly } from "./downsampleToMonthly.js";
-import { utcMsToBtcChartYear } from "./timeAxis.js";
+import { utcMsToBtcChartYear } from "../../charts/timeAxis.js";
 
 /**
  * Fetches BTC/USD daily history and returns monthly chart rows (fractional year + rounded nominal price).

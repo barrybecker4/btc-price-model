@@ -1,4 +1,4 @@
-import { miningCostFloorBounds, START_PRICE_SLIDER_STEP } from "../../utils/startPriceSlider.js";
+import { miningCostFloorBounds, START_PRICE_SLIDER_STEP } from "../../params/startPriceSlider.js";
 import { fmtUSD } from "../../utils/format.js";
 import { Section } from "../Section.jsx";
 import { Slider } from "../Slider.jsx";

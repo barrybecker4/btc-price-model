@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decimalYearToDate } from "./format.js";
+import { decimalYearToDate } from "../utils/format.js";
 import {
   GENESIS_MS,
   POWER_LAW_DAYS_EXPONENT,

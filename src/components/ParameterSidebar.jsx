@@ -3,7 +3,7 @@ import {
   miningCostFloorBounds,
   START_PRICE_SLIDER_BASE_MAX,
   START_PRICE_SLIDER_BASE_MIN,
-} from "../utils/startPriceSlider.js";
+} from "../params/startPriceSlider.js";
 import { C, FONT_UI } from "../theme.js";
 import { ParameterSidebarBlocks } from "./ParameterSidebarBlocks.jsx";
 

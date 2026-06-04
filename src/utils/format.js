@@ -1,6 +1,6 @@
 /**
  * Map a fractional **local** calendar year to a Date (inverse of getSimulationAnchorYear).
- * For UTC fractional years from API timestamps, see {@link ./timeAxis.js} and {@link ./powerLaw.js}.
+ * For UTC fractional years from API timestamps, see {@link ../charts/timeAxis.js} and {@link ../reference/powerLaw.js}.
  */
 export function decimalYearToDate(y) {
   if (!Number.isFinite(y)) return new Date(NaN);
@@ -19,7 +19,7 @@ const SIM_RANGE_FMT = new Intl.DateTimeFormat("en", {
 
 /**
  * Human-readable sim window from fractional-year anchor and horizon (years).
- * Uses local calendar interpolation; for UTC API timestamps see {@link ./timeAxis.js}.
+ * Uses local calendar interpolation; for UTC API timestamps see {@link ../charts/timeAxis.js}.
  */
 export function formatSimRangeLabel(anchorYear, simYears) {
   const a = decimalYearToDate(anchorYear);

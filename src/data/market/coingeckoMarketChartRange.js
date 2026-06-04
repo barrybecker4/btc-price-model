@@ -1,5 +1,5 @@
-import { fetchJsonWithTimeout } from "./httpFetch.js";
-import { parsePositiveUsdNumber } from "./parseUsd.js";
+import { fetchJsonWithTimeout } from "../../utils/httpFetch.js";
+import { parsePositiveUsdNumber } from "../../utils/parseUsd.js";
 
 /**
  * @param {[number, number]} tuple

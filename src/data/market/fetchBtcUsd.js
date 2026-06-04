@@ -1,5 +1,5 @@
-import { fetchJsonWithTimeout } from "./httpFetch.js";
-import { parsePositiveUsdNumber } from "./parseUsd.js";
+import { fetchJsonWithTimeout } from "../../utils/httpFetch.js";
+import { parsePositiveUsdNumber } from "../../utils/parseUsd.js";
 
 /**
  * Fetches spot BTC/USD from a public API (no key). CoinGecko first, Coinbase fallback.

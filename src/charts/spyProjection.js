@@ -1,5 +1,5 @@
 import spyMonthlyFallback from "../data/spyMonthlyFallback.json";
-import { toRealDollarsAtAnchor } from "./cpiUs.js";
+import { toRealDollarsAtAnchor } from "../data/cpiUs.js";
 
 const SPY_HISTORICAL_YEARLY_CLOSES = [
   { year: 2011, price: 125.5 },

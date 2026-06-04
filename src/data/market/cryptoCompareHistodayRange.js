@@ -1,4 +1,4 @@
-import { fetchWithTimeout } from "./httpFetch.js";
+import { fetchWithTimeout } from "../../utils/httpFetch.js";
 
 const CC_PAGE_LIMIT = 2000;
 const MAX_PAGES = 24;

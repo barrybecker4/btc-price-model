@@ -7,7 +7,7 @@
  * Calendar systems:
  * - {@link fractionalYearToMs} / {@link fractionalYearFromUtcMs}: **UTC** calendar year boundaries (matches API timestamps).
  * - {@link fractionalYearToLocalMs}: **local** calendar year boundaries — pair with `getSimulationAnchorYear` in `src/sim/config/constants.js`
- *   and `decimalYearToDate` in `./format.js` so “today” and history `toMs` agree.
+ *   and `decimalYearToDate` in `src/utils/format.js` so “today” and history `toMs` agree.
  */
 
 export const GENESIS_MS = Date.UTC(2009, 0, 3);

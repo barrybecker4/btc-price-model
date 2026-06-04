@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toRealDollarsAtAnchor } from "./cpiUs.js";
+import { toRealDollarsAtAnchor } from "../data/cpiUs.js";
 import {
   enrichHistoricalPriceRows,
   mergePriceChartHistoricalSim,

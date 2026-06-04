@@ -10,18 +10,18 @@ import { getEtfStressRedemptionYears } from "./sim/demand/etfStressRedemptions.j
 import { getHalvingYearsBetween, getHalvingYearsInRange } from "./sim/supply/halving.js";
 import { runSim } from "./sim/runSim.js";
 import { C, FONT_UI } from "./theme.js";
-import { fetchBtcUsdHistoryRange } from "./utils/fetchBtcHistory.js";
-import { fetchBtcUsd } from "./utils/fetchBtcUsd.js";
-import { fetchSpyMonthlyHistory } from "./utils/fetchSpyMonthlyHistory.js";
-import { safeDivide } from "./utils/format.js";
-import { enrichHistoricalPriceRows, mergePriceChartHistoricalSim } from "./utils/priceChartMerge.js";
-import { fractionalYearToLocalMs } from "./utils/powerLaw.js";
+import { enrichHistoricalPriceRows, mergePriceChartHistoricalSim } from "./charts/priceChartMerge.js";
+import { fetchBtcUsdHistoryRange } from "./data/market/index.js";
+import { fetchBtcUsd } from "./data/market/fetchBtcUsd.js";
+import { fetchSpyMonthlyHistory } from "./data/market/fetchSpyMonthlyHistory.js";
 import {
   START_PRICE_SLIDER_BASE_MAX,
   START_PRICE_SLIDER_BASE_MIN,
   boundsForSpotPrice,
   miningCostFloorBounds,
-} from "./utils/startPriceSlider.js";
+} from "./params/startPriceSlider.js";
+import { fractionalYearToLocalMs } from "./reference/powerLaw.js";
+import { safeDivide } from "./utils/format.js";
 
 const HISTORICAL_CHART_START_YEAR = 2011;
 const FROM_HISTORICAL_START_MS = Date.UTC(HISTORICAL_CHART_START_YEAR, 0, 1);

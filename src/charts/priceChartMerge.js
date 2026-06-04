@@ -1,4 +1,4 @@
-import { toRealDollarsAtAnchor } from "./cpiUs.js";
+import { toRealDollarsAtAnchor } from "../data/cpiUs.js";
 
 /**
  * @param {{ year: number, price: number }[]} rawHistorical from API (nominal only)

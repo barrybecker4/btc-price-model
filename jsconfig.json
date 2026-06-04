@@ -6,5 +6,13 @@
     "noEmit": true,
     "target": "ES2022"
   },
-  "include": ["src/utils/**/*.js", "src/sim/**/*.js", "src/**/*.d.ts"]
+  "include": [
+    "src/utils/**/*.js",
+    "src/sim/**/*.js",
+    "src/data/**/*.js",
+    "src/charts/**/*.js",
+    "src/reference/**/*.js",
+    "src/params/**/*.js",
+    "src/**/*.d.ts"
+  ]
 }
