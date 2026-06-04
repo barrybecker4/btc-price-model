@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { ChartNotes } from "./components/ChartNotes.jsx";
 import { FlowChart } from "./components/charts/FlowChart.jsx";
 import { PriceChart } from "./components/charts/PriceChart.jsx";
@@ -146,19 +146,21 @@ export default function App() {
     return () => ac.abort();
   }, [overlaySpy, spyHistoricalRaw]);
 
-  const params = useMemo(() => withParamDefaults(p), [p]);
+  const sidebarParams = useMemo(() => withParamDefaults(p), [p]);
+  const deferredP = useDeferredValue(p);
+  const simParams = useMemo(() => withParamDefaults(deferredP), [deferredP]);
 
-  const { data, supplyShockYear } = useMemo(() => runSim(params), [params]);
+  const { data, supplyShockYear } = useMemo(() => runSim(simParams), [simParams]);
   const cd = useMemo(() => data.filter((_, i) => i % 3 === 0), [data]);
 
   /** When the cap never binds, on/off runs match — surface that so the toggle doesn’t look “broken”. */
   const floatCapInfo = useMemo(() => {
-    const capOn = params.capBuyingToLiquidFloat !== false;
+    const capOn = simParams.capBuyingToLiquidFloat !== false;
     if (!capOn) return { mode: "off" };
     const maxRationPct = Math.max(0, ...data.map((d) => d.buyRationPct));
     const boundMonths = data.filter((d) => d.buyRationPct > 0.01).length;
     return { mode: "on", boundMonths, totalMonths: data.length, maxRationPct };
-  }, [data, params.capBuyingToLiquidFloat]);
+  }, [data, simParams.capBuyingToLiquidFloat]);
   const first = data[0];
   const last = data[data.length - 1];
   const mult = safeDivide(last?.price, first?.price, NaN);
@@ -175,18 +177,18 @@ export default function App() {
 
   const chartFirstRow = priceChartData[0] ?? first;
 
-  const simEndYear = YEAR_START + params.simYears;
+  const simEndYear = YEAR_START + simParams.simYears;
   const halvingsPrice = useMemo(() => {
     if (showHistorical && historicalEnriched?.length) {
       return getHalvingYearsBetween(HISTORICAL_CHART_START_YEAR, simEndYear);
     }
-    return getHalvingYearsInRange(YEAR_START, params.simYears);
-  }, [showHistorical, historicalEnriched, simEndYear, params.simYears]);
+    return getHalvingYearsInRange(YEAR_START, simParams.simYears);
+  }, [showHistorical, historicalEnriched, simEndYear, simParams.simYears]);
 
-  const halvingsSim = useMemo(() => getHalvingYearsInRange(YEAR_START, params.simYears), [params.simYears]);
+  const halvingsSim = useMemo(() => getHalvingYearsInRange(YEAR_START, simParams.simYears), [simParams.simYears]);
   const etfStressYears = useMemo(
-    () => getEtfStressRedemptionYears(YEAR_START, params.simYears, params.etfStressRedemptionCount),
-    [params.simYears, params.etfStressRedemptionCount]
+    () => getEtfStressRedemptionYears(YEAR_START, simParams.simYears, simParams.etfStressRedemptionCount),
+    [simParams.simYears, simParams.etfStressRedemptionCount]
   );
 
   const tabBtn = (key, lbl) => (
@@ -222,7 +224,7 @@ export default function App() {
       }}
     >
       <ParameterSidebar
-        p={params}
+        p={sidebarParams}
         setP={setP}
         startPriceMin={startPriceSliderMin}
         startPriceMax={startPriceSliderMax}
@@ -237,7 +239,7 @@ export default function App() {
           minHeight: 0,
         }}
       >
-        <KpiBar p={params} last={last} supplyShockYear={supplyShockYear} mult={mult} floatCapInfo={floatCapInfo} />
+        <KpiBar p={simParams} last={last} supplyShockYear={supplyShockYear} mult={mult} floatCapInfo={floatCapInfo} />
 
         <div style={{ flex: 1, minHeight: 0, padding: "14px 20px", overflow: "auto" }}>
           <div style={{ display: "flex", gap: 6, marginBottom: 14, alignItems: "center" }}>
@@ -289,9 +291,9 @@ export default function App() {
             <PriceChart
               data={priceChartData}
               first={chartFirstRow}
-              inflation={params.inflation}
-              gdpGrowth={params.gdpGrowth}
-              aiProductivityPct={params.aiProductivityPct}
+              inflation={simParams.inflation}
+              gdpGrowth={simParams.gdpGrowth}
+              aiProductivityPct={simParams.aiProductivityPct}
               logScale={logScale}
               yAxisScale={yAxisScale}
               halvings={halvingsPrice}
