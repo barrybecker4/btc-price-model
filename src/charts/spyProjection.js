@@ -1,6 +1,7 @@
 import spyMonthlyFallback from "../data/spyMonthlyFallback.json";
 import { toRealDollarsAtAnchor } from "../data/cpiUs.js";
 import { inflationFactorFromYears } from "../sim/macro/inflationFactor.js";
+import { nominalGdpGrowthPct } from "../sim/macro/nominalGdp.js";
 
 const SPY_HISTORICAL_YEARLY_CLOSES = [
   { year: 2011, price: 125.5 },
@@ -275,11 +276,11 @@ export function spyPriceAtYear(year, historicalPoints = SPY_HISTORICAL_YEARLY_CL
 
 /**
  * @param {number} inflationPct annual inflation (%)
- * @param {number} gdpGrowthPct annual nominal GDP growth (%), may include AI uplift
+ * @param {number} nominalGdpGrowthPct annual nominal GDP growth (%)
  */
-export function spyScenarioRates(inflationPct, gdpGrowthPct) {
+export function spyScenarioRates(inflationPct, nominalGdpPct) {
   const inflation = inflationPct / 100;
-  const gdpGrowth = gdpGrowthPct / 100;
+  const gdpGrowth = nominalGdpPct / 100;
   const earningsGrowth = gdpGrowth * EARNINGS_COEFF;
   const nominalReturn = earningsGrowth + DIVIDEND_YIELD;
   const realReturn = nominalReturn - inflation;
@@ -295,22 +296,21 @@ export function spyScenarioRates(inflationPct, gdpGrowthPct) {
 /**
  * Attach SPY historical/projection overlay fields to chart rows.
  * @param {object[]} rows
- * @param {{ yearStart: number, inflationPct: number, gdpGrowthPct: number, aiProductivityPct?: number, spyBullishness?: number, spyHistoricalPoints?: { year: number, price: number }[] }} input
+ * @param {{ yearStart: number, inflationPct: number, realGdpGrowthPct: number, spyBullishness?: number, spyHistoricalPoints?: { year: number, price: number }[] }} input
  * @returns {object[]}
  */
 export function attachSpyOverlay(rows, input) {
   const {
     yearStart,
     inflationPct,
-    gdpGrowthPct,
-    aiProductivityPct = 0,
+    realGdpGrowthPct,
     spyBullishness = 0.5,
     spyHistoricalPoints,
   } = input;
   const historicalPoints = resolveSpyHistoricalPoints(spyHistoricalPoints, yearStart);
   const statsPoints = historicalPoints;
-  const effectiveGdpPct = gdpGrowthPct + (aiProductivityPct ?? 0);
-  const rates = spyScenarioRates(inflationPct, effectiveGdpPct);
+  const nominalPct = nominalGdpGrowthPct(realGdpGrowthPct, inflationPct);
+  const rates = spyScenarioRates(inflationPct, nominalPct);
   const rMacro = rates.nominalReturn;
   const anchor = spyPriceAtYear(yearStart, historicalPoints);
   const inflation = inflationPct / 100;

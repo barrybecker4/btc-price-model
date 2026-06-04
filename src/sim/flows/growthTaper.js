@@ -1,5 +1,5 @@
 /**
- * Logistic taper: blend slider annual growth toward nominal GDP (rInf) over nYears.
+ * Logistic taper: blend slider annual growth toward nominal GDP = real + inflation (rInf) over nYears.
  * r_eff = rInf + (r0 - rInf) * w(u), u = min(tYears / nYears, 1),
  * w(u) = 1 / (1 + exp(k * (u - 0.5))).
  */
@@ -46,7 +46,7 @@ export function logisticWeight01(u, steepness) {
  * Effective annual growth % for this month after taper.
  * @param {object} opts
  * @param {number} opts.r0 slider annual % (e.g. strcGrowthRate)
- * @param {number} opts.rInf long-run anchor (nominal GDP %)
+ * @param {number} opts.rInf long-run anchor (nominal GDP % = real + inflation)
  * @param {number} opts.tYears years since sim start
  * @param {number} opts.nYears taper horizon (years); if < 1, no taper (returns r0)
  * @param {number} [opts.steepness] optional override for k (testing); default scales with nYears

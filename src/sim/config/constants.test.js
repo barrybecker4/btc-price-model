@@ -13,6 +13,17 @@ describe("withParamDefaults", () => {
     expect(merged.halvingNarrativeAmp).toBe(0.5);
   });
 
+  it("maps legacy gdpGrowth and aiProductivityPct to realGdpGrowth", () => {
+    const merged = withParamDefaults({
+      gdpGrowth: 4,
+      inflation: 3,
+      aiProductivityPct: 1,
+    });
+    expect(merged.realGdpGrowth).toBe(2);
+    expect(merged.gdpGrowth).toBeUndefined();
+    expect(merged.aiProductivityPct).toBeUndefined();
+  });
+
   it("strips removed organic/bond keys from older state", () => {
     const merged = withParamDefaults({
       bondYield: 4,

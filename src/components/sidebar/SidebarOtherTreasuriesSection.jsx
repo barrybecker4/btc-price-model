@@ -25,7 +25,7 @@ export function SidebarOtherTreasuriesSection({ p, set }) {
       />
       <Slider
         label="Other Corp. Growth"
-        hint="Catching up as playbook spreads globally. The number of Treasury companies may grow as well as each having larger buys. Tapers toward Nominal GDP over the horizon below."
+        hint="Catching up as playbook spreads globally. The number of Treasury companies may grow as well as each having larger buys. Tapers toward nominal GDP (real + inflation) over the horizon below."
         value={p.otherTreasuryGrowth}
         min={1}
         max={80}
@@ -35,7 +35,7 @@ export function SidebarOtherTreasuriesSection({ p, set }) {
       />
       <Slider
         label="Other treasury growth taper horizon"
-        hint="Years for other corporate BTC treasury USD growth to converge logistically to Nominal GDP Growth."
+        hint="Years for other corporate BTC treasury USD growth to converge logistically to nominal GDP (real + inflation)."
         value={p.otherTreasuryGrowthTaperYears}
         min={5}
         max={50}

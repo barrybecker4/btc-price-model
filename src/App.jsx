@@ -292,8 +292,7 @@ export default function App() {
               data={priceChartData}
               first={chartFirstRow}
               inflation={simParams.inflation}
-              gdpGrowth={simParams.gdpGrowth}
-              aiProductivityPct={simParams.aiProductivityPct}
+              realGdpGrowth={simParams.realGdpGrowth}
               logScale={logScale}
               yAxisScale={yAxisScale}
               halvings={halvingsPrice}

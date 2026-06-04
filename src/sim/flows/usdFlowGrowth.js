@@ -3,12 +3,8 @@ import {
   DEFAULT_TAPER_YEARS,
   MONTHS_PER_YEAR,
 } from "../config/constants.js";
+import { nominalGdpGrowthPct } from "../macro/nominalGdp.js";
 import { effectiveAnnualGrowthTapered } from "./growthTaper.js";
-import {
-  etfTerminalGdp,
-  institutionalTerminalGdp,
-  retailTerminalGdp,
-} from "./macroGrowth.js";
 
 /**
  * @param {number} annualPercent
@@ -30,29 +26,28 @@ function monthlyGrowthMultiplier(annualPercent) {
 export function advanceUsdFlowsForMonth(state) {
   const parameters = state.parameters;
   const tYears = state.monthIndex / MONTHS_PER_YEAR;
-  const gdp = parameters.gdpGrowth;
-  const ai = parameters.aiProductivityPct ?? 0;
+  const rInf = nominalGdpGrowthPct(parameters.realGdpGrowth, parameters.inflation);
   const strcRate = effectiveAnnualGrowthTapered({
     r0: parameters.strcGrowthRate,
-    rInf: institutionalTerminalGdp(gdp, ai),
+    rInf,
     tYears,
     nYears: parameters.strcGrowthTaperYears ?? DEFAULT_TAPER_YEARS,
   });
   const otherRate = effectiveAnnualGrowthTapered({
     r0: parameters.otherTreasuryGrowth,
-    rInf: institutionalTerminalGdp(gdp, ai),
+    rInf,
     tYears,
     nYears: parameters.otherTreasuryGrowthTaperYears ?? DEFAULT_TAPER_YEARS,
   });
   const etfRate = effectiveAnnualGrowthTapered({
     r0: parameters.etfGrowthRate,
-    rInf: etfTerminalGdp(gdp, ai),
+    rInf,
     tYears,
     nYears: parameters.etfGrowthTaperYears ?? DEFAULT_TAPER_YEARS,
   });
   const organicRate = effectiveAnnualGrowthTapered({
     r0: parameters.organicBuyGrowth,
-    rInf: retailTerminalGdp(gdp, ai),
+    rInf,
     tYears,
     nYears: parameters.organicBuyGrowthTaperYears ?? DEFAULT_ORGANIC_BUY_GROWTH_TAPER_YEARS,
   });

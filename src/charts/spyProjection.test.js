@@ -38,10 +38,10 @@ describe("spyScenarioRates", () => {
     expect(rates.realReturn).toBeCloseTo(0.0175, 8);
   });
 
-  it("increases nominal return when effective GDP includes AI uplift", () => {
+  it("increases nominal return when nominal GDP rises", () => {
     const base = spyScenarioRates(3, 5);
-    const withAi = spyScenarioRates(3, 6);
-    expect(withAi.nominalReturn).toBeGreaterThan(base.nominalReturn);
+    const higher = spyScenarioRates(3, 6);
+    expect(higher.nominalReturn).toBeGreaterThan(base.nominalReturn);
   });
 });
 
@@ -109,7 +109,12 @@ describe("attachSpyOverlay", () => {
   it("uses historical before anchor and projection at/after anchor", () => {
     const yearStart = 2025.25;
     const rows = [{ year: 2025.0 }, { year: 2025.25 }, { year: 2025.75 }];
-    const out = attachSpyOverlay(rows, { yearStart, inflationPct: 3, gdpGrowthPct: 5, spyBullishness: 0.5 });
+    const out = attachSpyOverlay(rows, {
+      yearStart,
+      inflationPct: 3,
+      realGdpGrowthPct: 2,
+      spyBullishness: 0.5,
+    });
     const anchor = spyPriceAtYear(yearStart);
     const rates = spyScenarioRates(3, 5);
     const hist = resolveSpyHistoricalPoints(undefined, yearStart);
@@ -140,8 +145,18 @@ describe("attachSpyOverlay", () => {
   it("raises projected nominal SPY and lowers real SPY when inflation increases", () => {
     const yearStart = 2025.25;
     const rows = [{ year: yearStart }, { year: yearStart + 8 }];
-    const low = attachSpyOverlay(rows, { yearStart, inflationPct: 1, gdpGrowthPct: 5, spyBullishness: 0.5 });
-    const high = attachSpyOverlay(rows, { yearStart, inflationPct: 15, gdpGrowthPct: 5, spyBullishness: 0.5 });
+    const low = attachSpyOverlay(rows, {
+      yearStart,
+      inflationPct: 1,
+      realGdpGrowthPct: 4,
+      spyBullishness: 0.5,
+    });
+    const high = attachSpyOverlay(rows, {
+      yearStart,
+      inflationPct: 15,
+      realGdpGrowthPct: -10,
+      spyBullishness: 0.5,
+    });
     expect(high[1].spy).toBeGreaterThan(low[1].spy);
     expect(high[1].spyReal).toBeLessThan(low[1].spyReal);
     expect(low[1].spy).toBeGreaterThan(low[1].spyReal);
@@ -151,8 +166,18 @@ describe("attachSpyOverlay", () => {
   it("moves projected nominal from bear to bull with bullishness", () => {
     const yearStart = 2025.25;
     const rows = [{ year: 2025.25 }, { year: 2026.25 }];
-    const bear = attachSpyOverlay(rows, { yearStart, inflationPct: 3, gdpGrowthPct: 5, spyBullishness: 0 });
-    const bull = attachSpyOverlay(rows, { yearStart, inflationPct: 3, gdpGrowthPct: 5, spyBullishness: 1 });
+    const bear = attachSpyOverlay(rows, {
+      yearStart,
+      inflationPct: 3,
+      realGdpGrowthPct: 2,
+      spyBullishness: 0,
+    });
+    const bull = attachSpyOverlay(rows, {
+      yearStart,
+      inflationPct: 3,
+      realGdpGrowthPct: 2,
+      spyBullishness: 1,
+    });
     expect(bull[1].spy).toBeGreaterThan(bear[1].spy);
     expect(bull[1].spyReal).toBeGreaterThan(bear[1].spyReal);
   });
@@ -168,7 +193,7 @@ describe("attachSpyOverlay", () => {
     const out = attachSpyOverlay(rows, {
       yearStart,
       inflationPct: 3,
-      gdpGrowthPct: 5,
+      realGdpGrowthPct: 2,
       spyHistoricalPoints,
     });
 
@@ -190,7 +215,7 @@ describe("attachSpyOverlay", () => {
     let out = attachSpyOverlay(rows, {
       yearStart,
       inflationPct: 3,
-      gdpGrowthPct: 5,
+      realGdpGrowthPct: 2,
       spyBullishness: 0.5,
       spyHistoricalPoints,
     });
@@ -207,7 +232,7 @@ describe("attachSpyOverlay", () => {
     const withFallback = attachSpyOverlay(rows, {
       yearStart,
       inflationPct: 3,
-      gdpGrowthPct: 4,
+      realGdpGrowthPct: 1,
       spyBullishness: 0.5,
     });
     expect(withFallback[1].spy).toBeGreaterThan(withFallback[0].spy);

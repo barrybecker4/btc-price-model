@@ -25,7 +25,7 @@ Build: `npm run build` · Preview production build: `npm run preview`
 - **Mining**: `getDailyMining(year)` applies block-reward halving at 2028, 2032, 2036, 2040 (reward steps down from 3.125 BTC/block).
 - **Supply shock flag**: `supplyShockYear` is set the first time **liquid BTC** falls below **30%** of the initial liquid pool (used for the red “SHOCK” marker on charts).
 - **Price update**: Uses net monthly demand vs. **liquid** supply, with elasticity that rises as the liquid pool shrinks (`baseElasticity / liquidRatio`), monthly change capped by `maxMonthlyPctGain`, floor at `miningCostFloor`.
-- **Macro**: `gdpGrowth` scales USD-denominated flows each month (commented in code as a stand-in for nominal growth / expanding capital base). The sim path is in anchor-year dollars; **inflation** compounds onto that for nominal `price` while `priceReal` stays on the sim path.
+- **Macro**: `realGdpGrowth` plus **inflation** derive nominal GDP (`real + inflation`) for USD-denominated flow growth tapers. The sim path is in anchor-year dollars; **inflation** compounds onto that for nominal `price` while `priceReal` stays on the sim path.
 - **Outputs**: Each point includes nominal/real price, liquid/treasury/ETF/lost supply (millions), daily buy/sell breakdowns, etc.
 
 The sidebar sliders map to a single `p` object (`DEFAULTS`); changing any value recomputes via `useMemo(() => runSim(p), [p])`.

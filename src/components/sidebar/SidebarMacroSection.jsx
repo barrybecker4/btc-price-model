@@ -1,9 +1,12 @@
 import { miningCostFloorBounds, START_PRICE_SLIDER_STEP } from "../../params/startPriceSlider.js";
+import { nominalGdpGrowthPct } from "../../sim/macro/nominalGdp.js";
 import { fmtUSD } from "../../utils/format.js";
 import { Section } from "../Section.jsx";
 import { Slider } from "../Slider.jsx";
 
 export function SidebarMacroSection({ p, setP, set, startPriceMin, startPriceMax }) {
+  const nominalGdp = nominalGdpGrowthPct(p.realGdpGrowth, p.inflation);
+
   return (
     <Section title="◈ Macroeconomic">
       <Slider
@@ -38,7 +41,7 @@ export function SidebarMacroSection({ p, setP, set, startPriceMin, startPriceMax
       <Slider
         label="USD Inflation Rate"
         hint="Expected annual rise in the general price level in the United States — the percentage by which a broad basket of goods and services becomes more expensive over a year (the same idea headline CPI inflation measures)."
-        hintDetail="BTC: dashed = sim path in today's dollars; solid = that path with inflation compounded on top. SPY: dashed = GDP/momentum path in real terms (nominal macro return minus inflation); solid = earnings path plus inflation compounding. Historical segments use fixed CPI-U."
+        hintDetail="BTC: dashed = sim path in today's dollars; solid = that path with inflation compounded on top. SPY: dashed = macro real return (nominal GDP minus inflation); solid = earnings path plus inflation compounding. Historical segments use fixed CPI-U."
         value={p.inflation}
         min={1}
         max={15}
@@ -47,25 +50,14 @@ export function SidebarMacroSection({ p, setP, set, startPriceMin, startPriceMax
         fmt={(v) => `${v.toFixed(1)}%/yr`}
       />
       <Slider
-        label="Nominal GDP Growth"
-        hint="Global nominal GDP growth (real GDP + inflation). Applied as an extra monthly multiplier to ALL USD-denominated demand flows — simulating money-supply expansion. Higher GDP → more capital chasing BTC."
-        hintDetail="Does not scale BTC-denominated paths (e.g. block rewards); it biases USD flows that chase the float."
-        value={p.gdpGrowth}
-        min={1}
-        max={20}
+        label="Real GDP Growth"
+        hint="Global real GDP growth — output volume after stripping inflation. USD demand flows (treasury, ETF, retail) taper toward nominal GDP, which equals real GDP plus inflation."
+        hintDetail={`Nominal GDP used for USD flows: ${nominalGdp.toFixed(1)}%/yr (${p.realGdpGrowth.toFixed(1)}% real + ${p.inflation.toFixed(1)}% inflation). Does not scale BTC-denominated paths (e.g. block rewards).`}
+        value={p.realGdpGrowth}
+        min={-5}
+        max={12}
         step={0.1}
-        onChange={set("gdpGrowth")}
-        fmt={(v) => `${v.toFixed(1)}%/yr`}
-      />
-      <Slider
-        label="AI productivity uplift"
-        hint="Extra annual nominal growth from AI/productivity. Lifts S&P earnings assumptions and models wealth flowing into BTC demand (especially retail), on top of Nominal GDP."
-        hintDetail="Adds to GDP for the SPY overlay macro path. In the BTC sim, treasury raises still taper to GDP only; retail gets the full uplift and ETFs half."
-        value={p.aiProductivityPct}
-        min={0}
-        max={5}
-        step={0.1}
-        onChange={set("aiProductivityPct")}
+        onChange={set("realGdpGrowth")}
         fmt={(v) => `${v.toFixed(1)}%/yr`}
       />
     </Section>

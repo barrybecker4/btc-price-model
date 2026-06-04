@@ -32,7 +32,7 @@ export const SUPPLY_SHOCK_LIQUID_PCT_THRESHOLD = 30;
 /** Default logistic taper horizon (years) for MSTR, other treasury, and ETF growth; single source of truth. */
 export const DEFAULT_TAPER_YEARS = 12;
 
-/** Default taper horizon (years) for organic retail USD demand growth toward Nominal GDP. */
+/** Default taper horizon (years) for organic retail USD demand growth toward nominal GDP (real + inflation). */
 export const DEFAULT_ORGANIC_BUY_GROWTH_TAPER_YEARS = 16;
 const SESSION_RANDOM_SEED = Math.floor(Math.random() * 0x7fffffff);
 
@@ -40,9 +40,8 @@ export const DEFAULTS = {
   simYears: 10,
   startPrice: 85000,
   inflation: 3.0,
-  gdpGrowth: 4.0,
-  /** Extra annual productivity/AI uplift (%/yr); adds to GDP for SPY macro and biases retail/ETF USD taper terminals. */
-  aiProductivityPct: 1.0,
+  /** Real GDP growth (%/yr); nominal GDP for USD flow tapers = real + inflation. */
+  realGdpGrowth: 2.0,
   circulatingSupply: 20000000,
   alreadyLostCoins: 3000000,
   annualLossRate: 1.0,
@@ -51,12 +50,12 @@ export const DEFAULTS = {
   strcInitialBtc: 815000,
   strcInitialUsdB: 30,
   strcGrowthRate: 15,
-  /** Years over which MSTR USD raise growth logistically tapers to nominal GDP. */
+  /** Years over which MSTR USD raise growth logistically tapers to nominal GDP (real + inflation). */
   strcGrowthTaperYears: 10,
   otherInitialBtc: 370000,
   otherTreasuryUsdB: 20,
   otherTreasuryGrowth: 5,
-  /** Years over which other corporate treasury growth tapers to nominal GDP. */
+  /** Years over which other corporate treasury growth tapers to nominal GDP (real + inflation). */
   otherTreasuryGrowthTaperYears: DEFAULT_TAPER_YEARS,
   etfInitialBtc: 1600000,
   etfDailyInflowM: 100,
@@ -67,7 +66,7 @@ export const DEFAULTS = {
   etfStressRedemptionCount: 1,
   /** One stress redemption as % of current ETF BTC holdings. */
   etfOutflowShockPct: 2,
-  /** Years over which ETF USD inflow growth tapers to nominal GDP. */
+  /** Years over which ETF USD inflow growth tapers to nominal GDP (real + inflation). */
   etfGrowthTaperYears: DEFAULT_TAPER_YEARS,
   /** Max BTC held by Strategy + other treasuries + ETFs, as % of total mined BTC. */
   institutionalAllocationCapPct: 50,
@@ -84,7 +83,7 @@ export const DEFAULTS = {
   /** Net retail USD demand, $M/day (signed: positive = net buying, negative = net selling pressure). */
   initialRetailPurchaseRateM: 20,
   organicBuyGrowth: 10,
-  /** Years over which retail USD demand growth logistically tapers to Nominal GDP Growth. */
+  /** Years over which retail USD demand growth logistically tapers to nominal GDP (real + inflation). */
   organicBuyGrowthTaperYears: DEFAULT_ORGANIC_BUY_GROWTH_TAPER_YEARS,
   baseElasticity: 1.1,
   maxMonthlyPctGain: 30,
@@ -150,6 +149,20 @@ export function withParamDefaults(p) {
   ) {
     merged.halvingNarrativeAmp = Math.min(1, merged.halvingNarrativeAmp / 0.02);
   }
+  // Legacy macro: nominal GDP + AI uplift → real GDP growth.
+  if (merged.realGdpGrowth === undefined && typeof merged.gdpGrowth === "number") {
+    const inflation =
+      typeof merged.inflation === "number" && Number.isFinite(merged.inflation)
+        ? merged.inflation
+        : DEFAULTS.inflation;
+    const ai =
+      typeof merged.aiProductivityPct === "number" && Number.isFinite(merged.aiProductivityPct)
+        ? merged.aiProductivityPct
+        : 0;
+    merged.realGdpGrowth = merged.gdpGrowth - inflation + ai;
+  }
+  delete merged.gdpGrowth;
+  delete merged.aiProductivityPct;
   // Removed UI-only bond yield (never fed the sim); strip from older merged state.
   delete merged.bondYield;
   delete merged.organicDailyBuy;

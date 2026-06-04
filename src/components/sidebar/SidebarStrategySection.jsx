@@ -1,7 +1,9 @@
+import { nominalGdpGrowthPct } from "../../sim/macro/nominalGdp.js";
 import { Section } from "../Section.jsx";
 import { Slider } from "../Slider.jsx";
 
 export function SidebarStrategySection({ p, set }) {
+  const nominalGdp = nominalGdpGrowthPct(p.realGdpGrowth, p.inflation);
   return (
     <Section title="🏦 Strategy / MSTR">
       <Slider
@@ -26,7 +28,7 @@ export function SidebarStrategySection({ p, set }) {
       />
       <Slider
         label="Annual Capital Raise Growth"
-        hint={`Rate at which Strategy grows its USD capital raises annually. Logistic taper (below) converges this toward Nominal GDP (${p.gdpGrowth.toFixed(1)}%/yr). Strategy has historically grown well above inflation via convertible notes and ATM offerings.`}
+        hint={`Rate at which Strategy grows its USD capital raises annually. Logistic taper (below) converges this toward nominal GDP (${nominalGdp.toFixed(1)}%/yr = real + inflation). Strategy has historically grown well above inflation via convertible notes and ATM offerings.`}
         value={p.strcGrowthRate}
         min={5}
         max={50}
@@ -36,7 +38,7 @@ export function SidebarStrategySection({ p, set }) {
       />
       <Slider
         label="MSTR growth taper horizon"
-        hint="Years over which capital-raise growth logistically tapers to the Nominal GDP Growth rate (macro block). Shorter = faster convergence to GDP pace."
+        hint="Years over which capital-raise growth logistically tapers to nominal GDP (real + inflation, macro block). Shorter = faster convergence to GDP pace."
         value={p.strcGrowthTaperYears}
         min={5}
         max={70}

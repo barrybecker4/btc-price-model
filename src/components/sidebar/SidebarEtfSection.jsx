@@ -1,7 +1,9 @@
+import { nominalGdpGrowthPct } from "../../sim/macro/nominalGdp.js";
 import { Section } from "../Section.jsx";
 import { Slider } from "../Slider.jsx";
 
 export function SidebarEtfSection({ p, set }) {
+  const nominalGdp = nominalGdpGrowthPct(p.realGdpGrowth, p.inflation);
   return (
     <Section title="📈 ETFs" defaultOpen={false}>
       <Slider
@@ -25,7 +27,7 @@ export function SidebarEtfSection({ p, set }) {
       />
       <Slider
         label="ETF Inflow Growth"
-        hint={`Annual growth of aggregate ETF USD inflow. Tapers toward GDP + half AI productivity (${(p.gdpGrowth + (p.aiProductivityPct ?? 0) * 0.5).toFixed(1)}%/yr) over the horizon below.`}
+        hint={`Annual growth of aggregate ETF USD inflow. Tapers toward nominal GDP (${nominalGdp.toFixed(1)}%/yr) over the horizon below.`}
         value={p.etfGrowthRate}
         min={0}
         max={60}
@@ -68,7 +70,7 @@ export function SidebarEtfSection({ p, set }) {
       />
       <Slider
         label="ETF inflow growth taper horizon"
-        hint="Years for ETF net USD inflow growth to converge logistically to GDP + half AI productivity (macro block)."
+        hint="Years for ETF net USD inflow growth to converge logistically to nominal GDP (real + inflation, macro block)."
         value={p.etfGrowthTaperYears}
         min={5}
         max={50}
