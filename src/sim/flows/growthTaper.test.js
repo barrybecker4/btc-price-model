@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_TAPER_YEARS } from "./constants.js";
+import { DEFAULT_TAPER_YEARS } from "../config/constants.js";
 import { effectiveAnnualGrowthTapered, logisticWeight01 } from "./growthTaper.js";
 
 describe("logisticWeight01", () => {

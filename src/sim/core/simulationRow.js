@@ -1,4 +1,4 @@
-import { MONTHS_PER_YEAR } from "./constants.js";
+import { MONTHS_PER_YEAR } from "../config/constants.js";
 
 /**
  * @param {number} value
@@ -22,9 +22,9 @@ function roundToDecimalPlaces(value, decimalPlaces) {
  * @param {number} input.youngLthBtc
  * @param {number} input.ancientBtc
  * @param {number} input.liquidPercentOfInitial
- * @param {import("./simTypes.js").MonthlyDemandSnapshot} input.demand
+ * @param {import("../config/simTypes.js").MonthlyDemandSnapshot} input.demand
  * @param {number} input.dailyMining
- * @returns {import("./simTypes.js").SimMonthRow}
+ * @returns {import("../config/simTypes.js").SimMonthRow}
  */
 export function buildSimulationRow(input) {
   const demand = input.demand;

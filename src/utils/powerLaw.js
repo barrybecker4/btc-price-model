@@ -6,7 +6,7 @@
  *
  * Calendar systems:
  * - {@link fractionalYearToMs} / {@link fractionalYearFromUtcMs}: **UTC** calendar year boundaries (matches API timestamps).
- * - {@link fractionalYearToLocalMs}: **local** calendar year boundaries — pair with `getSimulationAnchorYear` in `src/sim/constants.js`
+ * - {@link fractionalYearToLocalMs}: **local** calendar year boundaries — pair with `getSimulationAnchorYear` in `src/sim/config/constants.js`
  *   and `decimalYearToDate` in `./format.js` so “today” and history `toMs` agree.
  */
 
@@ -40,7 +40,7 @@ export function fractionalYearToMs(fractionalYear) {
 
 /**
  * Same interpolation as {@link fractionalYearToMs} but using the **local** calendar (host timezone).
- * Use when converting {@link ../sim/constants.js#getSimulationAnchorYear} to epoch ms.
+ * Use when converting {@link ../sim/config/constants.js#getSimulationAnchorYear} to epoch ms.
  * @param {number} fractionalYear
  * @returns {number} epoch milliseconds
  */

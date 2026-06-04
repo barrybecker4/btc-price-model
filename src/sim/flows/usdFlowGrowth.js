@@ -2,7 +2,7 @@ import {
   DEFAULT_ORGANIC_BUY_GROWTH_TAPER_YEARS,
   DEFAULT_TAPER_YEARS,
   MONTHS_PER_YEAR,
-} from "./constants.js";
+} from "../config/constants.js";
 import { effectiveAnnualGrowthTapered } from "./growthTaper.js";
 import {
   etfTerminalGdp,
@@ -25,7 +25,7 @@ function monthlyGrowthMultiplier(annualPercent) {
  * @param {number} state.etfUSD
  * @param {number} state.retailNetUsd
  * @param {number} state.monthIndex
- * @param {import("./simTypes.js").SimParams} state.parameters
+ * @param {import("../config/simTypes.js").SimParams} state.parameters
  */
 export function advanceUsdFlowsForMonth(state) {
   const parameters = state.parameters;

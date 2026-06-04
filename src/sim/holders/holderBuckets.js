@@ -1,4 +1,4 @@
-import { MONTHS_PER_YEAR } from "./constants.js";
+import { MONTHS_PER_YEAR } from "../config/constants.js";
 
 /** Minimum modeled liquid float (BTC) after rebalancing and holder flows. */
 export const LIQ_FLOOR = 50000;
@@ -66,7 +66,7 @@ export function rebalanceLiquidToFloor(liquid, youngLth, ancientBtc, floor) {
  * @param {number} liquid
  * @param {number} youngLth
  * @param {number} ancientBtc
- * @param {import("./simTypes.js").SimParams} p
+ * @param {import("../config/simTypes.js").SimParams} p
  * @param {number} [price] Current (month-end) BTC price.
  * @param {number} [priceMa52w] Trailing 52-week (12-month) average price; when omitted, falls back to start price for backward compatibility.
  */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MONTHS_PER_YEAR, SUPPLY_SHOCK_LIQUID_PCT_THRESHOLD, withParamDefaults } from "./constants.js";
+import { MONTHS_PER_YEAR, SUPPLY_SHOCK_LIQUID_PCT_THRESHOLD, withParamDefaults } from "./config/constants.js";
 import { runSim } from "./runSim.js";
 
 function baseParams(overrides = {}) {

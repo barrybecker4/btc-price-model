@@ -1,4 +1,4 @@
-import { YEAR_START } from "../sim/constants.js";
+import { YEAR_START } from "../sim/config/constants.js";
 import { C, FONT_UI } from "../theme.js";
 import { fmtUSD, formatSimRangeLabel, safeDivide } from "../utils/format.js";
 import { AboutLink } from "./AboutLink.jsx";

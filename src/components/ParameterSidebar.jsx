@@ -1,4 +1,4 @@
-import { ALREADY_LOST_COINS_CAP_BTC, DEFAULTS } from "../sim/constants.js";
+import { ALREADY_LOST_COINS_CAP_BTC, DEFAULTS } from "../sim/config/constants.js";
 import {
   miningCostFloorBounds,
   START_PRICE_SLIDER_BASE_MAX,

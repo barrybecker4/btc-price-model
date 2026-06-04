@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { withParamDefaults } from "./constants.js";
+import { withParamDefaults } from "../config/constants.js";
 import { computePriceAfterMonthTransition } from "./monthlyPriceStep.js";
 
 describe("computePriceAfterMonthTransition", () => {

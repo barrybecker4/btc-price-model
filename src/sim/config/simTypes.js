@@ -4,7 +4,7 @@
  */
 
 /**
- * Output of {@link import("./monthlyDemandFromUsd.js").computeMonthlyDemandFromUsd}.
+ * Output of {@link import("../demand/monthlyDemandFromUsd.js").computeMonthlyDemandFromUsd}.
  * @typedef {Object} MonthlyDemandSnapshot
  * @property {number} strcBtc
  * @property {number} otherBtc

@@ -1,4 +1,4 @@
-import { MONTHS_PER_YEAR } from "./constants.js";
+import { MONTHS_PER_YEAR } from "../config/constants.js";
 
 /** Deterministic uniform in [0, 1) from seed + key (xorshift/mix). */
 export function seededUnitRandom(seed, key) {

@@ -10,7 +10,7 @@ import {
   ReferenceLine,
 } from "recharts";
 import { C, FONT_NUM, FONT_UI } from "../../theme.js";
-import { YEAR_START } from "../../sim/constants.js";
+import { YEAR_START } from "../../sim/config/constants.js";
 import { fmtUSD } from "../../utils/format.js";
 import { TIP, XAXIS_PROPS } from "../../charts/rechartsConfig.js";
 import { daysSinceGenesis, powerLawBoundsUsd } from "../../utils/powerLaw.js";

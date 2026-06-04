@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SIM_MONTH_DAYS, withParamDefaults } from "./constants.js";
+import { SIM_MONTH_DAYS, withParamDefaults } from "../config/constants.js";
 import { computeMonthlyDemandFromUsd } from "./monthlyDemandFromUsd.js";
 
 function demandParameters(overrides = {}) {

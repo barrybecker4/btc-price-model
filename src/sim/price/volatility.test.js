@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MONTHS_PER_YEAR } from "./constants.js";
+import { MONTHS_PER_YEAR } from "../config/constants.js";
 import {
   monthlySigmaFromAnnual,
   seededClampedNormal,

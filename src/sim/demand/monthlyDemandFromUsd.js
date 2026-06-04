@@ -1,7 +1,7 @@
-import { MONTHS_PER_YEAR, SIM_MONTH_DAYS } from "./constants.js";
+import { MONTHS_PER_YEAR, SIM_MONTH_DAYS } from "../config/constants.js";
 import { getEtfStressRedemptionMonths } from "./etfStressRedemptions.js";
-import { LIQ_FLOOR } from "./holderBuckets.js";
-import { monthlySigmaFromAnnual, seededClampedNormal } from "./volatility.js";
+import { LIQ_FLOOR } from "../holders/holderBuckets.js";
+import { monthlySigmaFromAnnual, seededClampedNormal } from "../price/volatility.js";
 
 /**
  * @param {object} input
@@ -18,7 +18,7 @@ import { monthlySigmaFromAnnual, seededClampedNormal } from "./volatility.js";
  * @param {number} input.etfBtc
  * @param {number} input.momentumReturn
  * @param {number} [input.priceMa52w] Trailing 52-week (12-month) average of month-end closes for valuation drag; when omitted, uses start price (backward compatible).
- * @param {import("./simTypes.js").SimParams} input.parameters
+ * @param {import("../config/simTypes.js").SimParams} input.parameters
  */
 export function computeMonthlyDemandFromUsd(input) {
   const price = input.price;

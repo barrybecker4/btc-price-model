@@ -1,5 +1,5 @@
-import { getHalvingCycleMonthlyAdj } from "./halving.js";
-import { LIQ_FLOOR } from "./holderBuckets.js";
+import { getHalvingCycleMonthlyAdj } from "../supply/halving.js";
+import { LIQ_FLOOR } from "../holders/holderBuckets.js";
 import {
   monthlySigmaFromAnnual,
   seededClampedNormal,
@@ -16,7 +16,7 @@ import {
  * @param {number} input.year
  * @param {number} input.monthIndex
  * @param {number} input.totalMonths
- * @param {import("./simTypes.js").SimParams} input.parameters
+ * @param {import("../config/simTypes.js").SimParams} input.parameters
  * @returns {number}
  */
 export function computePriceAfterMonthTransition(input) {

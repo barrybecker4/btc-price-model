@@ -1,4 +1,4 @@
-import { DEFAULTS, REFERENCE_MINING_BTC_PER_DAY } from "../../sim/constants.js";
+import { DEFAULTS, REFERENCE_MINING_BTC_PER_DAY } from "../../sim/config/constants.js";
 import { C, FONT_NUM, FONT_UI } from "../../theme.js";
 import { safeDivide } from "../../utils/format.js";
 

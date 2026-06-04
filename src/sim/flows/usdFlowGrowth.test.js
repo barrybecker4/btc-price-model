@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_ORGANIC_BUY_GROWTH_TAPER_YEARS, DEFAULTS, withParamDefaults } from "./constants.js";
+import { DEFAULT_ORGANIC_BUY_GROWTH_TAPER_YEARS, DEFAULTS, withParamDefaults } from "../config/constants.js";
 import { effectiveAnnualGrowthTapered } from "./growthTaper.js";
 import { advanceUsdFlowsForMonth } from "./usdFlowGrowth.js";
 

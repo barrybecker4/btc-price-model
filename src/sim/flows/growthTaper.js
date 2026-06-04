@@ -4,7 +4,7 @@
  * w(u) = 1 / (1 + exp(k * (u - 0.5))).
  */
 
-import { DEFAULT_TAPER_YEARS } from "./constants.js";
+import { DEFAULT_TAPER_YEARS } from "../config/constants.js";
 
 /**
  * Logistic slope k in w(u)=1/(1+exp(k(u-0.5))). Independent of MONTHS_PER_YEAR (calendar);

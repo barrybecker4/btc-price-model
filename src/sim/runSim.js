@@ -4,23 +4,23 @@ import {
   SIM_MONTH_DAYS,
   SUPPLY_SHOCK_LIQUID_PCT_THRESHOLD,
   YEAR_START,
-} from "./constants.js";
+} from "./config/constants.js";
 import {
   applyHolderFlows,
   initialHolderSplit,
   LIQ_FLOOR,
   rebalanceLiquidToFloor,
-} from "./holderBuckets.js";
-import { getDailyMining } from "./mining.js";
-import { computeMonthlyDemandFromUsd } from "./monthlyDemandFromUsd.js";
-import { computePriceAfterMonthTransition } from "./monthlyPriceStep.js";
-import { buildSimulationRow } from "./simulationRow.js";
-import { advanceUsdFlowsForMonth } from "./usdFlowGrowth.js";
+} from "./holders/holderBuckets.js";
+import { getDailyMining } from "./supply/mining.js";
+import { computeMonthlyDemandFromUsd } from "./demand/monthlyDemandFromUsd.js";
+import { computePriceAfterMonthTransition } from "./price/monthlyPriceStep.js";
+import { buildSimulationRow } from "./core/simulationRow.js";
+import { advanceUsdFlowsForMonth } from "./flows/usdFlowGrowth.js";
 
-export { applyHolderFlows, initialHolderSplit, LIQ_FLOOR, rebalanceLiquidToFloor } from "./holderBuckets.js";
+export { applyHolderFlows, initialHolderSplit, LIQ_FLOOR, rebalanceLiquidToFloor } from "./holders/holderBuckets.js";
 
 /**
- * @param {import("./simTypes.js").SimParams} parameters
+ * @param {import("./config/simTypes.js").SimParams} parameters
  */
 export function runSim(parameters) {
   const months = parameters.simYears * MONTHS_PER_YEAR;

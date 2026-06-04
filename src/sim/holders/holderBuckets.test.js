@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MONTHS_PER_YEAR, withParamDefaults } from "./constants.js";
+import { MONTHS_PER_YEAR, withParamDefaults } from "../config/constants.js";
 import { applyHolderFlows, initialHolderSplit, LIQ_FLOOR, rebalanceLiquidToFloor } from "./holderBuckets.js";
 
 describe("rebalanceLiquidToFloor", () => {
