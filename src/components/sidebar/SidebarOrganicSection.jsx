@@ -19,7 +19,7 @@ export function SidebarOrganicSection({ p, set }) {
       />
       <Slider
         label="Retail Buy Growth"
-        hint={`Annual growth of net retail USD demand. Logistic taper (below) converges toward Nominal GDP (${p.gdpGrowth.toFixed(1)}%/yr).`}
+        hint={`Annual growth of net retail USD demand. Logistic taper (below) converges toward GDP + AI productivity (${(p.gdpGrowth + (p.aiProductivityPct ?? 0)).toFixed(1)}%/yr).`}
         value={p.organicBuyGrowth}
         min={0}
         max={30}
@@ -29,7 +29,7 @@ export function SidebarOrganicSection({ p, set }) {
       />
       <Slider
         label="Retail growth taper horizon"
-        hint="Years for retail USD demand growth to converge logistically to Nominal GDP Growth (macro block), avoiding unbounded compounding at the slider rate."
+        hint="Years for retail USD demand growth to converge logistically to GDP + AI productivity (macro block), avoiding unbounded compounding at the slider rate."
         value={p.organicBuyGrowthTaperYears}
         min={5}
         max={50}

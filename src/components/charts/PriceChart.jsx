@@ -123,6 +123,7 @@ export function PriceChart({
   first,
   inflation,
   gdpGrowth,
+  aiProductivityPct = 0,
   logScale,
   yAxisScale = 1,
   halvings,
@@ -157,6 +158,7 @@ export function PriceChart({
         yearStart: YEAR_START,
         inflationPct: inflation,
         gdpGrowthPct: gdpGrowth,
+        aiProductivityPct,
         spyHistoricalPoints,
         spyBullishness,
       });
@@ -189,7 +191,18 @@ export function PriceChart({
       : 0;
 
     return { chartData: rows, baseAxisMin: axisMin, baseAxisMax: axisMax };
-  }, [data, overlayPowerLaw, overlaySpy, logScale, inflation, gdpGrowth, first, spyBullishness, spyHistoricalPoints]);
+  }, [
+    data,
+    overlayPowerLaw,
+    overlaySpy,
+    logScale,
+    inflation,
+    gdpGrowth,
+    aiProductivityPct,
+    first,
+    spyBullishness,
+    spyHistoricalPoints,
+  ]);
 
   const safeScale = Math.max(1, Number(yAxisScale) || 1);
   const scaledAxisMax = Math.max(baseAxisMin * (logScale ? 1.05 : 1), baseAxisMax / safeScale);
@@ -507,10 +520,11 @@ export function PriceChart({
             fontFamily: FONT_UI,
           }}
         >
-          SPY is scaled to nominal BTC at the &ldquo;Now&rdquo; anchor. Past: historical monthly closes. Future nominal path
-          interpolates between bear (&minus;2% vs. base) and bull (+2% vs. base) using the slider. The
-          inflation-adjusted line uses annual CPI-U ratios for the historical segment and the model real return
-          (nominal minus inflation) for the projection segment.
+          SPY is scaled to nominal BTC at the &ldquo;Now&rdquo; anchor. Past: historical monthly closes. Future path
+          starts from trailing CAGR + log-linear momentum (decaying toward GDP + AI productivity uplift over ~7y),
+          with bull/bear spread widened by realized vol and a valuation premium proxy. &ldquo;How Bullish?&rdquo; tilts
+          that spread. AI productivity is set in the macro sidebar. Real SPY uses CPI-U history then nominal minus
+          inflation for the projection segment.
         </div>
       )}
       {overlaySpy && spyHistoricalError && (

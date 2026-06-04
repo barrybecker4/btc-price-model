@@ -112,9 +112,10 @@ export default function App() {
   }, [overlaySpy]);
 
   useEffect(() => {
-    if (!overlaySpy || !showHistorical) {
+    if (!overlaySpy) {
       spyHistoricalFetchAttemptedRef.current = false;
       setSpyHistoricalError(null);
+      setSpyHistoricalRaw(null);
       return;
     }
     if (spyHistoricalRaw != null) return;
@@ -143,7 +144,7 @@ export default function App() {
       }
     })();
     return () => ac.abort();
-  }, [overlaySpy, showHistorical, spyHistoricalRaw]);
+  }, [overlaySpy, spyHistoricalRaw]);
 
   const params = useMemo(() => withParamDefaults(p), [p]);
 
@@ -290,6 +291,7 @@ export default function App() {
               first={chartFirstRow}
               inflation={params.inflation}
               gdpGrowth={params.gdpGrowth}
+              aiProductivityPct={params.aiProductivityPct}
               logScale={logScale}
               yAxisScale={yAxisScale}
               halvings={halvingsPrice}
@@ -307,9 +309,6 @@ export default function App() {
                 setShowHistorical(v);
                 if (!v) {
                   setHistoricalError(null);
-                  setSpyHistoricalError(null);
-                  setSpyHistoricalRaw(null);
-                  spyHistoricalFetchAttemptedRef.current = false;
                 }
               }}
               showProjectionStartLine={showHistorical && !!historicalEnriched?.length}

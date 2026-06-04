@@ -57,6 +57,17 @@ export function SidebarMacroSection({ p, setP, set, startPriceMin, startPriceMax
         onChange={set("gdpGrowth")}
         fmt={(v) => `${v.toFixed(1)}%/yr`}
       />
+      <Slider
+        label="AI productivity uplift"
+        hint="Extra annual nominal growth from AI/productivity. Lifts S&P earnings assumptions and models wealth flowing into BTC demand (especially retail), on top of Nominal GDP."
+        hintDetail="Adds to GDP for the SPY overlay macro path. In the BTC sim, treasury raises still taper to GDP only; retail gets the full uplift and ETFs half."
+        value={p.aiProductivityPct}
+        min={0}
+        max={5}
+        step={0.1}
+        onChange={set("aiProductivityPct")}
+        fmt={(v) => `${v.toFixed(1)}%/yr`}
+      />
     </Section>
   );
 }

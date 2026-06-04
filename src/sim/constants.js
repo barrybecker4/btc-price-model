@@ -41,6 +41,8 @@ export const DEFAULTS = {
   startPrice: 85000,
   inflation: 3.0,
   gdpGrowth: 4.0,
+  /** Extra annual productivity/AI uplift (%/yr); adds to GDP for SPY macro and biases retail/ETF USD taper terminals. */
+  aiProductivityPct: 1.0,
   circulatingSupply: 20000000,
   alreadyLostCoins: 3000000,
   annualLossRate: 1.0,
