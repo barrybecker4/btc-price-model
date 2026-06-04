@@ -46,13 +46,33 @@ function fallbackRange({ fromMs, toMs }) {
 function mergeSpyRows({ fromMs, toMs, fallback, recentLive }) {
   const fromYear = utcMsToSpyAxisYear(fromMs);
   const toYear = utcMsToSpyAxisYear(toMs);
-  const merged = new Map(fallback.map((row) => [row.year, row]));
-  for (const row of cachedBulkLive) {
-    if (row.year < fromYear) continue;
-    if (row.year > toYear) continue;
+  const merged = new Map();
+
+  const bulkInRange =
+    cachedBulkLive?.filter((row) => row.year >= fromYear && row.year <= toYear) ?? [];
+
+  // Live CSV is the S&P 500 index (~7000); static fallback is SPY ETF (~585). Never merge both.
+  if (bulkInRange.length > 0) {
+    for (const row of bulkInRange) merged.set(row.year, row);
+  } else {
+    for (const row of fallback) {
+      if (row.year < fromYear || row.year > toYear) continue;
+      merged.set(row.year, row);
+    }
+  }
+
+  for (const row of recentLive) {
+    if (row.year < fromYear || row.year > toYear) continue;
     merged.set(row.year, row);
   }
-  for (const row of recentLive) merged.set(row.year, row);
+
+  if (merged.size === 0) {
+    for (const row of fallback) {
+      if (row.year < fromYear || row.year > toYear) continue;
+      merged.set(row.year, row);
+    }
+  }
+
   return Array.from(merged.values()).sort((a, b) => a.year - b.year);
 }
 

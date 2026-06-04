@@ -53,6 +53,26 @@ describe("fetchSpyMonthlyHistory", () => {
     expect(rows[0].price).toBeGreaterThan(0);
   });
 
+  it("does not mix SPY-ETF fallback tail with live S&P index bulk", async () => {
+    const csvBulk = ["Date,SP500", "2026-04-01,6957.01", "2026-05-01,7412.55"].join("\n");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: true,
+        text: async () => csvBulk,
+      })),
+    );
+
+    const rows = await fetchSpyMonthlyHistory({
+      fromMs: Date.UTC(2026, 3, 1),
+      toMs: Date.UTC(2026, 6, 15),
+      signal: undefined,
+    });
+
+    expect(rows.some((row) => row.price === 585)).toBe(false);
+    expect(rows.at(-1)?.price).toBe(7413);
+  });
+
   it("still merges cached bulk when only the recent-segment fetch fails", async () => {
     const csvBulk = ["Date,SP500", "2026-06-01,5000", "2026-06-30,5050"].join("\n");
     let calls = 0;

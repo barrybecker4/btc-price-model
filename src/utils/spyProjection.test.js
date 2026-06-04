@@ -86,6 +86,31 @@ describe("attachSpyOverlay", () => {
     expect(out[0].spy).toBeCloseTo(610, 8);
     expect(out[1].spy).toBeCloseTo(590, 8);
   });
+
+  it("keeps historical and projected SPY continuous at the Now anchor", () => {
+    const yearStart = 2026.421;
+    const spyHistoricalPoints = [
+      { year: 2026.25, price: 6957 },
+      { year: 2026.333, price: 7413 },
+    ];
+    const rows = [
+      { year: 2026.411, price: 64000 },
+      { year: 2026.421, price: 64000 },
+      { year: 2026.504, price: 65000 },
+    ];
+    let out = attachSpyOverlay(rows, {
+      yearStart,
+      inflationPct: 3,
+      gdpGrowthPct: 5,
+      spyHistoricalPoints,
+      spyBullishness: 0.5,
+    });
+    out = scaleSpyOverlayToBtcAtAnchor(out, yearStart);
+
+    const lastHist = out.find((r) => r.year < yearStart - 1e-4);
+    const firstProj = out.find((r) => r.year >= yearStart - 1e-4);
+    expect(lastHist?.spy).toBeCloseTo(firstProj?.spy ?? 0, 0);
+  });
 });
 
 describe("scaleSpyOverlayToBtcAtAnchor", () => {
