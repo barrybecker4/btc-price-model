@@ -1,5 +1,6 @@
 import spyMonthlyFallback from "../data/spyMonthlyFallback.json";
 import { toRealDollarsAtAnchor } from "../data/cpiUs.js";
+import { inflationFactorFromYears } from "../sim/macro/inflationFactor.js";
 
 const SPY_HISTORICAL_YEARLY_CLOSES = [
   { year: 2011, price: 125.5 },
@@ -45,6 +46,22 @@ const SPY_KEYS = ["spy", "spyReal"];
  */
 function clampReturn(r) {
   return Math.min(RETURN_CLAMP_MAX, Math.max(RETURN_CLAMP_MIN, r));
+}
+
+/** Allow modest negative real rates when inflation exceeds nominal macro return. */
+const REAL_RETURN_CLAMP_MIN = -0.12;
+
+function clampRealReturn(r) {
+  return Math.min(RETURN_CLAMP_MAX, Math.max(REAL_RETURN_CLAMP_MIN, r));
+}
+
+/**
+ * @param {number|null} rMomentum
+ * @param {number} inflationAnnual decimal (e.g. 0.03)
+ */
+function momentumReturnInRealTerms(rMomentum, inflationAnnual) {
+  if (rMomentum == null || !Number.isFinite(rMomentum)) return null;
+  return clampRealReturn(rMomentum - inflationAnnual);
 }
 
 /**
@@ -318,10 +335,26 @@ export function attachSpyOverlay(rows, input) {
       const spy = spyPriceAtYear(row.year, historicalPoints);
       return { ...row, spy, spyReal: toRealDollarsAtAnchor(spy, row.year, yearStart) };
     }
-    const spy = projectedPriceContinuous(anchor, deltaYears, rMacro, rMomentum, DECAY_HALF_LIFE_YEARS, spreadOffset);
-    const nominalIntegral = decayRateIntegral(deltaYears, rMacro, rMomentum) + spreadOffset * deltaYears;
-    const realIntegral = nominalIntegral - inflation * deltaYears;
-    const spyReal = anchor * Math.exp(realIntegral);
+    const spyEconomic = projectedPriceContinuous(
+      anchor,
+      deltaYears,
+      rMacro,
+      rMomentum,
+      DECAY_HALF_LIFE_YEARS,
+      spreadOffset
+    );
+    const rRealMacro = clampRealReturn(rates.realReturn);
+    const rRealMomentum = momentumReturnInRealTerms(rMomentum, inflation) ?? rRealMacro;
+    const spyReal = projectedPriceContinuous(
+      anchor,
+      deltaYears,
+      rRealMacro,
+      rRealMomentum,
+      DECAY_HALF_LIFE_YEARS,
+      spreadOffset
+    );
+    const inflationFactor = inflationFactorFromYears(inflationPct, deltaYears);
+    const spy = spyEconomic * inflationFactor;
     return { ...row, spy, spyReal };
   });
 }

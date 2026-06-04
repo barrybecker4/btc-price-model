@@ -38,7 +38,7 @@ export function SidebarMacroSection({ p, setP, set, startPriceMin, startPriceMax
       <Slider
         label="USD Inflation Rate"
         hint="Expected annual rise in the general price level in the United States — the percentage by which a broad basket of goods and services becomes more expensive over a year (the same idea headline CPI inflation measures)."
-        hintDetail="Used for projected real-price paths in the simulation and SPY projection. Historical inflation adjustment uses fixed CPI-U data."
+        hintDetail="BTC: dashed = sim path in today's dollars; solid = that path with inflation compounded on top. SPY: dashed = GDP/momentum path in real terms (nominal macro return minus inflation); solid = earnings path plus inflation compounding. Historical segments use fixed CPI-U."
         value={p.inflation}
         min={1}
         max={15}

@@ -523,8 +523,9 @@ export function PriceChart({
           SPY is scaled to nominal BTC at the &ldquo;Now&rdquo; anchor. Past: historical monthly closes. Future path
           starts from trailing CAGR + log-linear momentum (decaying toward GDP + AI productivity uplift over ~7y),
           with bull/bear spread widened by realized vol and a valuation premium proxy. &ldquo;How Bullish?&rdquo; tilts
-          that spread. AI productivity is set in the macro sidebar. Real SPY uses CPI-U history then nominal minus
-          inflation for the projection segment.
+          that spread. AI productivity is set in the macro sidebar. Projected SPY: dashed line uses macro real return
+          (nominal GDP path minus inflation); solid line adds compounded inflation on top. Historical SPY real uses
+          CPI-U.
         </div>
       )}
       {overlaySpy && spyHistoricalError && (

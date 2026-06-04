@@ -1,4 +1,4 @@
-import { MONTHS_PER_YEAR } from "../config/constants.js";
+import { inflationFactorFromMonth } from "../macro/inflationFactor.js";
 
 /**
  * @param {number} value
@@ -30,11 +30,13 @@ function roundToDecimalPlaces(value, decimalPlaces) {
  */
 export function buildSimulationRow(input) {
   const demand = input.demand;
-  const inflationFactor = Math.pow(1 + input.inflationPercent / 100, input.monthIndex / MONTHS_PER_YEAR);
-  const priceReal = Math.round(input.price / inflationFactor);
+  const inflationFactor = inflationFactorFromMonth(input.inflationPercent, input.monthIndex);
+  // Sim price path is in anchor-year (today's) dollars; nominal USD = real × cumulative inflation.
+  const priceReal = Math.round(input.price);
+  const price = Math.round(input.price * inflationFactor);
   return {
     year: roundToDecimalPlaces(input.year, 3),
-    price: Math.round(input.price),
+    price,
     priceReal,
     liquidM: roundToDecimalPlaces(input.liquid / 1e6, 3),
     treasuryM: roundToDecimalPlaces(input.treasury / 1e6, 3),

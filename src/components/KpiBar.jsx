@@ -73,7 +73,7 @@ export function KpiBar({ p, last, supplyShockYear, mult, floatCapInfo }) {
           label={`Price in today's dollars (${p.inflation}% inflation adj.)`}
           value={fmtUSD(last.priceReal)}
           sub={`Rough purchasing power parity (PPP) vs start at ${p.inflation}%/yr inflation.`}
-          tooltip="A simple deflation of the nominal path by the inflation slider — a coarse stand-in for inflation-adjusted purchasing power, not formal purchasing power parity between economies or a full macro model."
+          tooltip="Purchasing power of the simulated BTC path in today's dollars. The nominal terminal KPI and solid projection line scale up with the inflation slider; this value follows the underlying sim and stays fixed when only inflation changes."
         />
         <KPI
           label="Liquid BTC Remaining"

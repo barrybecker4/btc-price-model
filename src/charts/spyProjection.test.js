@@ -122,8 +122,30 @@ describe("attachSpyOverlay", () => {
     expect(out[1].spyReal).toBeCloseTo(anchor, 8);
 
     const delta = 0.5;
-    const expected = projectedPriceContinuous(anchor, delta, rates.nominalReturn, rMomentum, 7, 0);
-    expect(out[2].spy).toBeCloseTo(expected, 6);
+    const expectedNominal = projectedPriceContinuous(anchor, delta, rates.nominalReturn, rMomentum, 7, 0);
+    const inflationFactor = Math.pow(1.03, delta);
+    expect(out[2].spy).toBeCloseTo(expectedNominal * inflationFactor, 6);
+    const rRealMomentum = Math.max(0, rMomentum - 0.03);
+    const expectedReal = projectedPriceContinuous(
+      anchor,
+      delta,
+      rates.realReturn,
+      rRealMomentum,
+      7,
+      0
+    );
+    expect(out[2].spyReal).toBeCloseTo(expectedReal, 6);
+  });
+
+  it("raises projected nominal SPY and lowers real SPY when inflation increases", () => {
+    const yearStart = 2025.25;
+    const rows = [{ year: yearStart }, { year: yearStart + 8 }];
+    const low = attachSpyOverlay(rows, { yearStart, inflationPct: 1, gdpGrowthPct: 5, spyBullishness: 0.5 });
+    const high = attachSpyOverlay(rows, { yearStart, inflationPct: 15, gdpGrowthPct: 5, spyBullishness: 0.5 });
+    expect(high[1].spy).toBeGreaterThan(low[1].spy);
+    expect(high[1].spyReal).toBeLessThan(low[1].spyReal);
+    expect(low[1].spy).toBeGreaterThan(low[1].spyReal);
+    expect(high[1].spy).toBeGreaterThan(high[1].spyReal);
   });
 
   it("moves projected nominal from bear to bull with bullishness", () => {
