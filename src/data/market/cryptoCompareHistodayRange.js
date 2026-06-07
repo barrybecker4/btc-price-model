@@ -6,7 +6,7 @@ const BETWEEN_PAGES_MS = 120;
 
 /** In `vite dev`, requests use the same-origin proxy in vite.config.js (avoids CORS on non‑Vite localhost ports, e.g. IntelliJ :63342). */
 function cryptoCompareApiOrigin() {
-  const isDev = import.meta.env.DEV;
+  const isDev = import.meta.env?.DEV === true;
   if (isDev) return "/api/cryptocompare";
   return "https://min-api.cryptocompare.com";
 }

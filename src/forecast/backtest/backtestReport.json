@@ -1,0 +1,190 @@
+{
+  "generatedAt": "2026-06-07T02:16:58.872Z",
+  "config": {
+    "warmupDays": 120,
+    "holdoutDays": 90,
+    "stepDays": 14,
+    "sampleCount": 6,
+    "firstDate": "2026-03-09",
+    "lastDate": "2026-05-18"
+  },
+  "model": {
+    "horizon24h": {
+      "crps": 58954.31276831589,
+      "logScore": 16.284982795767636,
+      "medianMape": 0.7901151744734434,
+      "sampleCount": 6,
+      "calibration": {
+        "bins": [
+          {
+            "decile": 1,
+            "count": 2,
+            "predictedMean": 0,
+            "realizedUpRate": 0.5
+          },
+          {
+            "decile": 2,
+            "count": 0,
+            "predictedMean": null,
+            "realizedUpRate": null
+          },
+          {
+            "decile": 3,
+            "count": 0,
+            "predictedMean": null,
+            "realizedUpRate": null
+          },
+          {
+            "decile": 4,
+            "count": 0,
+            "predictedMean": null,
+            "realizedUpRate": null
+          },
+          {
+            "decile": 5,
+            "count": 0,
+            "predictedMean": null,
+            "realizedUpRate": null
+          },
+          {
+            "decile": 6,
+            "count": 0,
+            "predictedMean": null,
+            "realizedUpRate": null
+          },
+          {
+            "decile": 7,
+            "count": 0,
+            "predictedMean": null,
+            "realizedUpRate": null
+          },
+          {
+            "decile": 8,
+            "count": 0,
+            "predictedMean": null,
+            "realizedUpRate": null
+          },
+          {
+            "decile": 9,
+            "count": 0,
+            "predictedMean": null,
+            "realizedUpRate": null
+          },
+          {
+            "decile": 10,
+            "count": 4,
+            "predictedMean": 1,
+            "realizedUpRate": 0.75
+          }
+        ],
+        "brierScore": 0.3333333333333333
+      }
+    },
+    "horizon168h": {
+      "crps": 42116.29198086896,
+      "logScore": 17.180254884856794,
+      "medianMape": 0.5798947732901496,
+      "sampleCount": 6,
+      "calibration": {
+        "bins": [
+          {
+            "decile": 1,
+            "count": 2,
+            "predictedMean": 0,
+            "realizedUpRate": 0.5
+          },
+          {
+            "decile": 2,
+            "count": 0,
+            "predictedMean": null,
+            "realizedUpRate": null
+          },
+          {
+            "decile": 3,
+            "count": 0,
+            "predictedMean": null,
+            "realizedUpRate": null
+          },
+          {
+            "decile": 4,
+            "count": 0,
+            "predictedMean": null,
+            "realizedUpRate": null
+          },
+          {
+            "decile": 5,
+            "count": 0,
+            "predictedMean": null,
+            "realizedUpRate": null
+          },
+          {
+            "decile": 6,
+            "count": 0,
+            "predictedMean": null,
+            "realizedUpRate": null
+          },
+          {
+            "decile": 7,
+            "count": 0,
+            "predictedMean": null,
+            "realizedUpRate": null
+          },
+          {
+            "decile": 8,
+            "count": 0,
+            "predictedMean": null,
+            "realizedUpRate": null
+          },
+          {
+            "decile": 9,
+            "count": 0,
+            "predictedMean": null,
+            "realizedUpRate": null
+          },
+          {
+            "decile": 10,
+            "count": 4,
+            "predictedMean": 0.9999999999999999,
+            "realizedUpRate": 1
+          }
+        ],
+        "brierScore": 0.16666666666666666
+      }
+    }
+  },
+  "baseline": {
+    "horizon24h": {
+      "crps": 838.8042156677429,
+      "logScore": 8.774564359312881,
+      "medianMape": 0.014838088066472223,
+      "sampleCount": 6,
+      "calibration": {
+        "bins": [],
+        "brierScore": null
+      }
+    },
+    "horizon168h": {
+      "crps": 2242.1538447083044,
+      "logScore": 9.669643386901525,
+      "medianMape": 0.044323709274323164,
+      "sampleCount": 6,
+      "calibration": {
+        "bins": [],
+        "brierScore": null
+      }
+    }
+  },
+  "modelVsBaseline": {
+    "crps24h": -58115.50855264815,
+    "crps168h": -39874.138136160655,
+    "logScore24h": -7.510418436454755,
+    "logScore168h": -7.510611497955269,
+    "medianMape24h": -0.7752770864069711,
+    "medianMape168h": -0.5355710640158264
+  },
+  "notes": [
+    "Fear/Greed and CoinGecko global use neutral defaults in backtest (no free bulk history).",
+    "Fed policy snapshot is current bundled JSON, not historically accurate.",
+    "Positive modelVsBaseline means model beats baseline (lower CRPS/log score/MAPE is better)."
+  ]
+}

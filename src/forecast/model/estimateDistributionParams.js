@@ -1,4 +1,4 @@
-import coefficients from "./coefficients.json";
+import coefficients from "./coefficients.json" with { type: "json" };
 import { fedStanceSign } from "../macro/fomcContext.js";
 
 /**

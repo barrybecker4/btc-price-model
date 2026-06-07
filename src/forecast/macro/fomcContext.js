@@ -1,5 +1,5 @@
-import fomcCalendar from "../data/fomcCalendar.json";
-import fedPolicyContext from "../data/fedPolicyContext.json";
+import fomcCalendar from "../data/fomcCalendar.json" with { type: "json" };
+import fedPolicyContext from "../data/fedPolicyContext.json" with { type: "json" };
 import { daysBetweenUtcDates, parseUtcDateMs, utcDateString } from "../features/dailyReturns.js";
 
 const FOMC_WEEK_RADIUS_DAYS = 3;

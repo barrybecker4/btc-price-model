@@ -1,4 +1,5 @@
 import { useState } from "react";
+import backtestReport from "../../forecast/backtest/backtestReport.json" with { type: "json" };
 import { buildContextRibbon } from "../../forecast/context/buildContextRibbon.js";
 import { C, FONT_NUM, FONT_UI } from "../../theme.js";
 import { fmtUSD } from "../../utils/format.js";
@@ -234,6 +235,29 @@ export function ShortTermForecastTab({
                 ))}
               </tbody>
             </table>
+          )}
+
+          {backtestReport?.model && (
+            <div
+              style={{
+                padding: "10px 14px",
+                background: "#0c0c0c",
+                borderRadius: 4,
+                border: `1px solid ${C.border}`,
+                fontSize: 10,
+                color: C.gray,
+                fontFamily: FONT_UI,
+                lineHeight: 1.55,
+              }}
+            >
+              <span style={{ color: C.dim, fontWeight: 700 }}>MODEL QUALITY (walk-forward backtest): </span>
+              {backtestReport.config.sampleCount} samples ({backtestReport.config.firstDate} –{" "}
+              {backtestReport.config.lastDate}). 168h CRPS model{" "}
+              {backtestReport.model.horizon168h.crps.toFixed(0)} vs baseline{" "}
+              {backtestReport.baseline.horizon168h.crps.toFixed(0)} · median MAPE{" "}
+              {(backtestReport.model.horizon168h.medianMape * 100).toFixed(1)}%. Run{" "}
+              <code style={{ fontFamily: FONT_NUM }}>npm run backtest:forecast</code> to refresh.
+            </div>
           )}
 
           <div

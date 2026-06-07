@@ -46,7 +46,7 @@ Independent of the monthly supply-shock sim. Click **Generate forecast** on the 
 - **Horizons**: T+24h and T+168h price PDFs (log-normal + optional stress mixture).
 - **Narrative**: Plain-text summary of major factors (momentum, risk appetite, sentiment, FOMC week).
 - **Context ribbon** (optional): Overlays long-term sim price and power-law trend on the 7-day chart.
-- **Phase 2**: Walk-forward backtest — `npm run backtest:forecast` (see `src/forecast/backtest/README.md`).
+- **Phase 2**: Walk-forward backtest — `npm run backtest:forecast` (see [`src/forecast/backtest/README.md`](src/forecast/backtest/README.md)); writes `backtestReport.json`.
 
 Styling is inline (dark theme, monospace labels).
 
