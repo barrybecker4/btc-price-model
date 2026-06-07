@@ -36,7 +36,7 @@ function isCriticalDegraded(features) {
  */
 export function shouldActivateMixture(features) {
   const mix = coefficients.mixture;
-  if (features.isFomcWeek) return true;
+  // FOMC week widens σ via gammaFomc; mixture reserved for stress signals only.
   if (features.fearGreed != null && features.fearGreed < mix.fearGreedThreshold) return true;
   if (features.rSpy7d < mix.spy7dReturnThreshold) return true;
   if (features.expectedNextMove === "hike" && features.fedStance === "hawkish") return true;
@@ -68,10 +68,16 @@ export function estimateDistributionParams(features, horizonKey) {
   const h =
     horizonKey === "24h" ? coefficients.horizon24h : coefficients.horizon168h;
 
-  const zMom = zScore(features.rBtc7d, stats.rBtc7d.mean, stats.rBtc7d.std);
   const zRisk = zScore(features.rSpy1d, stats.rSpy1d.mean, stats.rSpy1d.std);
   const fgCentered = (features.fearGreed ?? 50) - 50;
   const zFg = zScore(fgCentered, stats.fearGreedCentered.mean, stats.fearGreedCentered.std);
+
+  // Weekly BTC momentum: scale to horizon (avoid treating 7d return as 1d expected move).
+  const momInput =
+    horizonKey === "24h" ? features.rBtc7d / 7 : features.rBtc7d;
+  const momStd =
+    horizonKey === "24h" ? stats.rBtc7d.std / 7 : stats.rBtc7d.std;
+  const zMom = zScore(momInput, 0, momStd);
 
   const fomcMu =
     features.isFomcWeek ? h.betaFomcMu * fedStanceSign(features.fedStance) : 0;
@@ -82,6 +88,13 @@ export function estimateDistributionParams(features, horizonKey) {
     h.betaRisk * zRisk +
     h.betaFg * zFg +
     fomcMu;
+
+  if (typeof h.muShrinkage === "number" && h.muShrinkage > 0 && h.muShrinkage < 1) {
+    mu *= h.muShrinkage;
+  }
+  if (typeof h.maxAbsMu === "number" && h.maxAbsMu > 0) {
+    mu = Math.max(-h.maxAbsMu, Math.min(h.maxAbsMu, mu));
+  }
 
   const degraded = isCriticalDegraded(features);
   const volInput = Math.max(0.05, features.volBtc30d);
@@ -141,14 +154,21 @@ function estimateDistributionParams24hOnly(features) {
  */
 function estimateDistributionParamsInternal(features, h, applyFomcBump) {
   const stats = coefficients.zScoreStats;
-  const zMom = zScore(features.rBtc7d, stats.rBtc7d.mean, stats.rBtc7d.std);
   const zRisk = zScore(features.rSpy1d, stats.rSpy1d.mean, stats.rSpy1d.std);
   const fgCentered = (features.fearGreed ?? 50) - 50;
   const zFg = zScore(fgCentered, stats.fearGreedCentered.mean, stats.fearGreedCentered.std);
+  const momInput = features.rBtc7d / 7;
+  const zMom = zScore(momInput, 0, stats.rBtc7d.std / 7);
   const fomcMu =
     features.isFomcWeek ? h.betaFomcMu * fedStanceSign(features.fedStance) : 0;
-  const mu =
+  let mu =
     h.beta0 + h.betaMom * zMom + h.betaRisk * zRisk + h.betaFg * zFg + fomcMu;
+  if (typeof h.muShrinkage === "number" && h.muShrinkage > 0 && h.muShrinkage < 1) {
+    mu *= h.muShrinkage;
+  }
+  if (typeof h.maxAbsMu === "number" && h.maxAbsMu > 0) {
+    mu = Math.max(-h.maxAbsMu, Math.min(h.maxAbsMu, mu));
+  }
   const degraded = isCriticalDegraded(features);
   const volInput = Math.max(0.05, features.volBtc30d);
   let logSigma =

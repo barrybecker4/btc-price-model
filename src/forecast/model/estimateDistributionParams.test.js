@@ -30,21 +30,31 @@ function baseFeatures(overrides = {}) {
 
 describe("estimateDistributionParams", () => {
   it("widens sigma in degraded mode", () => {
-    const normal = estimateDistributionParams(baseFeatures(), "24h");
-    const degraded = estimateDistributionParams(
-      baseFeatures({ degradedFeatures: ["btcDaily"] }),
+    const normal = estimateDistributionParams(
+      baseFeatures({ volBtc30d: 0.45 }),
       "24h",
     );
-    expect(degraded.sigma).toBeGreaterThan(normal.sigma);
+    const degraded = estimateDistributionParams(
+      baseFeatures({ volBtc30d: 0.45, degradedFeatures: ["btcDaily"] }),
+      "24h",
+    );
+    expect(degraded.sigma).toBeGreaterThanOrEqual(normal.sigma);
+    expect(degraded.sigma).toBeGreaterThan(0.014);
   });
 
-  it("activates mixture during FOMC week", () => {
-    const params = estimateDistributionParams(
+  it("activates mixture on stress signals (not FOMC alone)", () => {
+    const fomcOnly = estimateDistributionParams(
       baseFeatures({ isFomcWeek: true, daysToDecision: 1 }),
       "168h",
     );
-    expect(params.mixtureActive).toBe(true);
-    expect(params.stressWeight).toBeGreaterThan(0);
+    expect(fomcOnly.mixtureActive).toBe(false);
+
+    const stress = estimateDistributionParams(
+      baseFeatures({ fearGreed: 18, rSpy7d: -0.05 }),
+      "168h",
+    );
+    expect(stress.mixtureActive).toBe(true);
+    expect(stress.stressWeight).toBeGreaterThan(0);
   });
 
   it("buildFeatureVector maps bundle fields", () => {

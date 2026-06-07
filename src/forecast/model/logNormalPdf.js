@@ -93,13 +93,17 @@ export function summarizePdf(pdf, spotUsd) {
   for (let i = 1; i < normalized.length; i++) {
     const dx = normalized[i].price - normalized[i - 1].price;
     const slice = 0.5 * (normalized[i].density + normalized[i - 1].density) * dx;
-    const prevCum = cum;
-    cum += slice;
-    if (normalized[i].price > spotUsd && prevCum < probUp + slice) {
-      probUp += slice;
-    }
-    if (normalized[i].price < threshold95) {
+    const lo = normalized[i - 1].price;
+    const hi = normalized[i].price;
+    if (hi <= spotUsd) continue;
+    const tailLo = Math.max(lo, spotUsd);
+    const tailFrac = hi > tailLo ? (hi - tailLo) / (hi - lo) : 0;
+    probUp += slice * tailFrac;
+    if (hi < threshold95) {
       probDown5Pct += slice;
+    } else if (lo < threshold95) {
+      const belowFrac = (threshold95 - lo) / (hi - lo);
+      probDown5Pct += slice * belowFrac;
     }
   }
 
