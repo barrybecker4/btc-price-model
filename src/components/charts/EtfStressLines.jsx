@@ -1,5 +1,9 @@
 import { ReferenceLine } from "recharts";
 import { C, FONT_UI } from "../../theme.js";
+import { ChartAnnotationLabel } from "./ChartAnnotationLabel.jsx";
+
+const ETF_STRESS_TOOLTIP =
+  "ETF investors collectively redeem shares during a risk-off period, forcing ETF issuers or market makers to release/sell some BTC instead of absorbing BTC.";
 
 /** Vertical guides for modeled ETF stress redemption events. */
 export function EtfStressLines({ years, yAxisId }) {
@@ -13,13 +17,19 @@ export function EtfStressLines({ years, yAxisId }) {
       strokeWidth={1.25}
       strokeDasharray="2 5"
       label={{
-        value: "ETF Stress",
         position: index % 2 === 0 ? "insideTopRight" : "insideTopLeft",
         dy: 34,
-        fill: C.red,
-        fontSize: 10,
-        fontFamily: FONT_UI,
-        fontWeight: 600,
+        content: (props) => (
+          <ChartAnnotationLabel
+            {...props}
+            text="ETF Stress"
+            tooltip={ETF_STRESS_TOOLTIP}
+            fill={C.red}
+            fontSize={10}
+            fontFamily={FONT_UI}
+            fontWeight={600}
+          />
+        ),
       }}
     />
   ));

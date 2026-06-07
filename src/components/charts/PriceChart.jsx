@@ -566,26 +566,6 @@ export function PriceChart({
           {spyHistoricalError}
         </div>
       )}
-      <div
-        style={{
-          marginTop: 10,
-          maxWidth: 720,
-          fontSize: 11,
-          lineHeight: 1.45,
-          color: C.hint,
-          fontFamily: FONT_UI,
-        }}
-      >
-        <span style={{ color: C.red, fontWeight: 600 }}>Supply Shock</span>
-        {" — "}
-        The red dashed vertical line is drawn the first time modeled{" "}
-        <strong style={{ color: C.text }}>liquid</strong> BTC (coins still treated as available to the
-        market after treasuries, ETFs, and lost supply) drops{" "}
-        <strong style={{ color: C.text }}>below 30%</strong> of where it started. It is a stylized
-        &ldquo;free-float mostly gone&rdquo; moment, not a price crash marker. Placement depends on all
-        demand flows and price (including the mining cost floor, which changes how many BTC each dollar
-        of buying removes from that pool).
-      </div>
     </>
   );
 }
