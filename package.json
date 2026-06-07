@@ -8,6 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "test": "vitest run",
+    "backtest:forecast": "node scripts/backtest-forecast.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

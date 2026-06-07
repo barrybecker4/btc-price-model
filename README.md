@@ -33,12 +33,22 @@ The sidebar sliders map to a single `p` object (`DEFAULTS`); changing any value 
 ### UI
 
 - **Left column**: Collapsible sections (macro, supply/mining, MSTR-style treasury, other treasuries & ETFs, organic flow, market dynamics) plus live stats and **Reset to defaults**.
-- **Main panel**: KPI strip (terminal price, real price, liquid %, shock year, MSTR BTC/day, treasury % of mined) and three chart tabs:
+- **Main panel**: KPI strip (terminal price, real price, liquid %, shock year, MSTR BTC/day, treasury % of mined) and chart tabs:
   - **Price**: Nominal vs inflation-adjusted, halving lines, supply-shock line (log scale optional).
   - **Supply breakdown**: Stacked areas (lost, corporate treasury, ETF, liquid).
   - **Daily flow**: Buying vs selling vs mining vs MSTR vs ETF (downsampled series uses `cd` = every 3rd month for smoother charts).
+  - **Short-term forecast**: On-demand 24h / 168h price distributions from live market signals (see below).
 
-Styling is inline (dark theme, monospace labels); no separate component files.
+### Short-term forecast (`runForecast`)
+
+Independent of the monthly supply-shock sim. Click **Generate forecast** on the **Short-term forecast** tab to fetch free market data (BTC spot/history, S&P daily, Fear & Greed, CoinGecko global) plus bundled FOMC calendar and Fed policy snapshot.
+
+- **Horizons**: T+24h and T+168h price PDFs (log-normal + optional stress mixture).
+- **Narrative**: Plain-text summary of major factors (momentum, risk appetite, sentiment, FOMC week).
+- **Context ribbon** (optional): Overlays long-term sim price and power-law trend on the 7-day chart.
+- **Phase 2**: Walk-forward backtest — `npm run backtest:forecast` (see `src/forecast/backtest/README.md`).
+
+Styling is inline (dark theme, monospace labels).
 
 ## Important caveats
 
@@ -50,6 +60,9 @@ Styling is inline (dark theme, monospace labels); no separate component files.
 
 | Path | Role |
 |------|------|
-| `src/App.jsx` | Entire app: simulation, layout, charts |
-| `src/main.jsx` | Vite/React entry (unchanged from template) |
-| `src/App.css` | Global styles if any (template) |
+| `src/App.jsx` | App shell: simulation, layout, chart tabs |
+| `src/sim/` | Long-term monthly supply-shock simulation |
+| `src/forecast/` | Short-term probabilistic forecast (24h / 168h) |
+| `src/forecast/backtest/` | Phase 2 walk-forward validation (stubs) |
+| `src/components/` | UI components including forecast tab |
+| `src/main.jsx` | Vite/React entry |

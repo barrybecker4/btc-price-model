@@ -1,10 +1,12 @@
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { ChartNotes } from "./components/ChartNotes.jsx";
 import { FlowChart } from "./components/charts/FlowChart.jsx";
 import { PriceChart } from "./components/charts/PriceChart.jsx";
+import { ShortTermForecastTab } from "./components/charts/ShortTermForecastTab.jsx";
 import { SupplyChart } from "./components/charts/SupplyChart.jsx";
 import { KpiBar } from "./components/KpiBar.jsx";
 import { ParameterSidebar } from "./components/ParameterSidebar.jsx";
+import { runForecast } from "./forecast/runForecast.js";
 import { DEFAULTS, withParamDefaults, YEAR_START } from "./sim/config/constants.js";
 import { getEtfStressRedemptionYears } from "./sim/demand/etfStressRedemptions.js";
 import { getHalvingYearsBetween, getHalvingYearsInRange } from "./sim/supply/halving.js";
@@ -44,6 +46,12 @@ export default function App() {
   const [spyHistoricalError, setSpyHistoricalError] = useState(null);
   const historicalFetchAttemptedRef = useRef(false);
   const spyHistoricalFetchAttemptedRef = useRef(false);
+  const forecastAbortRef = useRef(null);
+  const [forecastResult, setForecastResult] = useState(null);
+  const [forecastLoading, setForecastLoading] = useState(false);
+  const [forecastError, setForecastError] = useState(null);
+  const [forecastGeneratedAt, setForecastGeneratedAt] = useState(null);
+  const [showContextRibbon, setShowContextRibbon] = useState(false);
 
   useEffect(() => {
     const ac = new AbortController();
@@ -191,6 +199,43 @@ export default function App() {
     [simParams.simYears, simParams.etfStressRedemptionCount]
   );
 
+  const forecastSimContext = useMemo(
+    () => ({
+      spotPrice: forecastResult?.spotUsd ?? first?.price ?? 0,
+      simFirstRow: first,
+      simRows: data,
+      yearStart: YEAR_START,
+    }),
+    [forecastResult?.spotUsd, first, data]
+  );
+
+  const handleGenerateForecast = useCallback(() => {
+    forecastAbortRef.current?.abort();
+    const ac = new AbortController();
+    forecastAbortRef.current = ac;
+    setForecastLoading(true);
+    setForecastError(null);
+    (async () => {
+      try {
+        const result = await runForecast({
+          signal: ac.signal,
+          bypassCache: true,
+          includeContextRibbon: showContextRibbon,
+          simContext: forecastSimContext,
+        });
+        if (ac.signal.aborted) return;
+        setForecastResult(result);
+        setForecastGeneratedAt(result.generatedAtMs);
+      } catch (e) {
+        if (!ac.signal.aborted) {
+          setForecastError(e instanceof Error ? e.message : "Forecast failed.");
+        }
+      } finally {
+        if (!ac.signal.aborted) setForecastLoading(false);
+      }
+    })();
+  }, [showContextRibbon, forecastSimContext]);
+
   const tabBtn = (key, lbl) => (
     <button
       type="button"
@@ -246,6 +291,7 @@ export default function App() {
             {tabBtn("price", "PRICE CHART")}
             {tabBtn("supply", "SUPPLY BREAKDOWN")}
             {tabBtn("flow", "DAILY FLOW")}
+            {tabBtn("forecast", "SHORT-TERM FORECAST")}
             {tab === "price" && (
               <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 14 }}>
                 <label
@@ -334,8 +380,20 @@ export default function App() {
               supplyShockYear={supplyShockYear}
             />
           )}
+          {tab === "forecast" && (
+            <ShortTermForecastTab
+              result={forecastResult}
+              loading={forecastLoading}
+              error={forecastError}
+              generatedAtMs={forecastGeneratedAt}
+              showContextRibbon={showContextRibbon}
+              onShowContextRibbonChange={setShowContextRibbon}
+              simContext={forecastSimContext}
+              onGenerate={handleGenerateForecast}
+            />
+          )}
 
-          <ChartNotes />
+          {tab !== "forecast" && <ChartNotes />}
         </div>
       </div>
     </div>

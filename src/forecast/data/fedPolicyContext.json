@@ -1,0 +1,8 @@
+{
+  "fundsRateLower": 4.25,
+  "fundsRateUpper": 4.5,
+  "stance": "neutral",
+  "expectedNextMove": "hold",
+  "lastUpdated": "2025-05-07",
+  "sourceNote": "Update after each FOMC statement. Not live FedWatch probabilities."
+}

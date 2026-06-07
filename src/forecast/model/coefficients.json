@@ -1,0 +1,49 @@
+{
+  "zScoreStats": {
+    "rBtc7d": { "mean": 0, "std": 0.12 },
+    "rSpy1d": { "mean": 0, "std": 0.012 },
+    "fearGreedCentered": { "mean": 0, "std": 25 }
+  },
+  "horizon24h": {
+    "beta0": 0,
+    "betaMom": 0.35,
+    "betaRisk": 0.15,
+    "betaFg": 0.0008,
+    "betaFomcMu": 0.002,
+    "gamma0": -3.2,
+    "gammaVol": 0.85,
+    "gammaFomc": 0.18,
+    "gammaDegraded": 0.25,
+    "fomcVolBump": 0.2,
+    "minSigma": 0.008,
+    "maxSigma": 0.08
+  },
+  "horizon168h": {
+    "beta0": 0,
+    "betaMom": 0.28,
+    "betaRisk": 0.12,
+    "betaFg": 0.004,
+    "betaFomcMu": 0.006,
+    "gamma0": -2.85,
+    "gammaVol": 0.9,
+    "gammaFomc": 0.22,
+    "gammaDegraded": 0.3,
+    "fomcVolBump": 0.25,
+    "sigmaScaleFrom24h": 2.6457513110645907,
+    "minSigma": 0.02,
+    "maxSigma": 0.18
+  },
+  "mixture": {
+    "fearGreedThreshold": 25,
+    "spy7dReturnThreshold": -0.03,
+    "stressWeightBase": 0.35,
+    "stressWeightFomc": 0.25,
+    "stressWeightHawkishHike": 0.2,
+    "stressMuShift": -0.015,
+    "stressSigmaMultiplier": 1.35
+  },
+  "pdf": {
+    "gridPoints": 200,
+    "sigmaSpan": 4
+  }
+}
