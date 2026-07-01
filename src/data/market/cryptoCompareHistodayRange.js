@@ -11,10 +11,17 @@ function cryptoCompareApiOrigin() {
   return "https://min-api.cryptocompare.com";
 }
 
+function cryptoCompareApiKey() {
+  const key = import.meta.env?.VITE_CRYPTOCOMPARE_API_KEY;
+  return key ? String(key) : "";
+}
+
 function buildHistodayUrl(toTs) {
   const origin = cryptoCompareApiOrigin();
-  const query =
+  let query =
     "/data/v2/histoday?fsym=BTC&tsym=USD&limit=" + CC_PAGE_LIMIT + "&toTs=" + toTs;
+  const apiKey = cryptoCompareApiKey();
+  if (apiKey) query += "&api_key=" + encodeURIComponent(apiKey);
   return origin + query;
 }
 
@@ -53,7 +60,8 @@ function mapToPricePoints(byTime) {
 }
 
 /**
- * Daily BTC/USD from CryptoCompare (no API key; CORS-friendly). Paginates backward from `toSec`.
+ * Daily BTC/USD from CryptoCompare. Paginates backward from `toSec`.
+ * Requires `VITE_CRYPTOCOMPARE_API_KEY` in production (CoinDesk retired the keyless tier).
  * @see https://min-api.cryptocompare.com/documentation?key=Historical&cat=dataHistoday
  * @param {{ fromSec: number, toSec: number, signal?: AbortSignal }} params
  * @returns {Promise<{ timestampMs: number, price: number }[]>}
