@@ -164,12 +164,21 @@ export function PriceChart({
   onSpyBullishnessChange,
   showHistorical,
   onShowHistoricalChange,
+  historicalStartYear = 2011,
+  historicalStartYearMin = 2011,
+  historicalStartYearMax = 2025,
+  onHistoricalStartYearChange,
   /** When historical series is merged, draw a vertical guide at the sim anchor (today). */
   showProjectionStartLine = false,
   historicalLoading = false,
   historicalError = null,
   spyHistoricalError = null,
 }) {
+  const historicalStartYears = useMemo(() => {
+    const years = [];
+    for (let y = historicalStartYearMin; y <= historicalStartYearMax; y++) years.push(y);
+    return years;
+  }, [historicalStartYearMin, historicalStartYearMax]);
   const { chartData, baseAxisMin, baseAxisMax } = useMemo(() => {
     let rows = data;
     if (overlayPowerLaw) {
@@ -398,7 +407,34 @@ export function PriceChart({
             onChange={(e) => onShowHistoricalChange(e.target.checked)}
             style={{ accentColor: C.amber }}
           />
-          Show historical data (2011–present)
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
+            Show historical data (
+            <select
+              aria-label="Historical data start year"
+              value={historicalStartYear}
+              disabled={!onHistoricalStartYearChange}
+              onChange={(e) => onHistoricalStartYearChange?.(Number(e.target.value))}
+              style={{
+                appearance: "auto",
+                background: C.panel,
+                color: C.text,
+                border: `1px solid ${C.border}`,
+                borderRadius: 2,
+                fontSize: 11,
+                fontFamily: FONT_UI,
+                padding: "1px 2px",
+                cursor: onHistoricalStartYearChange ? "pointer" : "default",
+                accentColor: C.amber,
+              }}
+            >
+              {historicalStartYears.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+            –present)
+          </span>
         </label>
         {historicalLoading && (
           <div

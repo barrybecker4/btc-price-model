@@ -26,6 +26,7 @@ import { fractionalYearToLocalMs } from "./reference/powerLaw.js";
 import { safeDivide } from "./utils/format.js";
 
 const HISTORICAL_CHART_START_YEAR = 2011;
+const HISTORICAL_CHART_END_YEAR = 2025;
 const FROM_HISTORICAL_START_MS = Date.UTC(HISTORICAL_CHART_START_YEAR, 0, 1);
 
 export default function App() {
@@ -39,6 +40,7 @@ export default function App() {
   const [overlaySpy, setOverlaySpy] = useState(false);
   const [spyBullishness, setSpyBullishness] = useState(0.5);
   const [showHistorical, setShowHistorical] = useState(false);
+  const [historicalStartYear, setHistoricalStartYear] = useState(HISTORICAL_CHART_START_YEAR);
   const [historicalRaw, setHistoricalRaw] = useState(null);
   const [historicalLoading, setHistoricalLoading] = useState(false);
   const [historicalError, setHistoricalError] = useState(null);
@@ -175,8 +177,10 @@ export default function App() {
 
   const historicalEnriched = useMemo(() => {
     if (!historicalRaw?.length) return null;
-    return enrichHistoricalPriceRows(historicalRaw, YEAR_START);
-  }, [historicalRaw]);
+    const enriched = enrichHistoricalPriceRows(historicalRaw, YEAR_START);
+    if (historicalStartYear <= HISTORICAL_CHART_START_YEAR) return enriched;
+    return enriched.filter((row) => row.year >= historicalStartYear);
+  }, [historicalRaw, historicalStartYear]);
 
   const priceChartData = useMemo(() => {
     if (!showHistorical || !historicalEnriched?.length) return cd;
@@ -188,10 +192,10 @@ export default function App() {
   const simEndYear = YEAR_START + simParams.simYears;
   const halvingsPrice = useMemo(() => {
     if (showHistorical && historicalEnriched?.length) {
-      return getHalvingYearsBetween(HISTORICAL_CHART_START_YEAR, simEndYear);
+      return getHalvingYearsBetween(historicalStartYear, simEndYear);
     }
     return getHalvingYearsInRange(YEAR_START, simParams.simYears);
-  }, [showHistorical, historicalEnriched, simEndYear, simParams.simYears]);
+  }, [showHistorical, historicalEnriched, historicalStartYear, simEndYear, simParams.simYears]);
 
   const halvingsSim = useMemo(() => getHalvingYearsInRange(YEAR_START, simParams.simYears), [simParams.simYears]);
   const etfStressYears = useMemo(
@@ -358,6 +362,10 @@ export default function App() {
                   setHistoricalError(null);
                 }
               }}
+              historicalStartYear={historicalStartYear}
+              historicalStartYearMin={HISTORICAL_CHART_START_YEAR}
+              historicalStartYearMax={HISTORICAL_CHART_END_YEAR}
+              onHistoricalStartYearChange={setHistoricalStartYear}
               showProjectionStartLine={showHistorical && !!historicalEnriched?.length}
               historicalLoading={historicalLoading}
               historicalError={historicalError}
